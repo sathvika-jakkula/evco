@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 import logging
 import socket
-from typing import Any, Dict, List, Optional
+import time
+from typing import Any, Dict, List, Optional, Tuple
 import urllib.parse
 import urllib.request
 import urllib.error
 
 from app.core.config import settings
+from app.database.api_audit_log_repository import ApiAuditLogRepository
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ class IQMSClient:
         password: Optional[str] = None,
         auth_token: Optional[str] = None,
         timeout: int = 5,
+        audit_repository: Optional[ApiAuditLogRepository] = None,
     ) -> None:
         self.base_url = (base_url or settings.IQMS_BASE_URL).rstrip("/")
         self.app_name = app_name or settings.IQMS_APPLICATION_NAME
@@ -31,6 +34,7 @@ class IQMSClient:
         self.password = password or settings.IQMS_PASSWORD
         self._auth_token = auth_token or settings.IQMS_AUTH_TOKEN or None
         self.timeout = timeout
+        self.audit_repository = audit_repository or ApiAuditLogRepository()
 
     def login(self) -> Optional[str]:
         """
@@ -84,6 +88,61 @@ class IQMSClient:
             return self.login()
         return self._auth_token
 
+    @staticmethod
+    def _safe_json(body_bytes: bytes) -> Any:
+        try:
+            return json.loads(body_bytes.decode("utf-8"))
+        except Exception:
+            return {"raw": body_bytes.decode("utf-8", errors="replace")[:2000]}
+
+    def _audit(
+        self,
+        endpoint: str,
+        http_method: str,
+        status: str,
+        http_status: Optional[int],
+        duration_ms: int,
+        url: str,
+        body_bytes: bytes,
+        attempt: int,
+    ) -> None:
+        """Best-effort write to api_audit_logs - never lets logging failures break an IQMS call."""
+        try:
+            self.audit_repository.log_call(
+                endpoint=endpoint,
+                http_method=http_method,
+                status=status,
+                http_status=http_status,
+                duration_ms=duration_ms,
+                request_payload={"url": url},
+                response_payload=self._safe_json(body_bytes),
+                retry_attempt=attempt,
+            )
+        except Exception as exc:
+            logger.warning("Failed to write api_audit_logs entry for %s: %s", endpoint, exc)
+
+    def _request_with_audit(
+        self, url: str, headers: Dict[str, str], method: str, endpoint_label: str, attempt: int
+    ) -> Tuple[int, bytes]:
+        """
+        Perform one HTTP request and log it to api_audit_logs regardless of outcome.
+        Re-raises HTTPError after logging, so callers' existing retry-on-401/403
+        handling is unaffected.
+        """
+        started = time.perf_counter()
+        req = urllib.request.Request(url, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                body_bytes = response.read()
+                duration_ms = int((time.perf_counter() - started) * 1000)
+                self._audit(endpoint_label, method, "SUCCESS", response.status, duration_ms, url, body_bytes, attempt)
+                return response.status, body_bytes
+        except urllib.error.HTTPError as http_err:
+            duration_ms = int((time.perf_counter() - started) * 1000)
+            error_body = http_err.read()
+            self._audit(endpoint_label, method, "FAILED", http_err.code, duration_ms, url, error_body, attempt)
+            raise
+
     def get_customers_lite(self) -> List[Dict[str, Any]]:
         """
         Fetches the complete customer list from IQMS /CRM/CustomerCentral/CustomersLite.
@@ -103,17 +162,15 @@ class IQMSClient:
                 "User-Agent": "EVCO-Backend/1.0",
             }
 
-            req = urllib.request.Request(url, headers=headers, method="GET")
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                    if response.status == 200:
-                        body_bytes = response.read()
-                        data = json.loads(body_bytes.decode("utf-8"))
-                        if isinstance(data, list):
-                            return data
-                        elif isinstance(data, dict):
-                            return data.get("items") or data.get("data") or data.get("Customers") or [data]
-                        return []
+                status_code, body_bytes = self._request_with_audit(url, headers, "GET", "CustomersLite", attempt)
+                if status_code == 200:
+                    data = json.loads(body_bytes.decode("utf-8"))
+                    if isinstance(data, list):
+                        return data
+                    elif isinstance(data, dict):
+                        return data.get("items") or data.get("data") or data.get("Customers") or [data]
+                    return []
             except urllib.error.HTTPError as http_err:
                 if http_err.code in (401, 403) and attempt == 0:
                     logger.warning("IQMS AuthToken expired or invalid (HTTP %s). Attempting re-login...", http_err.code)
@@ -148,17 +205,17 @@ class IQMSClient:
                 "User-Agent": "EVCO-Backend/1.0",
             }
 
-            req = urllib.request.Request(url, headers=headers, method="GET")
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                    if response.status == 200:
-                        body_bytes = response.read()
-                        data = json.loads(body_bytes.decode("utf-8"))
-                        if isinstance(data, dict):
-                            return data.get("data") or data.get("Data") or data.get("items") or []
-                        if isinstance(data, list):
-                            return data
-                        return []
+                status_code, body_bytes = self._request_with_audit(
+                    url, headers, "GET", "AKAInventoryForCustomer", attempt
+                )
+                if status_code == 200:
+                    data = json.loads(body_bytes.decode("utf-8"))
+                    if isinstance(data, dict):
+                        return data.get("data") or data.get("Data") or data.get("items") or []
+                    if isinstance(data, list):
+                        return data
+                    return []
             except urllib.error.HTTPError as http_err:
                 if http_err.code in (401, 403) and attempt == 0:
                     logger.warning(
@@ -191,17 +248,15 @@ class IQMSClient:
                 "User-Agent": "EVCO-Backend/1.0",
             }
 
-            req = urllib.request.Request(url, headers=headers, method="GET")
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                    if response.status == 200:
-                        body_bytes = response.read()
-                        data = json.loads(body_bytes.decode("utf-8"))
-                        if isinstance(data, dict):
-                            return data.get("data") or data.get("Data") or data.get("items") or []
-                        if isinstance(data, list):
-                            return data
-                        return []
+                status_code, body_bytes = self._request_with_audit(url, headers, "GET", label, attempt)
+                if status_code == 200:
+                    data = json.loads(body_bytes.decode("utf-8"))
+                    if isinstance(data, dict):
+                        return data.get("data") or data.get("Data") or data.get("items") or []
+                    if isinstance(data, list):
+                        return data
+                    return []
             except urllib.error.HTTPError as http_err:
                 if http_err.code in (401, 403) and attempt == 0:
                     logger.warning("IQMS AuthToken expired or invalid (HTTP %s). Attempting re-login...", http_err.code)
