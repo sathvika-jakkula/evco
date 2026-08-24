@@ -174,3 +174,71 @@ class IQMSClient:
                 break
 
         return []
+
+    def _get_json_list(self, url: str, label: str) -> List[Dict[str, Any]]:
+        """Shared GET-and-unwrap-list logic with the standard AuthToken retry-once pattern."""
+        token = self.get_auth_token()
+
+        for attempt in range(2):
+            if not token:
+                logger.error("No valid IQMS AuthToken available for %s request.", label)
+                return []
+
+            headers = {
+                "Accept": "application/json",
+                "AuthToken": token,
+                "Authorization": f"Bearer {token}",
+                "User-Agent": "EVCO-Backend/1.0",
+            }
+
+            req = urllib.request.Request(url, headers=headers, method="GET")
+            try:
+                with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                    if response.status == 200:
+                        body_bytes = response.read()
+                        data = json.loads(body_bytes.decode("utf-8"))
+                        if isinstance(data, dict):
+                            return data.get("data") or data.get("Data") or data.get("items") or []
+                        if isinstance(data, list):
+                            return data
+                        return []
+            except urllib.error.HTTPError as http_err:
+                if http_err.code in (401, 403) and attempt == 0:
+                    logger.warning("IQMS AuthToken expired or invalid (HTTP %s). Attempting re-login...", http_err.code)
+                    self._auth_token = None
+                    token = self.login()
+                    continue
+                logger.error("IQMS %s HTTP error %s: %s", label, http_err.code, http_err)
+                break
+            except Exception as exc:
+                logger.error("Error fetching IQMS %s: %s", label, exc)
+                break
+
+        return []
+
+    def get_sales_orders(self) -> List[Dict[str, Any]]:
+        """
+        Fetches all sales order line records from IQMS
+        /SalesDistribution/SalesOrder/SalesOrder.
+
+        IQMS's `filters` query parameter (e.g. filters=ArInvtId.eq~207192)
+        does not actually filter server-side - confirmed by testing: the
+        response includes rows for ArInvtId values other than the one
+        filtered on. So this always fetches the full list; callers must
+        filter client-side (see SalesOrderService.get_sales_orders).
+        """
+        url = f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrder"
+        return self._get_json_list(url, "SalesOrder")
+
+    def get_sales_order_details(self, sales_order_id: int) -> List[Dict[str, Any]]:
+        """Fetches sales order detail (line item) records for one sales order - filters correctly server-side."""
+        url = f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrderDetails?salesOrderId={sales_order_id}"
+        return self._get_json_list(url, "SalesOrderDetails")
+
+    def get_sales_order_releases(self, sales_order_detail_id: int) -> List[Dict[str, Any]]:
+        """Fetches release/shipment schedule records for one sales order detail line - filters correctly server-side."""
+        url = (
+            f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrderReleases"
+            f"?salesOrderDetailId={sales_order_detail_id}"
+        )
+        return self._get_json_list(url, "SalesOrderReleases")
