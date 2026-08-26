@@ -28,6 +28,11 @@ class Settings:
         "EXTRACTED_MARKDOWN_FOLDER_PATH", str(BASE_DIR / "extracted_quotes")
     )
 
+    # T21: SMTP server used to send notification emails. Account credentials are
+    # supplied per-request (not stored here) - only the server address is configured.
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+
     # PostgreSQL quote-processing database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
 

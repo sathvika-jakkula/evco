@@ -4,7 +4,7 @@ import json
 import logging
 import socket
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -14,9 +14,24 @@ from app.database.api_audit_log_repository import ApiAuditLogRepository
 
 logger = logging.getLogger(__name__)
 
+# HTTP statuses worth retrying (transient server-side/rate-limit failures).
+# 401/403 are handled separately since they trigger a re-login, not a plain retry.
+RETRYABLE_HTTP_STATUSES = {429, 500, 502, 503, 504}
+
+
+def _default_unwrap(data: Any) -> List[Dict[str, Any]]:
+    """Default response-list unwrapping shared by most IQMS endpoints."""
+    if isinstance(data, dict):
+        return data.get("data") or data.get("Data") or data.get("items") or []
+    if isinstance(data, list):
+        return data
+    return []
+
 
 class IQMSClient:
     """Client for connecting to DELMIAWorks / IQMS WebAPI."""
+
+    DEFAULT_MAX_RETRIES = 3  # retries beyond the first attempt (4 attempts total)
 
     def __init__(
         self,
@@ -125,9 +140,9 @@ class IQMSClient:
         self, url: str, headers: Dict[str, str], method: str, endpoint_label: str, attempt: int
     ) -> Tuple[int, bytes]:
         """
-        Perform one HTTP request and log it to api_audit_logs regardless of outcome.
-        Re-raises HTTPError after logging, so callers' existing retry-on-401/403
-        handling is unaffected.
+        Perform one HTTP request and log it to api_audit_logs regardless of outcome
+        (success, HTTP error, or network-level failure). Re-raises the original
+        exception after logging, so callers' retry handling is unaffected.
         """
         started = time.perf_counter()
         req = urllib.request.Request(url, headers=headers, method=method)
@@ -142,101 +157,35 @@ class IQMSClient:
             error_body = http_err.read()
             self._audit(endpoint_label, method, "FAILED", http_err.code, duration_ms, url, error_body, attempt)
             raise
+        except (urllib.error.URLError, TimeoutError, socket.timeout) as net_err:
+            duration_ms = int((time.perf_counter() - started) * 1000)
+            self._audit(endpoint_label, method, "FAILED", None, duration_ms, url, str(net_err).encode("utf-8"), attempt)
+            raise
 
-    def get_customers_lite(self) -> List[Dict[str, Any]]:
+    def _fetch_json_list(
+        self,
+        url: str,
+        label: str,
+        unwrap: Optional[Callable[[Any], List[Dict[str, Any]]]] = None,
+        max_retries: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """
-        Fetches the complete customer list from IQMS /CRM/CustomerCentral/CustomersLite.
+        GET url and return the unwrapped JSON list, with retries and an
+        api_audit_logs entry for every attempt.
+
+        Retries (up to max_retries additional attempts) on:
+          - HTTP 401/403 - re-authenticates before retrying
+          - HTTP 429/500/502/503/504 - transient server-side failures, retried with backoff
+          - network-level errors (timeouts, connection failures) - retried with backoff
+        Any other HTTP error status, or an unexpected exception (including a
+        malformed/undecodable response body), is treated as non-retryable and
+        returns [] immediately.
         """
-        token = self.get_auth_token()
-        url = f"{self.base_url}/CRM/CustomerCentral/CustomersLite"
-
-        for attempt in range(2):
-            if not token:
-                logger.error("No valid IQMS AuthToken available for CustomersLite request.")
-                return []
-
-            headers = {
-                "Accept": "application/json",
-                "AuthToken": token,
-                "Authorization": f"Bearer {token}",
-                "User-Agent": "EVCO-Backend/1.0",
-            }
-
-            try:
-                status_code, body_bytes = self._request_with_audit(url, headers, "GET", "CustomersLite", attempt)
-                if status_code == 200:
-                    data = json.loads(body_bytes.decode("utf-8"))
-                    if isinstance(data, list):
-                        return data
-                    elif isinstance(data, dict):
-                        return data.get("items") or data.get("data") or data.get("Customers") or [data]
-                    return []
-            except urllib.error.HTTPError as http_err:
-                if http_err.code in (401, 403) and attempt == 0:
-                    logger.warning("IQMS AuthToken expired or invalid (HTTP %s). Attempting re-login...", http_err.code)
-                    self._auth_token = None
-                    token = self.login()
-                    continue
-                logger.error("IQMS CustomersLite HTTP error %s: %s", http_err.code, http_err)
-                break
-            except Exception as exc:
-                logger.error("Error fetching IQMS CustomersLite: %s", exc)
-                break
-
-        return []
-
-    def get_aka_inventory_for_customer(self, ar_custo_id: int) -> List[Dict[str, Any]]:
-        """
-        Fetches AKA (customer alias) inventory records for a customer from
-        IQMS /Manufacturing/Inventory/AKAInventoryForCustomer/{ArCustoId}.
-        """
-        token = self.get_auth_token()
-        url = f"{self.base_url}/Manufacturing/Inventory/AKAInventoryForCustomer/{ar_custo_id}"
-
-        for attempt in range(2):
-            if not token:
-                logger.error("No valid IQMS AuthToken available for AKAInventoryForCustomer request.")
-                return []
-
-            headers = {
-                "Accept": "application/json",
-                "AuthToken": token,
-                "Authorization": f"Bearer {token}",
-                "User-Agent": "EVCO-Backend/1.0",
-            }
-
-            try:
-                status_code, body_bytes = self._request_with_audit(
-                    url, headers, "GET", "AKAInventoryForCustomer", attempt
-                )
-                if status_code == 200:
-                    data = json.loads(body_bytes.decode("utf-8"))
-                    if isinstance(data, dict):
-                        return data.get("data") or data.get("Data") or data.get("items") or []
-                    if isinstance(data, list):
-                        return data
-                    return []
-            except urllib.error.HTTPError as http_err:
-                if http_err.code in (401, 403) and attempt == 0:
-                    logger.warning(
-                        "IQMS AuthToken expired or invalid (HTTP %s). Attempting re-login...", http_err.code
-                    )
-                    self._auth_token = None
-                    token = self.login()
-                    continue
-                logger.error("IQMS AKAInventoryForCustomer HTTP error %s: %s", http_err.code, http_err)
-                break
-            except Exception as exc:
-                logger.error("Error fetching IQMS AKAInventoryForCustomer for ArCustoId=%s: %s", ar_custo_id, exc)
-                break
-
-        return []
-
-    def _get_json_list(self, url: str, label: str) -> List[Dict[str, Any]]:
-        """Shared GET-and-unwrap-list logic with the standard AuthToken retry-once pattern."""
+        unwrap = unwrap or _default_unwrap
+        max_retries = self.DEFAULT_MAX_RETRIES if max_retries is None else max_retries
         token = self.get_auth_token()
 
-        for attempt in range(2):
+        for attempt in range(max_retries + 1):
             if not token:
                 logger.error("No valid IQMS AuthToken available for %s request.", label)
                 return []
@@ -250,26 +199,71 @@ class IQMSClient:
 
             try:
                 status_code, body_bytes = self._request_with_audit(url, headers, "GET", label, attempt)
-                if status_code == 200:
-                    data = json.loads(body_bytes.decode("utf-8"))
-                    if isinstance(data, dict):
-                        return data.get("data") or data.get("Data") or data.get("items") or []
-                    if isinstance(data, list):
-                        return data
+                if status_code != 200:
+                    logger.error("IQMS %s returned unexpected status %s", label, status_code)
+                    return []
+                try:
+                    return unwrap(json.loads(body_bytes.decode("utf-8")))
+                except Exception as parse_exc:
+                    logger.error("Failed to parse IQMS %s response: %s", label, parse_exc)
                     return []
             except urllib.error.HTTPError as http_err:
-                if http_err.code in (401, 403) and attempt == 0:
-                    logger.warning("IQMS AuthToken expired or invalid (HTTP %s). Attempting re-login...", http_err.code)
+                has_retries_left = attempt < max_retries
+                if http_err.code in (401, 403) and has_retries_left:
+                    logger.warning(
+                        "IQMS AuthToken expired or invalid (HTTP %s) on %s attempt %d/%d - re-authenticating...",
+                        http_err.code, label, attempt + 1, max_retries + 1,
+                    )
                     self._auth_token = None
                     token = self.login()
                     continue
+                if http_err.code in RETRYABLE_HTTP_STATUSES and has_retries_left:
+                    delay = min(2 ** attempt, 5)
+                    logger.warning(
+                        "IQMS %s returned HTTP %s on attempt %d/%d - retrying in %ss...",
+                        label, http_err.code, attempt + 1, max_retries + 1, delay,
+                    )
+                    time.sleep(delay)
+                    continue
                 logger.error("IQMS %s HTTP error %s: %s", label, http_err.code, http_err)
-                break
+                return []
+            except (urllib.error.URLError, TimeoutError, socket.timeout) as net_err:
+                if attempt < max_retries:
+                    delay = min(2 ** attempt, 5)
+                    logger.warning(
+                        "IQMS %s network error on attempt %d/%d: %s - retrying in %ss...",
+                        label, attempt + 1, max_retries + 1, net_err, delay,
+                    )
+                    time.sleep(delay)
+                    continue
+                logger.error("IQMS %s network error, retries exhausted: %s", label, net_err)
+                return []
             except Exception as exc:
-                logger.error("Error fetching IQMS %s: %s", label, exc)
-                break
+                logger.error("Unexpected error fetching IQMS %s: %s", label, exc)
+                return []
 
         return []
+
+    def get_customers_lite(self) -> List[Dict[str, Any]]:
+        """Fetches the complete customer list from IQMS /CRM/CustomerCentral/CustomersLite."""
+        url = f"{self.base_url}/CRM/CustomerCentral/CustomersLite"
+
+        def unwrap(data: Any) -> List[Dict[str, Any]]:
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict):
+                return data.get("items") or data.get("data") or data.get("Customers") or [data]
+            return []
+
+        return self._fetch_json_list(url, "CustomersLite", unwrap=unwrap)
+
+    def get_aka_inventory_for_customer(self, ar_custo_id: int) -> List[Dict[str, Any]]:
+        """
+        Fetches AKA (customer alias) inventory records for a customer from
+        IQMS /Manufacturing/Inventory/AKAInventoryForCustomer/{ArCustoId}.
+        """
+        url = f"{self.base_url}/Manufacturing/Inventory/AKAInventoryForCustomer/{ar_custo_id}"
+        return self._fetch_json_list(url, "AKAInventoryForCustomer")
 
     def get_sales_orders(self) -> List[Dict[str, Any]]:
         """
@@ -283,12 +277,12 @@ class IQMSClient:
         filter client-side (see SalesOrderService.get_sales_orders).
         """
         url = f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrder"
-        return self._get_json_list(url, "SalesOrder")
+        return self._fetch_json_list(url, "SalesOrder")
 
     def get_sales_order_details(self, sales_order_id: int) -> List[Dict[str, Any]]:
         """Fetches sales order detail (line item) records for one sales order - filters correctly server-side."""
         url = f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrderDetails?salesOrderId={sales_order_id}"
-        return self._get_json_list(url, "SalesOrderDetails")
+        return self._fetch_json_list(url, "SalesOrderDetails")
 
     def get_sales_order_releases(self, sales_order_detail_id: int) -> List[Dict[str, Any]]:
         """Fetches release/shipment schedule records for one sales order detail line - filters correctly server-side."""
@@ -296,4 +290,4 @@ class IQMSClient:
             f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrderReleases"
             f"?salesOrderDetailId={sales_order_detail_id}"
         )
-        return self._get_json_list(url, "SalesOrderReleases")
+        return self._fetch_json_list(url, "SalesOrderReleases")

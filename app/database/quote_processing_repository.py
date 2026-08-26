@@ -124,6 +124,38 @@ class QuoteProcessingRepository:
                 ),
             )
 
+    def record_exception(
+        self,
+        processing_id: UUID,
+        agent_name: str,
+        tool_name: str,
+        exception_code: str,
+        exception_message: str,
+        line_item_id: UUID | None = None,
+        retry_attempt: int = 0,
+        max_retry_count: int = 0,
+        is_retryable: bool = False,
+        resolved: bool = False,
+        resolved_by: str | None = None,
+        resolved_time: datetime | None = None,
+    ) -> UUID:
+        """General-purpose exception_logs write, callable with arbitrary batch/agent/rule context."""
+        exception_id, now = uuid4(), datetime.now(timezone.utc)
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                """INSERT INTO exception_logs (
+                   exception_id, line_item_id, processing_id, agent_name, tool_name,
+                   exception_code, exception_message, retry_attempt, max_retry_count,
+                   is_retryable, resolved, resolved_by, resolved_time, created_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (
+                    exception_id, line_item_id, processing_id, agent_name, tool_name,
+                    exception_code, exception_message, retry_attempt, max_retry_count,
+                    is_retryable, resolved, resolved_by, resolved_time, now,
+                ),
+            )
+        return exception_id
+
     def mark_processing_failed(self, processing_id: UUID, reason: str) -> None:
         with self.connection.connect() as db, db.cursor() as cursor:
             cursor.execute(
