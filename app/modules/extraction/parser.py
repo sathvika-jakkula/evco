@@ -69,7 +69,7 @@ class QuoteExtractionResponse(BaseModel):
     exception_reason: Optional[str] = Field(default=None, description="Description of the exception if is_exception is True")
     exception_codes: List[str] = Field(
         default_factory=list,
-        description="Rule codes that triggered the exception (e.g. ['EX-001', 'EX-003']), per the EVCO Quote Validation Rules & Requirements spec's Exception Rules. Empty when is_exception is False.",
+        description="Rule codes that triggered the exception (e.g. ['EX-001', 'EX-002']), per the EVCO Quote Validation Rules & Requirements spec's Exception Rules. Empty when is_exception is False.",
     )
 
 
@@ -681,8 +681,8 @@ class ExceptionCode:
     # From the EVCO Quote Validation Rules & Requirements spec's Exception
     # Rules section only - no Business Requirements (BRM) codes included.
     EX_001 = "EX-001"    # Exception Rules - quote is not active
-    EX_002 = "EX-002"    # Exception Rules - required quote header information is missing
-    EX_003 = "EX-003"    # Exception Rules - required column header information is missing
+    EX_002 = "EX-002"    # Exception Rules - required quote information is missing (header or column)
+   # EX_003 = "EX-003"    # Exception Rules - required column header information is missing (merged into EX-002)
 
     # Extractor-internal codes - not part of the SOW's rule numbering, used
     # for failure modes the spec doesn't assign a business rule code to.
@@ -696,13 +696,10 @@ EXCEPTION_CODE_DESCRIPTIONS = {
         "Sales Orders (Exception Rules)"
     ),
     ExceptionCode.EX_002: (
-        "Required quote header is missing: quote number, quote type, "
-        "effective date, or customer name (Exception Rules)"
-    ),
-    ExceptionCode.EX_003: (
-        "Required column header information is missing: Mold, EVCO part "
-        "number, manufacturing/BOM number, customer part number, "
-        "Description, quantity, MOQ, or price - stops automatic "
+        "Required quote information is missing: quote number, quote type, "
+        "effective date, customer name, or a required column header (Mold, "
+        "EVCO part number, manufacturing/BOM number, customer part number, "
+        "Description, quantity, MOQ, or price) - stops automatic "
         "processing (Exception Rules)"
     ),
     ExceptionCode.IMAGE_ONLY_TABLE: "Part Pricing table is image-based, not machine-readable text (extractor-internal, not an SOW rule code)",
@@ -717,13 +714,14 @@ EXCEPTION_CODE_DESCRIPTIONS = {
 # Rules section - no BRM codes, only EX codes are emitted:
 #   EX-001  - quote is not active; must not be used to update AKA pricing
 #             or Sales Orders.
-#   EX-002  - required quote header is missing: quote number, quote type,
-#             effective date, or customer name.
-#   EX-003  - required column header information is missing: Mold, EVCO
+#   EX-002  - any required quote information is missing, including both
+#             the header (quote number, quote type, effective date,
+#             customer name) and required column headers (Mold, EVCO
 #             part number, manufacturing/BOM number, customer part
 #             number, Description, quantity, MOQ, or price - all
 #             independently required, not an either/or between EVCO Part
-#             No. and Manufacturing/BOM No.
+#             No. and Manufacturing/BOM No.). There is no separate EX-003
+#             code - column-header failures are reported as EX-002 too.
 # If any of these fail, the entire quote must be excluded from automated
 # processing and routed for manual review - not partially processed.
 # ---------------------------------------------------------------------------
@@ -761,13 +759,12 @@ def validate_required_fields(result):
         Sales Orders.
 
     EX-002:
-        Required quote header is missing: quote number, quote type,
-        effective date, or customer name.
-
-    EX-003:
-        Required column header information is missing: Mold, EVCO part
-        number, manufacturing/BOM number, customer part number,
-        Description, quantity, MOQ, or price.
+        Any required quote information is missing, including:
+        - Required quote header (quote number, quote type, effective
+          date, or customer name)
+        - Required column header (Mold, EVCO part number,
+          manufacturing/BOM number, customer part number, Description,
+          quantity, MOQ, or price)
 
     If any validation fails, the entire quote is excluded from
     automated processing and routed for manual review.
@@ -823,13 +820,13 @@ def validate_required_fields(result):
         )
 
     # ---------------------------------------------------------------
-    # EX-003 - required column header information
+    # EX-002 - required column header information
     # ---------------------------------------------------------------
     parts = result.get("parts") or []
 
     if not parts:
         fail(
-            ExceptionCode.EX_003,
+            ExceptionCode.EX_002,
             "no parts could be extracted from the Part Pricing table.",
         )
         return failures
@@ -838,13 +835,13 @@ def validate_required_fields(result):
     for field, label in REQUIRED_LINE_FIELDS.items():
         if all(not _has_required_value(p.get(field)) for p in parts):
             fail(
-                ExceptionCode.EX_003,
+                ExceptionCode.EX_002,
                 f"required column '{label}' is missing from this "
                 f"document's Part Pricing table.",
             )
 
     # ---------------------------------------------------------------
-    # EX-003 - MOQ and Price
+    # EX-002 - MOQ and Price
     # ---------------------------------------------------------------
     all_tiers = [
         tier
@@ -854,21 +851,21 @@ def validate_required_fields(result):
 
     if not all_tiers:
         fail(
-            ExceptionCode.EX_003,
+            ExceptionCode.EX_002,
             "no MOQ/pricing data could be extracted from the "
             "Part Pricing table.",
         )
     else:
         if all(not _has_required_value(t.get("moq")) for t in all_tiers):
             fail(
-                ExceptionCode.EX_003,
+                ExceptionCode.EX_002,
                 "required column 'MOQ' is missing from this "
                 "document's Part Pricing table.",
             )
 
         if all(not _has_required_value(t.get("price")) for t in all_tiers):
             fail(
-                ExceptionCode.EX_003,
+                ExceptionCode.EX_002,
                 "required column 'Price' is missing from this "
                 "document's Part Pricing table.",
             )
@@ -979,7 +976,7 @@ def extract_pdf_data(pdf_path):
     # loosely-formatted header text; overlay them onto the LLM's result.
     result.update(header_fields)
 
-    # Enforce EX-001/EX-002/EX-003 exception rules. A failure here excludes the ENTIRE quote from
+    # Enforce EX-001/EX-002 exception rules. A failure here excludes the ENTIRE quote from
     # automated processing (per the spec - not a partial/best-effort
     # result), citing the specific rule code(s) that failed.
     validation_failures = validate_required_fields(result)
