@@ -581,6 +581,46 @@ def build_prompt(annotated_text, table_markdown, detected_notes, master_header=N
     return "\n".join(parts)
 
 
+_PLACEHOLDER_HEADER_CELL_RE = re.compile(r"^Col\d+$")
+_GARBLED_HEADER_PLACEHOLDER_RATIO = 0.15
+
+
+def _table_header_is_garbled(markdown_table: str) -> bool:
+    """
+    PyMuPDF names a column 'ColN' when a header cell's text wraps across
+    multiple physical lines (e.g. a narrow "EVCO PN" column prints "EVCO" on
+    one line and "PN" on the next) and its table-grid detector mistakes the
+    wrapped header fragments for extra data rows instead of merging them
+    back into one header cell. The column's own data values still come
+    through correctly on every real row - only its header label is lost -
+    so trusting this table's header (for column-presence checks, or as
+    "ground truth" shown to the LLM) would incorrectly suggest a real,
+    populated column is missing.
+
+    A header only counts as "garbled" once a meaningful FRACTION of its
+    cells are placeholders, not just any single one: a wide, dense table
+    (e.g. 18 columns) can have one unrelated trailing "ColN" - a stray
+    parsing artifact from something at the table's edge - while every
+    required column (Mold, EVCO PN, Customer PN, etc.) is still cleanly
+    labeled. Withholding a whole otherwise-good table over one irrelevant
+    column throws away real, correctly-aligned data and forces the LLM
+    onto messier raw reading-order text instead, which - on a large table -
+    tends to produce WORSE extractions than just keeping the table (this
+    was observed directly: an 18-column table with only "Col18" garbled
+    still had "RA Part #" perfectly labeled, but withholding it caused the
+    LLM to lose track of that column in the reading-order text). Several
+    placeholder cells clustered together, in contrast, is the real failure
+    mode this guards against - wrapped header text torn out of the row
+    entirely, corrupting the columns that data actually depends on.
+    """
+    header_line = markdown_table.split("\n", 1)[0]
+    cells = [c.strip() for c in header_line.split("|") if c.strip()]
+    if not cells:
+        return False
+    placeholder_count = sum(1 for c in cells if _PLACEHOLDER_HEADER_CELL_RE.match(c))
+    return placeholder_count > 0 and (placeholder_count / len(cells)) >= _GARBLED_HEADER_PLACEHOLDER_RATIO
+
+
 def find_master_table_header(doc, max_pages_to_scan=8):
     """
     Some multi-page price lists print their column header row only once,
@@ -596,7 +636,7 @@ def find_master_table_header(doc, max_pages_to_scan=8):
                 md = t.to_markdown()
             except Exception:
                 continue
-            if not md:
+            if not md or _table_header_is_garbled(md):
                 continue
             header_line = md.split("\n", 1)[0]
             hl = header_line.lower()
@@ -692,18 +732,49 @@ def _collect_page_data(page):
     annotated_text, notes = build_annotated_page_text(page, annotations)
     notes = notes + get_cell_overrides(page, annotations)
     markdowns = []
+    had_garbled_table = False
     for t in page.find_tables().tables:
         try:
             md = t.to_markdown()
-            if md:
-                markdowns.append(md)
+            if not md:
+                continue
+            if _table_header_is_garbled(md):
+                had_garbled_table = True
+                continue
+            markdowns.append(md)
         except Exception:
             pass
 
+    if had_garbled_table:
+        # This page's table grid was detected, but its header text wraps
+        # across multiple physical lines and confused the table parser -
+        # some header cells came back as meaningless "ColN" placeholders
+        # instead of their real label (see _table_header_is_garbled). The
+        # data ROWS in that markdown are still correctly column-aligned,
+        # but showing the LLM a header row with fabricated placeholder
+        # names would make it wrongly conclude a real, populated column is
+        # missing (exactly the EX-002 failure this guards against) - so
+        # that table's markdown is withheld entirely, forcing the model to
+        # read column identity from the reading-order text below instead,
+        # where the same header words appear correctly (if wrapped).
+        notes.append(
+            "This page's Part Pricing table header could not be reliably "
+            "parsed into column names by the PDF's table-grid detector "
+            "(its header text wraps across multiple lines, e.g. 'EVCO' "
+            "and 'PN' printed on separate lines for one 'EVCO PN' "
+            "column) - its Structured Table Rendering has been withheld "
+            "for this reason. Determine each column's identity from the "
+            "reading-order text's header block above the first data row "
+            "instead, reassembling consecutive short header-fragment "
+            "lines in left-to-right column order; do NOT conclude a "
+            "required column is missing just because no Structured Table "
+            "Rendering entry names it here."
+        )
+
     if not markdowns and plain_text.strip():
         annotated_text = _reorder_orphaned_tier_lines(annotated_text)
-        # No table grid was detected on this page at all. This is the
-        # exact shape of the "orphaned last row" failure mode: a page
+        # No (usable) table grid was detected on this page at all. This is
+        # the exact shape of the "orphaned last row" failure mode: a page
         # break can leave the table's final row sitting alone on its own
         # page, with no other rows nearby for the PDF's table-grid
         # detector to recognize as a table. Flag it explicitly so the
@@ -711,12 +782,13 @@ def _collect_page_data(page):
         # has no accompanying Markdown table entry - see the schema
         # instruction's "orphaned last row" rule for how to handle it.
         notes.append(
-            "No table grid was detected by the PDF parser on this page - "
-            "if the reading-order text above contains a line matching the "
-            "master table header's column pattern (see the 'orphaned last "
-            "row' rule), extract it as a genuine part row using the "
-            "master header's column order; do not drop it just because "
-            "this page has no Structured Table Rendering entry of its own."
+            "No usable table grid was detected by the PDF parser on this "
+            "page - if the reading-order text above contains a line "
+            "matching the master table header's column pattern (see the "
+            "'orphaned last row' rule), extract it as a genuine part row "
+            "using the master header's column order; do not drop it just "
+            "because this page has no Structured Table Rendering entry of "
+            "its own."
         )
 
     return plain_text, annotated_text, markdowns, notes
@@ -796,12 +868,116 @@ REQUIRED_LINE_FIELDS = {
     "box_quantity": "Box Quantity (Parts/Box)",
 }
 
+# Column-name aliases (config.py) used to check for each required column's
+# presence directly in a detected table header row - no LLM call needed.
+REQUIRED_COLUMN_ALIASES = {
+    "mold_number": settings.EXTRACTION_ALIAS_MOLD,
+    "evco_part_number": settings.EXTRACTION_ALIAS_EVCO_PN,
+    "manufacturing_bom_number": settings.EXTRACTION_ALIAS_EVCO_MFG,
+    "customer_part_number": settings.EXTRACTION_ALIAS_CUSTOMER_PN,
+    "part_description": settings.EXTRACTION_ALIAS_PART_DESC,
+    "box_quantity": settings.EXTRACTION_ALIAS_BOX_QTY,
+    "moq": settings.EXTRACTION_ALIAS_MOQ,
+    "price": settings.EXTRACTION_ALIAS_PRICING,
+}
+
+REQUIRED_COLUMN_LABELS = {**REQUIRED_LINE_FIELDS, "moq": "MOQ", "price": "Price"}
+
 
 def _has_required_value(value: Any) -> bool:
     """Return True when a required extracted value is actually present."""
     if value is None:
         return False
     return bool(str(value).strip())
+
+
+def _normalize_header_cell(text: str) -> str:
+    """
+    Collapse a markdown table header cell down to a whitespace-free,
+    lowercase canonical form. A header cell that wraps onto multiple
+    physical lines but was still correctly kept as ONE cell (e.g.
+    "EVCO<br>Part #" or "Parts/<br>Box") comes back from to_markdown() with
+    a literal "<br>" joining the wrapped fragments - contrast with
+    _table_header_is_garbled(), where the wrap defeats the parser entirely
+    and the cell is lost to a "ColN" placeholder. Here the real text is
+    present, but naively turning "<br>" into a single space is unreliable:
+    whether the true wrap point had a space (e.g. "EVCO Part #") or not
+    (e.g. "Parts/Box") varies per document, so a fixed choice breaks one
+    case or the other. Stripping ALL whitespace instead sidesteps the
+    guess entirely - both sides of a comparison collapse to the same form
+    regardless of where the PDF happened to wrap.
+    """
+    return re.sub(r"\s+", "", text.replace("<br>", " ")).lower()
+
+
+def _master_header_missing_columns(master_header: str) -> List[str]:
+    """
+    Compare a detected Markdown table header line's cell text against the
+    configured column-name aliases. Returns the label of every required
+    column whose aliases cannot be found in any header cell.
+    """
+    cells_norm = [_normalize_header_cell(c) for c in master_header.split("|") if c.strip()]
+    missing = []
+    for field, alias_setting in REQUIRED_COLUMN_ALIASES.items():
+        aliases = settings.parse_aliases(alias_setting)
+        if not aliases:
+            continue
+        if not any(_normalize_header_cell(alias) in cell for alias in aliases for cell in cells_norm):
+            missing.append(REQUIRED_COLUMN_LABELS[field])
+    return missing
+
+
+def validate_before_extraction(header_fields: Dict[str, Any], master_header: Optional[str]):
+    """
+    Fail-fast pass run BEFORE the LLM table-data extraction. Both checks
+    here are fully deterministic - no LLM call involved - so a document
+    that's going to fail EX-001/EX-002 anyway never pays for a full
+    parts/pricing-tier extraction:
+      - EX-001 / EX-002 header fields: quote_number/type/price_effective_date/
+        customer_name are already regex-extracted by extract_header_fields()
+        before this runs.
+      - EX-002 required column headers: only checked when a table grid WAS
+        detected (master_header is not None) - the absence of a detected
+        header doesn't prove a column is missing, so that case is left to
+        the existing post-extraction validate_required_fields() instead of
+        risking a false fail-fast.
+    Returns the same {"codes": [...], "message": ...} failure list shape as
+    validate_required_fields().
+    """
+    failures = []
+
+    def fail(code, message):
+        failures.append({"codes": [code], "message": f"{code}: {message}"})
+
+    quote_type = str(header_fields.get("type") or "").strip()
+    if quote_type and quote_type.lower() != "active":
+        fail(
+            ExceptionCode.EX_001,
+            f"quote Type is '{quote_type}', not Active - inactive quotes "
+            "must not be used to update AKA pricing or Sales Orders.",
+        )
+
+    missing_header = [
+        label
+        for field, label in REQUIRED_HEADER_FIELDS.items()
+        if not _has_required_value(header_fields.get(field))
+    ]
+    if missing_header:
+        fail(
+            ExceptionCode.EX_002,
+            f"missing required quote header field(s): {', '.join(missing_header)}.",
+        )
+
+    if master_header:
+        missing_columns = _master_header_missing_columns(master_header)
+        if missing_columns:
+            fail(
+                ExceptionCode.EX_002,
+                f"required column(s) missing from this document's Part "
+                f"Pricing table header: {', '.join(missing_columns)}.",
+            )
+
+    return failures
 
 
 def validate_required_fields(result):
@@ -948,6 +1124,28 @@ def extract_pdf_data(pdf_path):
 
     full_plain_text = "\n".join(p[0] for p in per_page)
     header_fields = extract_header_fields(full_plain_text)
+
+    # Fail fast, before spending an LLM call on the (potentially multi-page,
+    # multi-chunk) parts/pricing-tier extraction: both checks here are
+    # deterministic (regex header fields + detected table header aliases),
+    # so a document that's going to be excluded per EX-001/EX-002 anyway
+    # never pays for the full table-data extraction.
+    precheck_failures = validate_before_extraction(header_fields, master_header)
+    if precheck_failures:
+        exception_codes = sorted({c for f in precheck_failures for c in f["codes"]})
+        exception_reason = " | ".join(f["message"] for f in precheck_failures)
+        print(f"  -> Pre-extraction validation failed for {os.path.basename(pdf_path)}: {exception_codes}")
+        return {
+            "status": "exception",
+            "exception_codes": exception_codes,
+            "exception_reason": exception_reason,
+            "quote_number": header_fields.get("quote_number"),
+            "type": header_fields.get("type"),
+            "issue_date": header_fields.get("issue_date"),
+            "price_effective_date": header_fields.get("price_effective_date"),
+            "customer_name": header_fields.get("customer_name"),
+            "parts": [],
+        }
 
     all_parts = []
     header_result = None
