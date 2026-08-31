@@ -460,6 +460,22 @@ cells that repeat across several printed rows):
   earlier row with a value for that column (e.g. this is the FIRST row of
   the table and its Mold cell is genuinely blank), the cell is simply
   empty - leave it as an empty string "".
+- EXCEPTION to the fill-down rule above, for pages where NO Markdown table
+  was detected at all (reading-order text only, no table grid in the
+  original PDF): on these pages a bare tier line - just a quantity and a
+  price, with no other row data - can appear ABOVE the full data row it
+  actually belongs to, not below it. This happens because the extra
+  price-tier line for a two-tier row is sometimes positioned, in the PDF's
+  own reading order, closer to the END of the PRECEDING row than to the
+  START of its own row. Do not assume a bare tier line always belongs to
+  the nearest row above it in this case. Telltale sign: if attaching a bare
+  tier line to the row above it would leave the very next full data row
+  with ZERO pricing tiers (its own line ends with no quantity/price at
+  all), the bare tier line almost certainly belongs to that NEXT row
+  instead - reassign it down, not up. Every part row must end up with at
+  least one pricing tier; a row left with an empty pricing_tiers list while
+  an unclaimed bare tier line sits immediately above it in the text is a
+  strong signal of this exact misattribution - fix it before finalizing.
 - CRITICAL - never let a blank cell shift the row: a blank/empty cell
   must stay in its own column and be extracted as "". It must NEVER cause
   every value after it to slide left into the wrong field. Column
@@ -632,6 +648,43 @@ def call_llm(prompt, retries=2):
                 raise last_error
 
 
+_BARE_TIER_LINE_RE = re.compile(r"^[\d,]+\s+\$\s?[\d,]+\.\d{1,2}$")
+_FULL_ROW_START_RE = re.compile(r"^\d.*\|")
+
+
+def _reorder_orphaned_tier_lines(text: str) -> str:
+    """
+    On pages with no detected table grid, a multi-tier part's earlier price
+    tier(s) can appear, in the PDF's own reading order, ABOVE the full data
+    row they belong to instead of below it - an artifact of how some quote
+    templates vertically merge a part's identity cells (Mold/EVCO PN/
+    Description) across its tier rows, anchoring that merged text near the
+    bottom of the merged block instead of the top. A "bare" line - just a
+    quantity and a price, nothing else - is reassigned to trail the next
+    full data row rather than staying attached to whatever line precedes it,
+    so it lands next to the row it actually belongs to.
+    """
+    lines = text.split("\n")
+    result: list[str] = []
+    pending_bare: list[str] = []
+    for line in lines:
+        if _BARE_TIER_LINE_RE.match(line.strip()):
+            pending_bare.append(line)
+            continue
+        if pending_bare and _FULL_ROW_START_RE.match(line.strip()):
+            result.append(line)
+            result.extend(pending_bare)
+            pending_bare = []
+            continue
+        if pending_bare:
+            result.extend(pending_bare)
+            pending_bare = []
+        result.append(line)
+    if pending_bare:
+        result.extend(pending_bare)
+    return "\n".join(result)
+
+
 def _collect_page_data(page):
     """Extract plain text, annotated text, table markdown, and notes for one page."""
     plain_text = page.get_text("text")
@@ -648,6 +701,7 @@ def _collect_page_data(page):
             pass
 
     if not markdowns and plain_text.strip():
+        annotated_text = _reorder_orphaned_tier_lines(annotated_text)
         # No table grid was detected on this page at all. This is the
         # exact shape of the "orphaned last row" failure mode: a page
         # break can leave the table's final row sitting alone on its own
