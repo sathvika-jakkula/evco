@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 # --- Configuration - edit these -----------------------------------------
-FOLDER_PATH = r"C:\Data\Incoming"                    # folder to scan for PDFs
+FOLDER_PATH = r"C:\Data\testing"                     # folder to scan for PDFs
 RECURSIVE = False                                  # also scan subfolders
 OUTPUT_CSV_PATH = r"C:\Data\extraction_report.csv"  # summary report
 SAVE_EXTRACTED_JSON = True                          # save each file's full extracted JSON

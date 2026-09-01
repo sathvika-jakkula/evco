@@ -746,6 +746,118 @@ def _count_matched_required_columns(header_line: str) -> int:
     return count
 
 
+def _spreadsheet_column_labels(n: int) -> List[str]:
+    """['A', 'B', ... 'Z', 'AA', 'AB', ...] - the first `n` spreadsheet
+    column labels, in order."""
+    labels = []
+    for i in range(n):
+        s, x = "", i
+        while True:
+            s = chr(ord("A") + x % 26) + s
+            x = x // 26 - 1
+            if x < 0:
+                break
+        labels.append(s)
+    return labels
+
+
+def _reconstruct_header_from_column_letters(doc, max_pages_to_scan=8) -> Optional[str]:
+    """
+    Several EVCO 'master price list' templates print a spreadsheet-style
+    column-letter guide row (A, B, C, ... Z, AA, AB ...) directly above the
+    real column-label row - and those same templates tend to be the widest
+    ones (25+ columns, header labels wrapped across 2-3 lines), which is
+    exactly the shape that defeats PyMuPDF's table-grid parser and leaves
+    the header full of meaningless 'ColN' placeholders (see
+    _table_header_is_garbled / find_master_table_header). A ColN-riddled
+    master header makes the LLM unable to map real, populated columns (e.g.
+    a clearly-printed "EVCO #" column ends up hidden between "Col17" and
+    "Col19"), which then surfaces downstream as a bogus "required column
+    blank on most parts" partial-extraction failure.
+
+    When the letter guide row IS present it nails down the true column
+    count and each column's exact x-position, so the real header can be
+    rebuilt straight from text positions instead of the broken table
+    parse: every label line just below the guide row is snapped to its
+    nearest letter-column x-anchor, and lines that snapped to the same
+    column (one label that wrapped onto several physical lines) are
+    stitched back together in visual order. Returns a single Markdown
+    header line, or None when no usable letter guide row is found (in
+    which case the caller falls back to the table-parse header as before).
+    """
+    for page_idx in range(min(len(doc), max_pages_to_scan)):
+        page = doc[page_idx]
+        lines = []
+        for block in page.get_text("dict")["blocks"]:
+            if block.get("type") != 0:
+                continue
+            for ln in block["lines"]:
+                text = "".join(s["text"] for s in ln["spans"]).strip()
+                if not text:
+                    continue
+                x0, y0 = ln["bbox"][0], ln["bbox"][1]
+                lines.append((y0, x0, text))
+        if not lines:
+            continue
+
+        # Find a row (lines sharing a y band) that is a run of consecutive
+        # spreadsheet column letters starting at 'A' - the guide row.
+        by_row: Dict[int, list] = {}
+        for y0, x0, text in lines:
+            by_row.setdefault(round(y0 / 3.0), []).append((x0, y0, text))
+
+        anchors = None
+        letters_bottom_y = None
+        for _, row in sorted(by_row.items()):
+            letter_cells = sorted(
+                (c for c in row if re.fullmatch(r"[A-Z]{1,2}", c[2])),
+                key=lambda c: c[0],
+            )
+            if len(letter_cells) < 6:
+                continue
+            if [c[2] for c in letter_cells] != _spreadsheet_column_labels(len(letter_cells)):
+                continue
+            anchors = [c[0] for c in letter_cells]
+            letters_bottom_y = max(c[1] for c in letter_cells)
+            break
+
+        if not anchors or letters_bottom_y is None:
+            continue
+
+        # Collect label lines just below the guide row, stopping at the
+        # first sizable vertical gap (that gap is the start of the data rows).
+        label_lines = []
+        prev_y = letters_bottom_y
+        for y0, x0, text in sorted(lines, key=lambda c: c[0]):
+            if y0 <= letters_bottom_y + 1:
+                continue
+            if y0 - prev_y > 25:
+                break
+            label_lines.append((y0, x0, text))
+            prev_y = y0
+        if not label_lines:
+            continue
+
+        columns: list = [[] for _ in anchors]
+        for y0, x0, text in label_lines:  # label_lines is already y-sorted
+            idx = min(range(len(anchors)), key=lambda i: abs(anchors[i] - x0))
+            columns[idx].append((x0, text))
+
+        cells = []
+        for frags in columns:
+            # Order a column's wrapped label fragments left-to-right; a
+            # stable sort keeps top-to-bottom (y) order for fragments that
+            # share an x. These templates typeset wrapped header lines with
+            # non-monotonic y values, so x is the more reliable key.
+            frags.sort(key=lambda f: round(f[0]))
+            cells.append(" ".join(t for _, t in frags).strip())
+        if sum(1 for c in cells if c) < len(cells) * 0.6:
+            continue
+        return "|" + "|".join(cells) + "|"
+
+    return None
+
+
 def find_master_table_header(doc, max_pages_to_scan=8):
     """
     Some multi-page price lists print their column header row only once,
@@ -785,6 +897,20 @@ def find_master_table_header(doc, max_pages_to_scan=8):
             score = _count_matched_required_columns(header_line)
             if score > best_score:
                 best_score, best_header = score, header_line
+
+    # When a spreadsheet column-letter guide row is present, a header
+    # rebuilt from raw text positions is more trustworthy than the
+    # table-grid parse (which, on these wide templates, tends to be the
+    # ColN-riddled one). Use it only when it identifies at least as many
+    # required columns as the best table-parse header did - so a
+    # reconstruction that accidentally drops a column can never replace a
+    # more complete table header.
+    reconstructed = _reconstruct_header_from_column_letters(doc, max_pages_to_scan)
+    if reconstructed:
+        recon_score = _count_matched_required_columns(reconstructed)
+        if recon_score >= best_score and recon_score >= 3:
+            return reconstructed
+
     return best_header if best_score >= 3 else None
 
 
