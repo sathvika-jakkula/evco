@@ -103,7 +103,7 @@ class Settings:
 
     EXTRACTION_ALIAS_MOLD: str = os.getenv("EXTRACTION_ALIAS_MOLD", "Mold, Mold#, Mold Number")
     EXTRACTION_ALIAS_EVCO_PN: str = os.getenv(
-        "EXTRACTION_ALIAS_EVCO_PN", "EVCO PN, EVCO Part Number, EVCO Part#, EVCO Part #, EVCO #"
+        "EXTRACTION_ALIAS_EVCO_PN", "EVCO PN, EVCO Part Number, EVCO Part#, EVCO Part #, EVCO #, EVCO MX, EVCO US"
     )
     EXTRACTION_ALIAS_EVCO_MFG: str = os.getenv(
         "EXTRACTION_ALIAS_EVCO_MFG", "EVCO MFG (BOM), EVCO MFG #, EVCO MFG, EVCO BOM, BOM #, BOM"
@@ -115,7 +115,8 @@ class Settings:
     EXTRACTION_ALIAS_PART_DESC: str = os.getenv("EXTRACTION_ALIAS_PART_DESC", "Part Description, Description, Part Desc")
     EXTRACTION_ALIAS_BOX_QTY: str = os.getenv("EXTRACTION_ALIAS_BOX_QTY", "Box Qty, Box Quantity, Pkg Qty, Parts/Box")
     EXTRACTION_ALIAS_MOQ: str = os.getenv(
-        "EXTRACTION_ALIAS_MOQ", "MOQ, Minimum Order Quantity, Min Order Qty, MRQ, Monthly MOQ, Release Qty, Release"
+        "EXTRACTION_ALIAS_MOQ",
+        "MOQ, Minimum Order Quantity, Min Order Qty, MRQ, Monthly MOQ, Release Qty, Release, Min. Rel. Qty., Min Rel Qty",
     )
     EXTRACTION_ALIAS_PRICING: str = os.getenv("EXTRACTION_ALIAS_PRICING", "Pricing, Price, Unit Price")
 

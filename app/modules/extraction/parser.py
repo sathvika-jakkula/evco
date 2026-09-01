@@ -327,7 +327,13 @@ def find_effective_date_override(full_text):
 def extract_header_fields(full_text):
     fields = {}
 
-    m = re.search(r"Quote#:?\s*([\d]{5,6})\s*-\s*(\d{3})", full_text)
+    # "Quote" and "#" can have a space between them ("Quote #:" vs
+    # "Quote#:"), and the separator between the two number groups isn't
+    # always a plain ASCII hyphen - some PDFs render it with an en-dash or
+    # an embedded-font glyph that PyMuPDF can't map to a real character at
+    # all (comes through as U+FFFD). \W matches any of those non-word
+    # separators without over-matching into the digits on either side.
+    m = re.search(r"Quote\s*#:?\s*([\d]{5,6})\s*\W\s*(\d{3})", full_text)
     if m:
         fields["quote_number"] = f"{m.group(1)}-{m.group(2)}"
 
@@ -621,14 +627,150 @@ def _table_header_is_garbled(markdown_table: str) -> bool:
     return placeholder_count > 0 and (placeholder_count / len(cells)) >= _GARBLED_HEADER_PLACEHOLDER_RATIO
 
 
+def _degroup_repeated_markdown_columns(markdown_table: str) -> Optional[str]:
+    """
+    Repair a different PyMuPDF corruption pattern from the one
+    _table_header_is_garbled guards against: instead of a wrapped header
+    cell's text being lost entirely into phantom rows, the whole table
+    gets split into a fixed-size repeating group per real column (seen
+    directly: a 3-line-tall header row turned an 8-column table into 24
+    columns, with every real value tripled in place). The real header
+    label ends up sitting among ColN placeholders within its group, and
+    every data row's group holds N identical copies of that column's one
+    true value - discarding this table as "too garbled" would throw away
+    data that's still perfectly, correctly aligned; it just needs its
+    groups collapsed back to one cell each.
+
+    This is detected, not assumed: for a candidate group size (any exact
+    divisor of the column count, checked from 2 to 4), the header's every
+    group must contain at most one non-placeholder cell, AND every data
+    row's every group must hold cells that are all identical. Only when
+    both hold for the whole table is it collapsed - a table that doesn't
+    match this exact repeating-group shape is left untouched (returns
+    None) rather than risk mangling a real, differently-corrupted table.
+
+    One further wrinkle, also observed directly: a row whose real FIRST
+    column is genuinely blank can come back short by a whole group
+    instead of holding an empty group - e.g. 21 cells instead of 24, with
+    the group for the blank leading column dropped entirely rather than
+    represented as ["", "", ""]. Such a row is left-padded back to the
+    full width with blank groups before the checks above run, since a
+    blank leading cell (never a blank trailing one - every real row must
+    end in a price) is the far more plausible place for cells to have
+    been dropped outright.
+    """
+    lines = [ln for ln in markdown_table.split("\n") if ln.strip()]
+    if len(lines) < 2:
+        return None
+
+    rows = []
+    for line in lines:
+        stripped = line.strip().strip("|")
+        if stripped and set(stripped.replace("|", "").replace(" ", "")) <= set("-:"):
+            continue  # markdown separator row (---|---|...)
+        rows.append([c.strip() for c in line.strip().strip("|").split("|")])
+    if len(rows) < 2:
+        return None
+
+    header = rows[0]
+    total_cols = len(header)
+    if total_cols < 6:
+        return None
+
+    for group_size in range(2, 5):
+        if total_cols % group_size != 0:
+            continue
+        col_count = total_cols // group_size
+        if col_count < 3:
+            continue
+
+        padded_rows = []
+        rows_ok = True
+        for row in rows:
+            deficit = total_cols - len(row)
+            if deficit == 0:
+                padded_rows.append(row)
+            elif deficit > 0 and deficit % group_size == 0:
+                padded_rows.append([""] * deficit + row)
+            else:
+                rows_ok = False
+                break
+        if not rows_ok:
+            continue
+        def group_of(row, g, size=group_size):
+            return row[g * size:(g + 1) * size]
+
+        padded_header = padded_rows[0]
+        header_ok = all(
+            len({c for c in group_of(padded_header, g) if not _PLACEHOLDER_HEADER_CELL_RE.match(c)}) <= 1
+            for g in range(col_count)
+        )
+        if not header_ok:
+            continue
+
+        data_ok = all(
+            len(set(group_of(row, g))) <= 1
+            for row in padded_rows[1:]
+            for g in range(col_count)
+        )
+        if not data_ok:
+            continue
+
+        new_rows = []
+        for row in padded_rows:
+            new_row = []
+            for g in range(col_count):
+                group = group_of(row, g)
+                non_placeholder = [c for c in group if not _PLACEHOLDER_HEADER_CELL_RE.match(c)]
+                new_row.append(non_placeholder[0] if non_placeholder else group[0])
+            new_rows.append(new_row)
+
+        out_lines = ["|" + "|".join(new_rows[0]) + "|", "|" + "|".join(["---"] * col_count) + "|"]
+        out_lines.extend("|" + "|".join(row) + "|" for row in new_rows[1:])
+        return "\n".join(out_lines)
+
+    return None
+
+
+def _count_matched_required_columns(header_line: str) -> int:
+    """How many distinct required Part Pricing columns this header row's
+    cells can identify via the configured aliases. ColN placeholder cells
+    simply match nothing (contributing 0), rather than disqualifying the
+    header outright - see find_master_table_header() for why this matters."""
+    cells_norm = [_normalize_header_cell(c) for c in header_line.split("|") if c.strip()]
+    count = 0
+    for alias_setting in REQUIRED_COLUMN_ALIASES.values():
+        aliases = settings.parse_aliases(alias_setting)
+        if aliases and any(_normalize_header_cell(a) in cell for a in aliases for cell in cells_norm):
+            count += 1
+    return count
+
+
 def find_master_table_header(doc, max_pages_to_scan=8):
     """
     Some multi-page price lists print their column header row only once,
     on an early page, and never repeat it. Find that header (as a Markdown
     header line) so it can be supplied to every chunk, including chunks
     whose pages never show a header of their own.
+
+    A document can contain several tables on its early pages - the actual
+    Part Pricing table, but also a materials/resin reference list, a terms
+    table, etc. Picking the first header that merely LOOKS clean (no ColN
+    placeholders) is a trap: a short reference table can pass that bar
+    while the real Part Pricing table - wider, and more likely to have a
+    wrapped header cell or two - gets skipped for being "garbled", handing
+    back a header from entirely the wrong table (observed directly: a
+    7-column material/resin reference table with generic column names like
+    "Evco PN"/"MOQ"/"Price" was picked over the actual, partially garbled
+    17-column Part Pricing table on an earlier page). Scoring every
+    candidate by how many required columns its cells actually identify -
+    tolerating placeholder cells rather than being disqualified by them -
+    and keeping the best-scoring one picks the real table even when it's
+    imperfectly parsed, since it still matches far more required columns
+    than an unrelated reference table ever will.
     """
-    keywords = ("part", "evco", "mold", "description", "price", "qty", "cost", "moq", "box")
+    best_header = None
+    best_score = 0
     for page_idx in range(min(len(doc), max_pages_to_scan)):
         page = doc[page_idx]
         for t in page.find_tables().tables:
@@ -636,16 +778,14 @@ def find_master_table_header(doc, max_pages_to_scan=8):
                 md = t.to_markdown()
             except Exception:
                 continue
-            if not md or _table_header_is_garbled(md):
+            if not md:
                 continue
+            md = _degroup_repeated_markdown_columns(md) or md
             header_line = md.split("\n", 1)[0]
-            hl = header_line.lower()
-            hits = sum(1 for k in keywords if k in hl)
-            total_cols = max(header_line.count("|") - 1, 1)
-            col_placeholder_count = hl.count("col")
-            if hits >= 3 and col_placeholder_count < total_cols * 0.6:
-                return header_line
-    return None
+            score = _count_matched_required_columns(header_line)
+            if score > best_score:
+                best_score, best_header = score, header_line
+    return best_header if best_score >= 3 else None
 
 
 def call_llm(prompt, retries=2):
@@ -738,6 +878,7 @@ def _collect_page_data(page):
             md = t.to_markdown()
             if not md:
                 continue
+            md = _degroup_repeated_markdown_columns(md) or md
             if _table_header_is_garbled(md):
                 had_garbled_table = True
                 continue
@@ -910,11 +1051,11 @@ def _normalize_header_cell(text: str) -> str:
     return re.sub(r"\s+", "", text.replace("<br>", " ")).lower()
 
 
-def _master_header_missing_columns(master_header: str) -> List[str]:
+def _master_header_missing_columns(master_header: str) -> List[Tuple[str, str]]:
     """
     Compare a detected Markdown table header line's cell text against the
-    configured column-name aliases. Returns the label of every required
-    column whose aliases cannot be found in any header cell.
+    configured column-name aliases. Returns (field, label) for every
+    required column whose aliases cannot be found in any header cell.
     """
     cells_norm = [_normalize_header_cell(c) for c in master_header.split("|") if c.strip()]
     missing = []
@@ -923,8 +1064,14 @@ def _master_header_missing_columns(master_header: str) -> List[str]:
         if not aliases:
             continue
         if not any(_normalize_header_cell(alias) in cell for alias in aliases for cell in cells_norm):
-            missing.append(REQUIRED_COLUMN_LABELS[field])
+            missing.append((field, REQUIRED_COLUMN_LABELS[field]))
     return missing
+
+
+def _header_has_placeholder_cells(header_line: str) -> bool:
+    """True if any cell in this header row is a PyMuPDF 'ColN' placeholder."""
+    cells = [c.strip() for c in header_line.split("|") if c.strip()]
+    return any(_PLACEHOLDER_HEADER_CELL_RE.match(c) for c in cells)
 
 
 def validate_before_extraction(header_fields: Dict[str, Any], master_header: Optional[str]):
@@ -971,11 +1118,56 @@ def validate_before_extraction(header_fields: Dict[str, Any], master_header: Opt
     if master_header:
         missing_columns = _master_header_missing_columns(master_header)
         if missing_columns:
-            fail(
-                ExceptionCode.EX_002,
-                f"required column(s) missing from this document's Part "
-                f"Pricing table header: {', '.join(missing_columns)}.",
-            )
+            # MOQ/Price are never trusted from the header check alone, even
+            # with a perfectly clean-looking header (no placeholder cells
+            # at all): observed directly on a real document whose table
+            # parsed with 9 fully-labeled columns and simply had no Price
+            # column at all - a silent, traceless loss distinct from every
+            # other corruption pattern here (no ColN to catch it on). A
+            # required Part Pricing table missing MOQ or Price entirely
+            # has never once turned out to be a genuine business case
+            # across this whole corpus - unlike BOM, it's essentially
+            # always a parsing artifact - so both are always deferred to
+            # the post-extraction check instead of being asserted here.
+            missing_columns = [
+                (field, label) for field, label in missing_columns
+                if field not in ("moq", "price")
+            ]
+            if missing_columns and _header_has_placeholder_cells(master_header):
+                # A placeholder cell means the parser lost track of some
+                # column's real label - a "missing" claim about most fields
+                # is then unreliable (the column could be hiding behind
+                # that very placeholder; see find_master_table_header) and
+                # is deferred to the post-extraction check instead, which
+                # judges by the LLM's actual extracted data rather than a
+                # header that's already known to be unreliable here.
+                #
+                # manufacturing_bom_number is exempted from that deferral,
+                # but ONLY when it's the single field this check flagged: a
+                # genuinely absent BOM/MFG# column is by far the most common
+                # reason this fires even alongside unrelated corruption
+                # elsewhere in the header (e.g. one stray trailing column),
+                # and confidently catching that case for free is worth
+                # keeping (observed directly avoiding a token-truncation-
+                # prone full extraction on a large multi-page document). But
+                # when OTHER required fields are ALSO missing from the same
+                # header, that's a sign the corruption sits right where
+                # BOM's own column would be too, not somewhere unrelated -
+                # trusting it then produced a real false positive (a real
+                # "Evco BOM" column whose label was torn away into the very
+                # placeholder cell sitting next to it). So BOM only bypasses
+                # the defer when nothing else on the header is also unread.
+                if len(missing_columns) == 1 and missing_columns[0][0] == "manufacturing_bom_number":
+                    pass  # keep the sole BOM claim, trust it
+                else:
+                    missing_columns = []
+            if missing_columns:
+                labels = [label for _, label in missing_columns]
+                fail(
+                    ExceptionCode.EX_002,
+                    f"required column(s) missing from this document's Part "
+                    f"Pricing table header: {', '.join(labels)}.",
+                )
 
     return failures
 
@@ -1061,13 +1253,31 @@ def validate_required_fields(result):
         )
         return failures
 
-    # Required line-level fields
+    # Required line-level fields. A field failing for EVERY part usually
+    # means the column genuinely doesn't exist in this template - but a
+    # field blank for most (not all) parts is a different, worse signal:
+    # the column exists (some rows have it) and extraction is silently
+    # dropping it on most rows - e.g. a large multi-chunk document where
+    # only some chunks came back with the field populated. That case
+    # produced no exception at all before (only "all blank" was checked),
+    # letting a document with 73% of its parts missing evco_part_number
+    # through as a silent "success" - so any field blank on a MAJORITY of
+    # parts is now flagged too, not just a field blank on all of them.
     for field, label in REQUIRED_LINE_FIELDS.items():
-        if all(not _has_required_value(p.get(field)) for p in parts):
+        blank_count = sum(1 for p in parts if not _has_required_value(p.get(field)))
+        if blank_count == len(parts):
             fail(
                 ExceptionCode.EX_002,
                 f"required column '{label}' is missing from this "
                 f"document's Part Pricing table.",
+            )
+        elif blank_count > len(parts) / 2:
+            fail(
+                ExceptionCode.EX_002,
+                f"required column '{label}' is blank on {blank_count} of "
+                f"{len(parts)} parts in this document's Part Pricing "
+                f"table - likely a partial extraction failure, not a "
+                f"genuinely absent column.",
             )
 
     # ---------------------------------------------------------------
@@ -1101,6 +1311,47 @@ def validate_required_fields(result):
             )
 
     return failures
+
+
+def _dedupe_adjacent_parts(parts: list) -> list:
+    """
+    Drop a part if it's an exact duplicate of the one immediately before it
+    in the combined list. This targets a specific artifact of chunked
+    extraction (CHUNK_PAGE_SIZE pages per LLM call): a table row that sits
+    right at a chunk boundary can get included by both the chunk that ends
+    there and the chunk that starts there, producing back-to-back identical
+    entries once every chunk's parts are concatenated. Only ADJACENT,
+    fully-identical entries are removed - two genuinely distinct parts that
+    happen to be identical but are NOT next to each other are left alone,
+    since collapsing non-adjacent repeats could silently drop a real,
+    intentionally-duplicated row instead of a boundary artifact.
+    """
+    def _key(part):
+        if not isinstance(part, dict):
+            return None
+        tiers = part.get("pricing_tiers") or []
+        tiers_key = tuple((t.get("moq"), t.get("price")) for t in tiers if isinstance(t, dict))
+        return (
+            part.get("mold_number"),
+            part.get("evco_part_number"),
+            part.get("manufacturing_bom_number"),
+            part.get("customer_part_number"),
+            part.get("part_description"),
+            part.get("box_quantity"),
+            tiers_key,
+        )
+
+    deduped: list = []
+    prev_key = object()
+    for part in parts:
+        key = _key(part)
+        if key is not None and key == prev_key:
+            continue
+        deduped.append(part)
+        prev_key = key
+    return deduped
+
+
 # ---------------------------------------------------------------------------
 # Main per-document extraction
 # ---------------------------------------------------------------------------
@@ -1220,7 +1471,7 @@ def extract_pdf_data(pdf_path):
         return result
 
     result = dict(header_result)
-    result["parts"] = all_parts
+    result["parts"] = _dedupe_adjacent_parts(all_parts)
     if warnings:
         result["extraction_warnings"] = warnings
 
