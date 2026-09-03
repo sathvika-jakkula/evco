@@ -113,7 +113,9 @@ class Settings:
         "Customer PN, Customer Part Number, Cust PN, Customer Part#, JD PN, JD Part #, RA Part #",
     )
     EXTRACTION_ALIAS_PART_DESC: str = os.getenv("EXTRACTION_ALIAS_PART_DESC", "Part Description, Description, Part Desc")
-    EXTRACTION_ALIAS_BOX_QTY: str = os.getenv("EXTRACTION_ALIAS_BOX_QTY", "Box Qty, Box Quantity, Pkg Qty, Parts/Box")
+    EXTRACTION_ALIAS_BOX_QTY: str = os.getenv(
+        "EXTRACTION_ALIAS_BOX_QTY", "Box Qty, Box Quantity, Pkg Qty, Parts/Box, Parts/Gaylord, Gaylord"
+    )
     EXTRACTION_ALIAS_MOQ: str = os.getenv(
         "EXTRACTION_ALIAS_MOQ",
         "MOQ, Minimum Order Quantity, Min Order Qty, MRQ, Monthly MOQ, Release Qty, Release, Min. Rel. Qty., Min Rel Qty",

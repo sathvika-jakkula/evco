@@ -894,6 +894,10 @@ def find_master_table_header(doc, max_pages_to_scan=8):
                 continue
             md = _degroup_repeated_markdown_columns(md) or md
             header_line = md.split("\n", 1)[0]
+            if _header_has_placeholder_cells(header_line):
+                repaired = _fill_garbled_header_from_layout(page, t)
+                if repaired:
+                    header_line = "|" + "|".join(repaired) + "|"
             score = _count_matched_required_columns(header_line)
             if score > best_score:
                 best_score, best_header = score, header_line
@@ -991,6 +995,93 @@ def _reorder_orphaned_tier_lines(text: str) -> str:
     return "\n".join(result)
 
 
+_MD_PRICE_CELL_RE = re.compile(r"^[*_]{0,2}\$?\s?[\d,]+\.\d+[*_]{0,2}$")
+
+
+def _fill_garbled_header_from_layout(page, table) -> Optional[List[str]]:
+    """
+    A ColN-garbled table whose DATA rows are still cleanly column-aligned:
+    PyMuPDF kept the row grid but lost some header labels to placeholders
+    (a header cell whose text wraps or sits slightly outside the cell box
+    it computed). Rebuild only the missing labels from the header region's
+    reading-order text, snapped to the table's own column x-anchors, and
+    trust the labels PyMuPDF did resolve. Returns one name per column, or
+    None when a gap can't be filled confidently.
+    """
+    try:
+        names = list(table.header.names)
+        anchors = [c[0] for c in table.header.cells if c]
+        y0h, y1h = table.header.bbox[1], table.header.bbox[3]
+    except Exception:
+        return None
+    if not names or len(anchors) != len(names):
+        return None
+
+    empty_idx = {i for i, n in enumerate(names) if not (n or "").strip()}
+    if not empty_idx:
+        return [(n or "").replace("\n", " ").strip() for n in names]
+
+    frags: Dict[int, list] = {i: [] for i in empty_idx}
+    for block in page.get_text("dict")["blocks"]:
+        if block.get("type") != 0:
+            continue
+        for ln in block["lines"]:
+            text = "".join(s["text"] for s in ln["spans"]).strip()
+            if not text:
+                continue
+            x0, y0 = ln["bbox"][0], ln["bbox"][1]
+            # Stay strictly inside the header band. PyMuPDF's header.bbox can
+            # run taller than the actual labels, so a loose lower bound would
+            # vacuum up the first data row's text.
+            if y0 < y0h - 6 or y0 > y1h + 2:
+                continue
+            idx = min(range(len(anchors)), key=lambda i: abs(anchors[i] - x0))
+            if idx in empty_idx:
+                frags[idx].append((y0, x0, text))
+
+    out = []
+    for i, n in enumerate(names):
+        if i in empty_idx:
+            parts = sorted(frags[i], key=lambda f: (round(f[0]), f[1]))
+            out.append(" ".join(p[2] for p in parts).strip())
+        else:
+            out.append((n or "").replace("\n", " ").strip())
+    if any(not c for c in out):
+        return None
+    return out
+
+
+def _regrid_garbled_markdown(md: str, header_names: List[str]) -> Optional[str]:
+    """
+    Re-emit a ColN-garbled to_markdown() table with a clean reconstructed
+    header, keeping only its genuine data rows (right cell count, last cell
+    is a price - which drops the leftover bold/duplicated header-fragment
+    rows PyMuPDF interleaves). Returns None when the data rows don't look
+    consistent enough to trust the row grid.
+    """
+    data = []
+    for line in md.split("\n"):
+        s = line.strip()
+        if not s.startswith("|"):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if cells and not "".join(cells).strip("-: "):
+            continue  # markdown separator row
+        if len(cells) != len(header_names) or not cells:
+            continue
+        if not _MD_PRICE_CELL_RE.match(cells[-1].replace(" ", "")):
+            continue
+        data.append(cells)
+    if len(data) < 2:
+        return None
+    lines = [
+        "| " + " | ".join(header_names) + " |",
+        "|" + "|".join(["---"] * len(header_names)) + "|",
+    ]
+    lines.extend("| " + " | ".join(r) + " |" for r in data)
+    return "\n".join(lines)
+
+
 def _collect_page_data(page):
     """Extract plain text, annotated text, table markdown, and notes for one page."""
     plain_text = page.get_text("text")
@@ -1006,6 +1097,19 @@ def _collect_page_data(page):
                 continue
             md = _degroup_repeated_markdown_columns(md) or md
             if _table_header_is_garbled(md):
+                # The table grid is intact but some header labels were lost
+                # to ColN placeholders. If the data rows are still cleanly
+                # aligned and the missing labels can be rebuilt from the
+                # header region's text (snapped to the table's own column
+                # x-anchors), keep the table with that repaired header -
+                # withholding it entirely forces the LLM onto reading-order
+                # text where a value that wrapped across lines (e.g. an
+                # "Evco BOM" like "6682/9475227-\nCHIMEI") gets truncated.
+                repaired_names = _fill_garbled_header_from_layout(page, t)
+                regridded = _regrid_garbled_markdown(md, repaired_names) if repaired_names else None
+                if regridded:
+                    markdowns.append(regridded)
+                    continue
                 had_garbled_table = True
                 continue
             markdowns.append(md)
