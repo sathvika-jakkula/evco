@@ -1,3 +1,4 @@
+from datetime import date
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -228,3 +229,26 @@ def test_move_quote_file_endpoint(monkeypatch):
     assert response.status_code == 200
     assert response.json()["data"]["moved"] is True
     fake_service.move_quote_file.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("June 15th, 2026", date(2026, 6, 15)),
+        ("August 22nd, 2025", date(2025, 8, 22)),
+        ("October 14th, 2025", date(2025, 10, 14)),
+        ("November 30th, 2025", date(2025, 11, 30)),
+        ("July 6, 2026", date(2026, 7, 6)),
+        ("February 13, 2026", date(2026, 2, 13)),
+        ("6/15/2026", date(2026, 6, 15)),
+        ("2026-06-15", date(2026, 6, 15)),
+        ("  July   6,  2026 ", date(2026, 7, 6)),
+        (None, None),
+        ("", None),
+        ("see spreadsheet", None),
+    ],
+)
+def test_parse_date_handles_ordinal_suffixes(raw, expected):
+    from app.database.quote_processing_repository import QuoteProcessingRepository
+
+    assert QuoteProcessingRepository._parse_date(raw) == expected

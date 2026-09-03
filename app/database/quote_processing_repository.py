@@ -183,7 +183,7 @@ class QuoteProcessingRepository:
         return resolution_id
 
     def save_unique_customer_resolution_for_processing(
-        self, processing_id: UUID, customer_name: str, candidates: list[dict]
+        self, processing_id: UUID, customer_name: str | None, candidates: list[dict]
     ) -> UUID:
         """Store one quote-level unique customer resolution, linked to its first line item."""
         if len(candidates) != 1:
@@ -214,7 +214,7 @@ class QuoteProcessingRepository:
         return resolution_id
 
     def save_customer_resolutions_for_processing(
-        self, processing_id: UUID, customer_name: str, match_status: str, candidates: list[dict]
+        self, processing_id: UUID, customer_name: str | None, match_status: str, candidates: list[dict]
     ) -> list[UUID]:
         """Persist one result for each line item belonging to a processing run."""
         matched = candidates[0] if match_status == "UNIQUE" and candidates else None
@@ -304,9 +304,16 @@ class QuoteProcessingRepository:
     def _parse_date(value: str | None) -> date | None:
         if not value:
             return None
+        cleaned = value.strip()
+        # EVCO quotes commonly write the effective date with an ordinal
+        # suffix ("June 15th, 2026", "August 22nd, 2025"), which strptime
+        # can't parse - strip "st/nd/rd/th" right after the day number.
+        cleaned = re.sub(r"(\d)(st|nd|rd|th)\b", r"\1", cleaned, flags=re.IGNORECASE)
+        # Collapse any doubled spaces left by upstream formatting.
+        cleaned = re.sub(r"\s+", " ", cleaned)
         for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y", "%B %d, %Y", "%b %d, %Y"):
             try:
-                return datetime.strptime(value.strip(), fmt).date()
+                return datetime.strptime(cleaned, fmt).date()
             except ValueError:
                 pass
         return None

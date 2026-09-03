@@ -19,7 +19,9 @@ class CustomerResolveRequest(BaseModel):
     )
     part_number: Optional[str] = Field(default=None, description="Part identifier under evaluation")
     quote_number: Optional[str] = Field(default=None, description="Quote identifier under evaluation")
-    customer_name: str = Field(..., description="Customer name extracted from the quote")
+    customer_name: Optional[str] = Field(
+        default=None, description="Customer name extracted from the quote, if present"
+    )
     customer_number: Optional[str] = Field(default=None, description="Customer number if present on the quote")
     aka_customer_number: Optional[str] = Field(
         default=None,

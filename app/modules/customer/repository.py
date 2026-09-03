@@ -194,7 +194,7 @@ class CustomerRepository:
 
     def find_candidates(
         self,
-        customer_name: str,
+        customer_name: Optional[str],
         customer_number: Optional[str] = None
     ) -> List[CustomerRecord]:
         """
