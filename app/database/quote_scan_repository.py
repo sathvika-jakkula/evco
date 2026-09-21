@@ -37,3 +37,13 @@ class QuoteScanRepository:
             )
             row = cursor.fetchone()
             return row[0] if row else None
+
+    def mark_file_moved(self, filename: str) -> None:
+        """Advances file_status to MOVED for a scanned file once move-quote-file has relocated
+        it - no scan_id is available at that call site, so this targets whichever row(s) for
+        this filename are still SCANNED rather than a single row by primary key."""
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                "UPDATE quote_scan_files SET file_status = 'MOVED' WHERE filename = %s AND file_status = 'SCANNED'",
+                (filename,),
+            )

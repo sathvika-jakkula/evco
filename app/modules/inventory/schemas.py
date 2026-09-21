@@ -1,5 +1,6 @@
-from typing import Any, Generic, List, Optional, TypeVar
-from pydantic import BaseModel, Field
+from typing import Generic, List, Optional, TypeVar
+from uuid import UUID
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
 
@@ -10,97 +11,105 @@ class StandardInventoryResponse(BaseModel, Generic[T]):
     data: Optional[T] = Field(None, description="Response Data Payload")
 
 
-# --- API 1: Search Inventory Part ---
-class SearchPartRequest(BaseModel):
-    evco_part_number: str = Field(..., description="EVCO Part Number to search")
+# --- Shared AKA shapes -------------------------------------------------
+
+class AkaHeader(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    item_number: str = Field(..., alias="Item #")
+    rev: str = Field(..., alias="Rev")
+    description: str = Field(..., alias="Description")
 
 
-class InventoryPartData(BaseModel):
-    evco_part_number: str
-    item_number: str
-    description: str
-    inventory_class: str
+class AkaDetail(BaseModel):
+    """One customer/manufacturing-number AKA mapping for an item. Identity for
+    lookup/update purposes is (item_number [from the enclosing Header],
+    customer_number, manufacturing_bom_number) - akaItem# (the customer's own
+    part number) is a mutable attribute of that mapping, not part of its key."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    aka_item_number: str = Field(default="", alias="akaItem#")
+    aka_description: str = Field(default="", alias="akaDescription")
+    rev: str = Field(default="", alias="rev")
+    customer_number: str = Field(..., alias="customer#")
+    currency: str = Field(default="USD", alias="currency")
+    customer_name: str = Field(default="", alias="customername")
+    manufacturing_bom_number: str = Field(..., alias="mfg#")
+    ship_to_attn: str = Field(default="", alias="shipToAttn")
+    minimum_selling_qty: int = Field(default=0, alias="minimumSellingQty")
+    selling_multiples_of: int = Field(default=0, alias="sellingMultiplesOf")
 
 
-# --- API 2: Get BOM Candidates ---
-class GetBomCandidatesRequest(BaseModel):
-    evco_part_number: str = Field(..., description="EVCO Part Number to get BOM candidates for")
+class AkaSearchData(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    header: AkaHeader = Field(..., alias="Header")
+    aka_details: List[AkaDetail] = Field(..., alias="akaDetails")
 
 
-class BomCandidateData(BaseModel):
-    manufacturing_bom_number: str
-    bom_description: str
-    item_number: str
+# --- API 1: Get AKA -------------------------------------------------------
 
-
-# --- API 3: Get AKA ---
 class GetAkaRequest(BaseModel):
-    customer_number: str = Field(..., description="Customer Number")
-    customer_part_number: str = Field(..., description="Customer Part Number")
-    item_number: str = Field(..., description="EVCO Item Number")
+    model_config = ConfigDict(populate_by_name=True)
+
+    item_number: str = Field(..., alias="Item #")
+    customer_number: str = Field(..., alias="customer#")
+    manufacturing_bom_number: str = Field(..., alias="mfg#")
+    line_item_id: Optional[UUID] = Field(
+        default=None, description="quote_line_items row that triggered this lookup, for traceability"
+    )
 
 
-class AkaRecordData(BaseModel):
-    customer_number: str
-    customer_part_number: str
-    item_number: str
-    aka_description: str
-    item_description: str
-    uom: str
-    currency: str
-    manufacturing_bom_number: str
-    moq: int
-    selling_multiples_of: int
+# --- API 2: Create AKA -----------------------------------------------------
+
+class CreateAkaDetails(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    aka_item_number: str = Field(..., alias="akaItem#")
+    aka_description: str = Field(default="", alias="akaDescription")
+    rev: str = Field(default="", alias="rev")
+    customer_number: str = Field(..., alias="customer#")
+    currency: str = Field(default="USD", alias="currency")
+    customer_name: str = Field(default="", alias="customername")
+    manufacturing_bom_number: str = Field(..., alias="mfg#")
+    ship_to_attn: str = Field(default="", alias="shipToAttn")
+    minimum_selling_qty: int = Field(default=0, alias="minimumSellingQty")
+    selling_multiples_of: int = Field(default=0, alias="sellingMultiplesOf")
 
 
-# --- API 4: Create AKA ---
 class CreateAkaRequest(BaseModel):
-    customer_number: str
-    aka_item_number: str
-    aka_description: str
-    item_number: str
-    item_description: str
-    uom: str
-    currency: str
-    manufacturing_bom_number: str
-    moq: int
-    selling_multiples_of: int
+    model_config = ConfigDict(populate_by_name=True)
+
+    item_number: str = Field(..., alias="Item #")
+    create_aka_details: CreateAkaDetails = Field(..., alias="createAkaDetails")
+    line_item_id: Optional[UUID] = Field(
+        default=None, description="quote_line_items row that triggered this creation, for traceability"
+    )
 
 
-class CreateAkaResponseData(BaseModel):
-    status: str = Field("CREATED")
-    customer_number: str
-    aka_item_number: str
-    item_number: str
-    manufacturing_bom_number: str
+# --- API 3: Update AKA -----------------------------------------------------
+
+class UpdateAkaDetails(BaseModel):
+    """Mutable fields only - customer#/mfg# identify the target record (see
+    UpdateAkaRequest) and are not themselves updatable through this API."""
+    model_config = ConfigDict(populate_by_name=True)
+
+    aka_item_number: Optional[str] = Field(default=None, alias="akaItem#")
+    aka_description: Optional[str] = Field(default=None, alias="akaDescription")
+    rev: Optional[str] = Field(default=None, alias="rev")
+    currency: Optional[str] = Field(default=None, alias="currency")
+    ship_to_attn: Optional[str] = Field(default=None, alias="shipToAttn")
+    minimum_selling_qty: Optional[int] = Field(default=None, alias="minimumSellingQty")
+    selling_multiples_of: Optional[int] = Field(default=None, alias="sellingMultiplesOf")
 
 
-# --- API 5: Update AKA ---
 class UpdateAkaRequest(BaseModel):
-    customer_number: str
-    customer_part_number: str
-    item_number: str
-    aka_description: Optional[str] = None
-    item_description: Optional[str] = None
-    currency: Optional[str] = None
-    manufacturing_bom_number: Optional[str] = None
-    moq: Optional[int] = None
-    selling_multiples_of: Optional[int] = None
+    model_config = ConfigDict(populate_by_name=True)
 
-
-class AkaStateBeforeAfter(BaseModel):
-    aka_description: str
-    item_description: str
-    currency: str
-    manufacturing_bom_number: str
-    moq: int
-    selling_multiples_of: int
-
-
-class UpdateAkaResponseData(BaseModel):
-    status: str = Field("UPDATED")
-    customer_number: str
-    customer_part_number: str
-    item_number: str
-    before: AkaStateBeforeAfter
-    after: AkaStateBeforeAfter
+    item_number: str = Field(..., alias="Item #")
+    customer_number: str = Field(..., alias="customer#")
+    manufacturing_bom_number: str = Field(..., alias="mfg#")
+    update_aka_details: UpdateAkaDetails = Field(..., alias="updateAkaDetails")
+    line_item_id: Optional[UUID] = Field(
+        default=None, description="quote_line_items row that triggered this update, for traceability"
+    )

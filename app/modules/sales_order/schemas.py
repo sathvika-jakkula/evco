@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 from pydantic import BaseModel, Field
 
 
@@ -8,6 +9,9 @@ from pydantic import BaseModel, Field
 # filtered against the full sales order list in SalesOrderService.
 class GetSalesOrdersRequest(BaseModel):
     item_number: str = Field(..., description="EVCO Item Number to filter sales order lines by")
+    line_item_id: Optional[UUID] = Field(
+        default=None, description="quote_line_items row that triggered this lookup, for traceability"
+    )
 
 
 class SalesOrderData(BaseModel):
@@ -56,6 +60,9 @@ class SalesOrderDetailData(BaseModel):
 # --- API 3: Get Sales Order Releases ---
 class GetSalesOrderReleasesRequest(BaseModel):
     sales_order_detail_id: int = Field(..., description="sales_order_detail_id from a prior get-sales-order-details call")
+    line_item_id: Optional[UUID] = Field(
+        default=None, description="quote_line_items row that triggered this lookup, for traceability"
+    )
 
 
 class SalesOrderReleaseData(BaseModel):

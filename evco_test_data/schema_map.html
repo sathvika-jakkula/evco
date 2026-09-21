@@ -1,0 +1,589 @@
+<title>EVCO Quote Pipeline Schema</title>
+<style>
+:root{
+  --bg:#f7f7f5;
+  --surface:#ffffff;
+  --surface-2:#eef0f0;
+  --border:#dcdfdf;
+  --ink:#16191c;
+  --ink-dim:#565d61;
+  --ink-faint:#8a9195;
+  --accent:#1f6f6b;
+  --accent-ink:#0d3f3d;
+  --accent-bg:#e3f1ef;
+  --warn:#a3540f;
+  --warn-bg:#fbeee0;
+  --warn-border:#e8c393;
+  --tracked:#1f6f6b;
+  --untracked:#a3540f;
+  --planned:#3b5fc4;
+  --planned-bg:#e7ecfa;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  --sans: 'IBM Plex Sans', -apple-system, Segoe UI, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171a;
+    --surface:#1b1f23;
+    --surface-2:#22262a;
+    --border:#31363b;
+    --ink:#e8eaec;
+    --ink-dim:#a7aeb3;
+    --ink-faint:#6d7479;
+    --accent:#5fc9c2;
+    --accent-ink:#bdeee9;
+    --accent-bg:#193331;
+    --warn:#e0a05c;
+    --warn-bg:#332415;
+    --warn-border:#5a4021;
+    --tracked:#5fc9c2;
+    --untracked:#e0a05c;
+    --planned:#8ea6f2;
+    --planned-bg:#1c2440;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171a;
+  --surface:#1b1f23;
+  --surface-2:#22262a;
+  --border:#31363b;
+  --ink:#e8eaec;
+  --ink-dim:#a7aeb3;
+  --ink-faint:#6d7479;
+  --accent:#5fc9c2;
+  --accent-ink:#bdeee9;
+  --accent-bg:#193331;
+  --warn:#e0a05c;
+  --warn-bg:#332415;
+  --warn-border:#5a4021;
+  --tracked:#5fc9c2;
+  --untracked:#e0a05c;
+  --planned:#8ea6f2;
+  --planned-bg:#1c2440;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  margin:0;
+  padding-inline:20px;
+  padding-block:40px 80px;
+}
+.wrap{max-width:1080px;margin:0 auto;}
+
+header{margin-bottom:36px;}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 10px;
+}
+h1{
+  font-size:clamp(28px,4vw,40px);
+  line-height:1.1;
+  margin:0 0 12px;
+  text-wrap:balance;
+  letter-spacing:-.01em;
+}
+.sub{
+  color:var(--ink-dim);
+  font-size:16px;
+  max-width:65ch;
+  line-height:1.55;
+  margin:0;
+}
+
+.callout{
+  background:var(--warn-bg);
+  border:1px solid var(--warn-border);
+  border-radius:10px;
+  padding:20px 22px;
+  margin:28px 0 40px;
+  display:flex;
+  gap:16px;
+}
+.callout .mark{
+  font-family:var(--mono);
+  font-size:20px;
+  color:var(--warn);
+  flex:none;
+  line-height:1.4;
+}
+.callout h2{
+  font-size:15px;
+  margin:0 0 6px;
+  color:var(--warn);
+  letter-spacing:.01em;
+}
+.callout p{
+  margin:0 0 8px;
+  font-size:14.5px;
+  line-height:1.6;
+  color:var(--ink);
+  max-width:70ch;
+}
+.callout p:last-child{margin-bottom:0;}
+.callout code{
+  font-family:var(--mono);
+  background:rgba(0,0,0,.06);
+  padding:1px 5px;
+  border-radius:4px;
+  font-size:.92em;
+}
+:root:not([data-theme="light"]) .callout code{background:rgba(255,255,255,.08);}
+
+.legend{
+  display:flex;
+  gap:22px;
+  flex-wrap:wrap;
+  margin:0 0 28px;
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:var(--ink-dim);
+}
+.legend span{display:inline-flex;align-items:center;gap:7px;}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;}
+
+.diagram-shell{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:8px;
+  margin-bottom:52px;
+  overflow-x:auto;
+}
+.diagram-shell pre.mermaid{margin:0;min-width:920px;}
+
+h2.section-title{
+  font-size:13px;
+  font-family:var(--mono);
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  color:var(--ink-faint);
+  border-bottom:1px solid var(--border);
+  padding-bottom:10px;
+  margin:0 0 20px;
+}
+
+.stage{margin-bottom:44px;}
+.stage-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.stage-head .n{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--accent);
+  background:var(--accent-bg);
+  border-radius:999px;
+  padding:2px 9px;
+}
+.stage-head h3{
+  margin:0;
+  font-size:19px;
+  letter-spacing:-.005em;
+}
+.stage-desc{
+  color:var(--ink-dim);
+  font-size:14px;
+  margin:0 0 16px;
+  max-width:70ch;
+  line-height:1.55;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px;
+}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px 18px;
+  position:relative;
+}
+.card.untracked{border-color:var(--warn-border);}
+.card.planned{border-color:var(--planned);}
+.card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:8px;
+  margin-bottom:10px;
+}
+.card h4{
+  font-family:var(--mono);
+  font-size:14.5px;
+  margin:0;
+  color:var(--ink);
+  word-break:break-word;
+}
+.badge{
+  font-family:var(--mono);
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  padding:2px 7px;
+  border-radius:5px;
+  flex:none;
+  white-space:nowrap;
+}
+.badge.tracked{color:var(--tracked);background:var(--accent-bg);}
+.badge.untracked{color:var(--untracked);background:var(--warn-bg);}
+.badge.planned{color:var(--planned);background:var(--planned-bg);}
+
+.pk{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--ink-faint);
+  margin:0 0 8px;
+}
+.pk b{color:var(--ink-dim);font-weight:600;}
+
+.fk-list{list-style:none;margin:0;padding:0;font-size:12.5px;font-family:var(--mono);}
+.fk-list li{
+  padding:5px 0;
+  border-top:1px dashed var(--border);
+  color:var(--ink-dim);
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.fk-list li:first-child{border-top:none;}
+.fk-list .arrow{color:var(--accent-ink);}
+.fk-list .col{color:var(--ink);}
+
+.rowcount{
+  font-size:11px;
+  color:var(--ink-faint);
+  font-family:var(--mono);
+  margin-top:10px;
+}
+
+footer{
+  margin-top:60px;
+  padding-top:20px;
+  border-top:1px solid var(--border);
+  font-size:12.5px;
+  color:var(--ink-faint);
+  font-family:var(--mono);
+}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">evco_db &middot; live schema + planned work, updated 2026&#8209;09&#8209;18</p>
+    <h1>Quote pipeline schema map</h1>
+    <p class="sub">Every table in the database, grouped by where it sits in the
+      pipeline (Scan &rarr; Processing &rarr; Line Item &rarr; downstream lookups &rarr;
+      per-line decisions), with the foreign key that links it back.</p>
+  </header>
+
+  <div class="callout">
+    <div class="mark">&#9888;</div>
+    <div>
+      <h2>Decision made: adopt the <code>_results</code> tables, don't duplicate them</h2>
+      <p><code>aka_resolution_results</code>, <code>pricing_results</code>, <code>sales_order_results</code>,
+        and <code>line_item_audit</code> were found live in this database with no migration file backing
+        them &mdash; each empty, each already shaped with a <code>line_item_id</code> FK plus <code>decision</code>/
+        <code>before_value</code>/<code>after_value</code> columns. That's exactly the "was this AKA/price/order
+        found-and-unchanged, or found-and-updated?" distinction the Quote Execution Summary report needs.</p>
+      <p>Plan: claim them with a real migration (<code>0005_claim_results_tables.sql</code>) and write to them
+        from three new decision-tracking repositories, instead of extending the raw-fetch tables built
+        earlier this session. <code>error_code_catalog</code> stays untouched &mdash; a plain reference table,
+        out of scope for this report.</p>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--tracked)"></span>tracked &mdash; has a migration file in this repo</span>
+    <span><span class="dot" style="background:var(--planned)"></span>planned &mdash; live in the DB, migration + writers coming in this plan</span>
+    <span><span class="dot" style="background:var(--untracked)"></span>untracked &mdash; live in the DB, out of scope</span>
+  </div>
+
+  <div class="diagram-shell">
+<pre class="mermaid">
+erDiagram
+    quote_scans ||--o{ quote_scan_files : scan_id
+    quote_scan_files |o--o| quote_processing : scan_file_id
+    quote_processing ||--o{ quote_line_items : processing_id
+    quote_processing ||--o{ quote_audit : processing_id
+    quote_processing ||--o{ exception_logs : processing_id
+    quote_processing ||--o{ api_audit_logs : processing_id
+    quote_processing ||--o{ sent_notifications : processing_id
+    quote_processing ||--o{ pricing_history : source_processing_id
+
+    quote_line_items ||--o{ customer_resolution_results : line_item_id
+    quote_line_items ||--o{ exception_logs : line_item_id
+    quote_line_items ||--o{ api_audit_logs : line_item_id
+    quote_line_items ||--o{ aka_records : line_item_id
+    quote_line_items ||--o{ pricing_history : line_item_id
+    quote_line_items ||--o{ sales_orders_synced : line_item_id
+    quote_line_items ||--o{ sales_order_releases_synced : line_item_id
+    quote_line_items ||--o{ aka_resolution_results : line_item_id
+    quote_line_items ||--o{ pricing_results : line_item_id
+    quote_line_items ||--o{ sales_order_results : line_item_id
+    quote_line_items ||--o{ line_item_audit : line_item_id
+
+    quote_scans {
+        uuid scan_id PK
+    }
+    quote_scan_files {
+        uuid scan_file_id PK
+        uuid scan_id FK
+    }
+    quote_processing {
+        uuid processing_id PK
+        uuid scan_file_id FK
+        string processing_status
+    }
+    quote_line_items {
+        uuid line_item_id PK
+        uuid processing_id FK
+        string evco_part_id
+        string bom_id
+    }
+    quote_audit {
+        uuid quote_audit_id PK
+        uuid processing_id FK
+    }
+    exception_logs {
+        uuid exception_id PK
+        uuid processing_id FK
+        uuid line_item_id FK
+        string exception_code
+    }
+    api_audit_logs {
+        uuid api_log_id PK
+        uuid processing_id FK
+        uuid line_item_id FK
+    }
+    sent_notifications {
+        uuid notification_id PK
+        uuid processing_id FK
+    }
+    customer_resolution_results {
+        uuid customer_resolution_id PK
+        uuid line_item_id FK
+        string resolution_status
+    }
+    aka_records {
+        uuid aka_record_id PK
+        uuid line_item_id FK
+        string item_number
+        string customer_number
+        string manufacturing_bom_number
+        string status
+    }
+    pricing_history {
+        uuid pricing_history_id PK
+        uuid line_item_id FK
+        uuid source_processing_id FK
+        numeric price
+        bool is_active
+    }
+    sales_orders_synced {
+        bigint sales_order_id PK
+        uuid line_item_id FK
+        string item_number
+    }
+    sales_order_releases_synced {
+        bigint release_id PK
+        uuid line_item_id FK
+    }
+    aka_resolution_results {
+        uuid aka_result_id PK
+        uuid line_item_id FK
+        string decision
+        string status
+    }
+    pricing_results {
+        uuid pricing_result_id PK
+        uuid line_item_id FK
+        string decision
+        string status
+    }
+    sales_order_results {
+        uuid sales_order_result_id PK
+        uuid line_item_id FK
+        string decision
+        string status
+    }
+    line_item_audit {
+        uuid line_item_audit_id PK
+        uuid line_item_id FK
+        jsonb rule_codes_applied
+        string line_status
+    }
+</pre>
+  </div>
+
+  <h2 class="section-title">Table by table, in pipeline order</h2>
+
+  <div class="stage">
+    <div class="stage-head"><span class="n">01</span><h3>Intake</h3></div>
+    <p class="stage-desc">A folder scan claims PDF files before anything is extracted.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-top"><h4>quote_scans</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> scan_id</p>
+        <ul class="fk-list"><li>no outbound FK &mdash; scan root</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>quote_scan_files</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> scan_file_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">scan_id</span> quote_scans</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-head"><span class="n">02</span><h3>Extraction &amp; processing run</h3></div>
+    <p class="stage-desc">One row per PDF processed; every quote line it contains hangs off this processing_id.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-top"><h4>quote_processing</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> processing_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">scan_file_id</span> quote_scan_files</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>quote_line_items</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> line_item_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">processing_id</span> quote_processing</li></ul>
+        <p class="rowcount">every downstream table below hangs off this row's line_item_id</p>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>quote_audit</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> quote_audit_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">processing_id</span> quote_processing</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>exception_logs</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> exception_id</p>
+        <ul class="fk-list">
+          <li><span class="arrow">&rarr;</span><span class="col">processing_id</span> quote_processing</li>
+          <li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>api_audit_logs</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> api_log_id</p>
+        <ul class="fk-list">
+          <li><span class="arrow">&rarr;</span><span class="col">processing_id</span> quote_processing</li>
+          <li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>sent_notifications</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> notification_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">processing_id</span> quote_processing</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-head"><span class="n">03</span><h3>Per-line-item lookups (this session's tables)</h3></div>
+    <p class="stage-desc">Customer, AKA, pricing, and sales-order data fetched for one quote line &mdash; each
+      keyed by business data first, linked back to <code>line_item_id</code> as of migration 0004.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-top"><h4>customer_resolution_results</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> customer_resolution_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>aka_records</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> aka_record_id &middot; unique(customer_number, item_number, mfg#)</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>pricing_history</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> pricing_history_id</p>
+        <ul class="fk-list">
+          <li><span class="arrow">&rarr;</span><span class="col">source_processing_id</span> quote_processing</li>
+          <li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>sales_orders_synced</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> sales_order_id (IQMS's own id)</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>sales_order_releases_synced</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> release_id (IQMS's own id)</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-head"><span class="n">04</span><h3>Per-line decisions &mdash; planned this round</h3></div>
+    <p class="stage-desc">All empty today. Each gets a real <code>decision</code> derived from an honest
+      before/after comparison &mdash; <code>NOT_FOUND</code> / <code>NO_CHANGE</code> / <code>UPDATED</code> /
+      <code>CREATED</code> for AKA and pricing; <code>NOT_FOUND</code> / <code>NO_CHANGE</code> / <code>MISMATCH</code>
+      for sales orders, since <code>SalesOrderService</code> is read-only and never itself changes an order.</p>
+    <div class="grid">
+      <div class="card planned">
+        <div class="card-top"><h4>aka_resolution_results</h4><span class="badge planned">planned</span></div>
+        <p class="pk"><b>PK</b> aka_result_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+        <p class="rowcount">written by app/database/aka_resolution_repository.py</p>
+      </div>
+      <div class="card planned">
+        <div class="card-top"><h4>pricing_results</h4><span class="badge planned">planned</span></div>
+        <p class="pk"><b>PK</b> pricing_result_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+        <p class="rowcount">written by app/database/pricing_resolution_repository.py</p>
+      </div>
+      <div class="card planned">
+        <div class="card-top"><h4>sales_order_results</h4><span class="badge planned">planned</span></div>
+        <p class="pk"><b>PK</b> sales_order_result_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+        <p class="rowcount">written by app/database/sales_order_resolution_repository.py</p>
+      </div>
+      <div class="card planned">
+        <div class="card-top"><h4>line_item_audit</h4><span class="badge planned">planned</span></div>
+        <p class="pk"><b>PK</b> line_item_audit_id</p>
+        <ul class="fk-list"><li><span class="arrow">&rarr;</span><span class="col">line_item_id</span> quote_line_items</li></ul>
+        <p class="rowcount">rolls up the three decisions above into one row per line &mdash; mold/MOQ columns stay NULL, no check exists for them</p>
+      </div>
+      <div class="card untracked">
+        <div class="card-top"><h4>error_code_catalog</h4><span class="badge untracked">untracked</span></div>
+        <p class="pk"><b>PK</b> error_code</p>
+        <ul class="fk-list"><li>no FK &mdash; reference/lookup table (category, severity, retryable, recommended_action), out of scope</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-head"><span class="n">05</span><h3>Standalone</h3></div>
+    <p class="stage-desc">No foreign key in either direction &mdash; not wired into any per-line-item flow.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-top"><h4>inventory_items</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> inventory_item_id</p>
+        <ul class="fk-list"><li>unused &mdash; search-part API was removed</li></ul>
+      </div>
+      <div class="card">
+        <div class="card-top"><h4>bom_candidates</h4><span class="badge tracked">tracked</span></div>
+        <p class="pk"><b>PK</b> bom_candidate_id</p>
+        <ul class="fk-list"><li>unused &mdash; BOM-candidates API was removed</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>evco_db &middot; public schema &middot; 20 application tables, 4 migrations tracked today &middot; 0005 (4 tables) + a new reporting module planned</footer>
+
+</div>

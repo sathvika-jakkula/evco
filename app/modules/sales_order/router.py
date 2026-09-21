@@ -22,7 +22,7 @@ router = APIRouter(prefix="/sales-orders", tags=["Sales Orders"])
     ),
 )
 async def get_sales_orders(payload: GetSalesOrdersRequest, response: Response):
-    records = sales_order_service.get_sales_orders(item_number=payload.item_number)
+    records = sales_order_service.get_sales_orders(item_number=payload.item_number, line_item_id=payload.line_item_id)
     response.status_code = status.HTTP_200_OK
     return StandardInventoryResponse(
         statusCode=200,
@@ -58,7 +58,7 @@ async def get_sales_order_details(payload: GetSalesOrderDetailsRequest, response
 )
 async def get_sales_order_releases(payload: GetSalesOrderReleasesRequest, response: Response):
     records = sales_order_service.get_sales_order_releases(
-        sales_order_detail_id=payload.sales_order_detail_id
+        sales_order_detail_id=payload.sales_order_detail_id, line_item_id=payload.line_item_id
     )
     response.status_code = status.HTTP_200_OK
     return StandardInventoryResponse(

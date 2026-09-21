@@ -126,7 +126,7 @@ class QuoteProcessingRepository:
 
     def record_exception(
         self,
-        processing_id: UUID,
+        processing_id: UUID | None,
         agent_name: str,
         tool_name: str,
         exception_code: str,
@@ -139,7 +139,10 @@ class QuoteProcessingRepository:
         resolved_by: str | None = None,
         resolved_time: datetime | None = None,
     ) -> UUID:
-        """General-purpose exception_logs write, callable with arbitrary batch/agent/rule context."""
+        """General-purpose exception_logs write, callable with arbitrary batch/agent/rule context.
+        Also increments quote_audit.exception_count in the same transaction, per the doc's
+        spec for this endpoint - finalize_quote_audit's later full recompute is unaffected
+        since it derives the count fresh from exception_logs rather than trusting this running total."""
         exception_id, now = uuid4(), datetime.now(timezone.utc)
         with self.connection.connect() as db, db.cursor() as cursor:
             cursor.execute(
@@ -154,7 +157,20 @@ class QuoteProcessingRepository:
                     is_retryable, resolved, resolved_by, resolved_time, now,
                 ),
             )
+            cursor.execute(
+                "UPDATE quote_audit SET exception_count = COALESCE(exception_count, 0) + 1 WHERE processing_id = %s",
+                (processing_id,),
+            )
         return exception_id
+
+    def get_processing_id_for_line_item(self, line_item_id: UUID) -> UUID | None:
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                "SELECT processing_id FROM quote_line_items WHERE line_item_id = %s",
+                (line_item_id,),
+            )
+            row = cursor.fetchone()
+            return row[0] if row is not None else None
 
     def mark_processing_failed(self, processing_id: UUID, reason: str) -> None:
         with self.connection.connect() as db, db.cursor() as cursor:

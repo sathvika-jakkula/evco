@@ -97,7 +97,7 @@ def test_get_sales_orders_endpoint(monkeypatch):
     data = response.json()
     assert len(data["data"]) == 1
     assert data["data"][0]["item_number"] == "9410145"
-    fake_service.get_sales_orders.assert_called_once_with(item_number="9410145")
+    fake_service.get_sales_orders.assert_called_once_with(item_number="9410145", line_item_id=None)
 
 
 def test_get_sales_order_details_filters_client_side_by_ar_invt_id():
@@ -146,7 +146,7 @@ def test_get_sales_order_releases_endpoint(monkeypatch):
     assert data["data"][0]["sales_order_detail_id"] == 3476
     assert data["data"][0]["left_to_ship"] == 240.0
     assert data["data"][0]["ship_date"] is None  # sentinel normalized to None
-    fake_service.get_sales_order_releases.assert_called_once_with(sales_order_detail_id=3476)
+    fake_service.get_sales_order_releases.assert_called_once_with(sales_order_detail_id=3476, line_item_id=None)
 
 
 def test_sales_order_endpoints_require_auth():

@@ -12,7 +12,11 @@ so those are passed straight through.
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
+from app.database.pricing_history_repository import PricingHistoryRepository
+from app.database.sales_order_repository import SalesOrderSyncRepository
+from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
 from app.integrations.iqms import IQMSClient
 from app.modules.sales_order.schemas import (
     SalesOrderData,
@@ -34,13 +38,38 @@ def _parse_date(value: Any) -> Optional[datetime]:
     return parsed if parsed.year > 1 else None
 
 
+def _build_default_iqms_client():
+    """The existing Sales Order GET API request/response contract below is
+    unchanged - only the data source is swapped here, to the dummy fixture
+    data built for testing (evco_test_data/mock_data/sales_orders/), since a
+    live IQMS connection isn't available for this. To go back to the real
+    IQMS connection, uncomment the live line and comment out the dummy one.
+
+    Return type is intentionally left unannotated: FixtureIQMSClient is a
+    duck-typed stand-in (same get_sales_orders/get_sales_order_details/
+    get_sales_order_releases method signatures), not a subclass of IQMSClient.
+    """
+    # return IQMSClient()  # <- LIVE IQMS (original)
+    from evco_test_data.mock_api.fixture_iqms_client import FixtureIQMSClient
+    return FixtureIQMSClient()  # <- DUMMY DATA (current)
+
+
 class SalesOrderService:
     """Looks up sales order / detail / release records directly from IQMS."""
 
-    def __init__(self, iqms_client: Optional[IQMSClient] = None) -> None:
-        self.iqms_client = iqms_client or IQMSClient()
+    def __init__(
+        self,
+        iqms_client: Optional[IQMSClient] = None,
+        sync_repository: Optional[SalesOrderSyncRepository] = None,
+        pricing_history_repository: Optional[PricingHistoryRepository] = None,
+        resolution_repository: Optional[SalesOrderResolutionRepository] = None,
+    ) -> None:
+        self.iqms_client = iqms_client or _build_default_iqms_client()
+        self.sync_repository = sync_repository or SalesOrderSyncRepository()
+        self.pricing_history_repository = pricing_history_repository or PricingHistoryRepository()
+        self.resolution_repository = resolution_repository or SalesOrderResolutionRepository()
 
-    def get_sales_orders(self, item_number: str) -> List[SalesOrderData]:
+    def get_sales_orders(self, item_number: str, line_item_id: Optional[UUID] = None) -> List[SalesOrderData]:
         """Fetch the full sales order list from IQMS and filter to item_number here."""
         raw_records = self.iqms_client.get_sales_orders()
         matching = [
@@ -48,7 +77,50 @@ class SalesOrderService:
             for record in raw_records
             if isinstance(record, dict) and str(record.get("ItemNumber") or "") == item_number
         ]
-        return [self._to_sales_order(record) for record in matching]
+        orders = [self._to_sales_order(record) for record in matching]
+        for order in orders:
+            self._persist_order(order, line_item_id)
+
+        if not orders:
+            self._record_resolution(line_item_id, None, "No sales orders found for this item",
+                                     decision="NOT_FOUND", status="NOT_FOUND")
+        else:
+            for order in orders:
+                self._record_order_resolution(order, line_item_id)
+        return orders
+
+    def _record_order_resolution(self, order: SalesOrderData, line_item_id: Optional[UUID]) -> None:
+        # Read-only comparison against the currently active quote pricing for this
+        # customer/item/quantity - SalesOrderService itself never mutates anything.
+        try:
+            reference = self.pricing_history_repository.get_active_price_for_quantity(
+                order.customer_number, order.item_number, order.total_qty_ordered,
+            )
+        except Exception:
+            reference = None
+            logger.exception("Failed to look up reference price for sales order %s", order.sales_order_id)
+
+        if reference is None:
+            # No comparable quote price exists at all - not evidence of a mismatch.
+            decision, note = "NO_CHANGE", "No comparable active quote price found to compare against."
+        elif float(reference["price"]) == order.unit_price:
+            decision, note = "NO_CHANGE", f"Order unit price ${order.unit_price} matches current quoted price."
+        else:
+            decision, note = "MISMATCH", (
+                f"Order unit price ${order.unit_price} differs from current quoted price ${reference['price']}."
+            )
+        self._record_resolution(line_item_id, str(order.sales_order_id), note, decision=decision, status="OBSERVED")
+
+    def _record_resolution(
+        self, line_item_id: Optional[UUID], sales_order_id: Optional[str], note: str, decision: str, status: str,
+    ) -> None:
+        try:
+            self.resolution_repository.record_resolution(
+                line_item_id=line_item_id, sales_order_id=sales_order_id, sales_order_note=note,
+                updates=None, decision=decision, status=status,
+            )
+        except Exception:
+            logger.exception("Failed to record sales order resolution for %s", sales_order_id)
 
     def get_sales_order_details(self, sales_order_id: int, ar_invt_id: int) -> List[SalesOrderDetailData]:
         """
@@ -64,11 +136,28 @@ class SalesOrderService:
         ]
         return [self._to_sales_order_detail(record) for record in matching]
 
-    def get_sales_order_releases(self, sales_order_detail_id: int) -> List[SalesOrderReleaseData]:
+    def get_sales_order_releases(
+        self, sales_order_detail_id: int, line_item_id: Optional[UUID] = None
+    ) -> List[SalesOrderReleaseData]:
         raw_records = self.iqms_client.get_sales_order_releases(sales_order_detail_id)
-        return [
+        releases = [
             self._to_sales_order_release(record) for record in raw_records if isinstance(record, dict)
         ]
+        for release in releases:
+            self._persist_release(release, line_item_id)
+        return releases
+
+    def _persist_order(self, order: SalesOrderData, line_item_id: Optional[UUID] = None) -> None:
+        try:
+            self.sync_repository.upsert_sales_order(order, source="dummy", line_item_id=line_item_id)
+        except Exception:
+            logger.exception("Failed to persist sales order %s to sales_orders_synced", order.sales_order_id)
+
+    def _persist_release(self, release: SalesOrderReleaseData, line_item_id: Optional[UUID] = None) -> None:
+        try:
+            self.sync_repository.upsert_release(release, line_item_id=line_item_id)
+        except Exception:
+            logger.exception("Failed to persist sales order release %s to sales_order_releases_synced", release.release_id)
 
     @staticmethod
     def _to_sales_order(record: Dict[str, Any]) -> SalesOrderData:

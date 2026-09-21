@@ -26,6 +26,8 @@ async def get_pricebreaks(payload: GetPriceBreaksRequest, response: Response):
         customer_number=payload.customer_number,
         evco_part_number=payload.evco_part_number,
         bom_number=payload.manufacturing_bom_number,
+        processing_id=payload.processing_id,
+        line_item_id=payload.line_item_id,
     )
     response.status_code = status.HTTP_200_OK
     return StandardInventoryResponse(
