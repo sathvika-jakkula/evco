@@ -7996,5 +7996,636 @@
       }
     ],
     "resin_rows": []
+  },
+  {
+    "file": "EVCO_QUOTE_74026_DUMMY.pdf",
+    "quote_number": "74026 - 001",
+    "opportunity_id": "74026",
+    "type": "Active",
+    "issue_date": "09-10-26",
+    "price_effective_date": "September 21, 2026",
+    "customer": {
+      "name": "ACUITY BRANDS LIGHTING INC",
+      "customer_number": "10130",
+      "address": [
+        "2925 Lakeview Terrace",
+        "Conyers, GA 30012"
+      ],
+      "attention": "Attention: Harper Lindqvist, h.lindqvist@acuitybrands-mail.example"
+    },
+    "template_style": "simple_decoy",
+    "header_repeats_each_page": true,
+    "effective_date_override": null,
+    "garbled_two_line_header": false,
+    "missing_required_column": null,
+    "supersedes_prior_quote": false,
+    "customer_similarity_test": false,
+    "sales": "J. Sterling",
+    "cs": "R. Alvarez",
+    "engineer": "T. Wynn / A. Castellano",
+    "plant": "DeForest/OSH",
+    "cavities": "1",
+    "mold_numbers": "See Table",
+    "credit_terms": "1% 10 Days Net 30",
+    "shipping": "FOB EVCO Dock DeForest/OSH",
+    "lead_time_note": "12 weeks for each unplanned order.",
+    "quote_comments": [
+      "Initial Active quote.",
+      "Individual rows intentionally omit one required field each - Mold, Price, Customer PN, Part Description, or Parts/Box - to exercise EX-003 (required quote-line info missing) and the soItemNumber gap (Mold) across both single-tier and multi-tier pricing rows."
+    ],
+    "rows": [
+      {
+        "row": 1,
+        "mold": "",
+        "evco_pn": "9490003",
+        "bom": "7102/9490003",
+        "customer_pn": "6727",
+        "description": "LOWER HANDLE",
+        "material": null,
+        "box_qty": "10",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "30",
+            "price": "$19.80"
+          }
+        ],
+        "scenarios": [
+          "BLANK_MOLD_SINGLE_ROW"
+        ],
+        "annotation": null,
+        "notes": "Mold intentionally left blank on this single row only - soItemNumber has nothing to populate from for this row, the rest of the row is otherwise valid."
+      },
+      {
+        "row": 2,
+        "mold": "7106",
+        "evco_pn": "9490009",
+        "bom": "7106/9490009",
+        "customer_pn": "6705",
+        "description": "FRONT DIVIDER",
+        "material": null,
+        "box_qty": "50",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "150",
+            "price": ""
+          }
+        ],
+        "scenarios": [
+          "BLANK_PRICE_SINGLE_ROW"
+        ],
+        "annotation": null,
+        "notes": "Price intentionally left as 'TBD' on this single row only (MOQ still present)."
+      },
+      {
+        "row": 3,
+        "mold": "7107",
+        "evco_pn": "9490025",
+        "bom": "7107/9490025",
+        "customer_pn": "",
+        "description": "FRONT DIVIDER",
+        "material": null,
+        "box_qty": "50",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "500",
+            "price": "$39.23"
+          }
+        ],
+        "scenarios": [
+          "BLANK_CUSTOMER_PN"
+        ],
+        "annotation": null,
+        "notes": "Customer PN intentionally left blank on this single row only."
+      },
+      {
+        "row": 4,
+        "mold": "7109",
+        "evco_pn": "9490033",
+        "bom": "7109/9490033",
+        "customer_pn": "6768",
+        "description": "",
+        "material": null,
+        "box_qty": "30",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "120",
+            "price": "$19.29"
+          }
+        ],
+        "scenarios": [
+          "BLANK_DESCRIPTION"
+        ],
+        "annotation": null,
+        "notes": "Part Description intentionally left blank on this single row only."
+      },
+      {
+        "row": 5,
+        "mold": "7110",
+        "evco_pn": "9490043",
+        "bom": "7110/9490043",
+        "customer_pn": "6817",
+        "description": "LH EMBLEM",
+        "material": null,
+        "box_qty": "",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "30",
+            "price": "$19.60"
+          }
+        ],
+        "scenarios": [
+          "BLANK_PARTS_BOX_SINGLE_ROW"
+        ],
+        "annotation": null,
+        "notes": "Parts/Box intentionally left blank on this single row only (MOQ and price still present)."
+      },
+      {
+        "row": 6,
+        "mold": "7112",
+        "evco_pn": "9490061",
+        "bom": "7112/9490061",
+        "customer_pn": "",
+        "description": "INNER SEAL",
+        "material": null,
+        "box_qty": "50",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "150",
+            "price": "$21.99"
+          },
+          {
+            "moq": "300",
+            "price": "$18.91"
+          }
+        ],
+        "scenarios": [
+          "BLANK_CUSTOMER_PN",
+          "MULTI_TIER_PRICING"
+        ],
+        "annotation": null,
+        "notes": "Customer PN intentionally left blank on this multi-tier pricing row."
+      },
+      {
+        "row": 7,
+        "mold": "7116",
+        "evco_pn": "9490079",
+        "bom": "7116/9490079",
+        "customer_pn": "6870",
+        "description": "",
+        "material": null,
+        "box_qty": "30",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "240",
+            "price": "$29.29"
+          },
+          {
+            "moq": "480",
+            "price": "$25.19"
+          }
+        ],
+        "scenarios": [
+          "BLANK_DESCRIPTION",
+          "MULTI_TIER_PRICING"
+        ],
+        "annotation": null,
+        "notes": "Part Description intentionally left blank on this multi-tier pricing row."
+      },
+      {
+        "row": 8,
+        "mold": "7118",
+        "evco_pn": "9490092",
+        "bom": "7118/9490092",
+        "customer_pn": "6860",
+        "description": "AUX SKIRT",
+        "material": null,
+        "box_qty": "",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "250",
+            "price": "$15.59"
+          },
+          {
+            "moq": "500",
+            "price": "$13.41"
+          }
+        ],
+        "scenarios": [
+          "BLANK_PARTS_BOX_SINGLE_ROW",
+          "MULTI_TIER_PRICING"
+        ],
+        "annotation": null,
+        "notes": "Parts/Box intentionally left blank on this multi-tier pricing row."
+      },
+      {
+        "row": 9,
+        "mold": "7119",
+        "evco_pn": "9490110",
+        "bom": "7119/9490110",
+        "customer_pn": "6674",
+        "description": "MAIN BRACKET",
+        "material": null,
+        "box_qty": "10",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "50",
+            "price": "$23.72"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 10,
+        "mold": "7120",
+        "evco_pn": "9490126",
+        "bom": "7120/9490126",
+        "customer_pn": "6712",
+        "description": "ASSY HANDLE",
+        "material": null,
+        "box_qty": "50",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "400",
+            "price": "$33.05"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 11,
+        "mold": "7124",
+        "evco_pn": "9490132",
+        "bom": "7124/9490132",
+        "customer_pn": "6869",
+        "description": "GREY PANEL",
+        "material": null,
+        "box_qty": "50",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "600",
+            "price": "$28.32"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 12,
+        "mold": "7125",
+        "evco_pn": "9490141",
+        "bom": "7125/9490141",
+        "customer_pn": "6835",
+        "description": "GREY SKIN",
+        "material": null,
+        "box_qty": "30",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "360",
+            "price": "$27.92"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 13,
+        "mold": "7127",
+        "evco_pn": "9490148",
+        "bom": "7127/9490148",
+        "customer_pn": "6820",
+        "description": "VENT SUPPORT",
+        "material": null,
+        "box_qty": "10",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "80",
+            "price": "$36.35"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 14,
+        "mold": "7131",
+        "evco_pn": "9490151",
+        "bom": "7131/9490151",
+        "customer_pn": "6601",
+        "description": "LH BAFFLE",
+        "material": null,
+        "box_qty": "10",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "120",
+            "price": "$15.18"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 15,
+        "mold": "7132",
+        "evco_pn": "9490153",
+        "bom": "7132/9490153",
+        "customer_pn": "6858",
+        "description": "REAR GRILLE",
+        "material": null,
+        "box_qty": "10",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "70",
+            "price": "$30.78"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 16,
+        "mold": "7136",
+        "evco_pn": "9490166",
+        "bom": "7136/9490166",
+        "customer_pn": "6695",
+        "description": "OUTER HANDLE",
+        "material": null,
+        "box_qty": "50",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "550",
+            "price": "$21.04"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 17,
+        "mold": "7138",
+        "evco_pn": "9490172",
+        "bom": "7138/9490172",
+        "customer_pn": "6876",
+        "description": "AUX BAFFLE",
+        "material": null,
+        "box_qty": "20",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "180",
+            "price": "$34.70"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 18,
+        "mold": "7142",
+        "evco_pn": "9490184",
+        "bom": "7142/9490184",
+        "customer_pn": "6867",
+        "description": "FRONT SHROUD",
+        "material": null,
+        "box_qty": "20",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "220",
+            "price": "$21.47"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 19,
+        "mold": "7143",
+        "evco_pn": "9490187",
+        "bom": "7143/9490187",
+        "customer_pn": "6627",
+        "description": "ASSY HOUSING",
+        "material": null,
+        "box_qty": "50",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "600",
+            "price": "$11.58"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 20,
+        "mold": "7147",
+        "evco_pn": "9490190",
+        "bom": "7147/9490190",
+        "customer_pn": "6778",
+        "description": "BLACK GRILLE",
+        "material": null,
+        "box_qty": "30",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "240",
+            "price": "$25.60"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 21,
+        "mold": "7149",
+        "evco_pn": "9490202",
+        "bom": "7149/9490202",
+        "customer_pn": "6742",
+        "description": "OUTER DUCT",
+        "material": null,
+        "box_qty": "20",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "100",
+            "price": "$14.25"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 22,
+        "mold": "7153",
+        "evco_pn": "9490213",
+        "bom": "7153/9490213",
+        "customer_pn": "6810",
+        "description": "ASSY DUCT",
+        "material": null,
+        "box_qty": "30",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "240",
+            "price": "$30.03"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 23,
+        "mold": "7154",
+        "evco_pn": "9490216",
+        "bom": "7154/9490216",
+        "customer_pn": "6890",
+        "description": "MAIN TRAY",
+        "material": null,
+        "box_qty": "10",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "40",
+            "price": "$23.95"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      },
+      {
+        "row": 24,
+        "mold": "7156",
+        "evco_pn": "9490224",
+        "bom": "7156/9490224",
+        "customer_pn": "6885",
+        "description": "ASSY SKIRT",
+        "material": null,
+        "box_qty": "10",
+        "decoy_qty": null,
+        "lead_time": null,
+        "family_code": null,
+        "tiers": [
+          {
+            "moq": "50",
+            "price": "$26.65"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE"
+        ],
+        "annotation": null,
+        "notes": "Plain valid baseline row."
+      }
+    ],
+    "resin_rows": []
   }
 ]

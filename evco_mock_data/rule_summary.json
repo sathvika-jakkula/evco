@@ -8448,6 +8448,466 @@
           "scenarios_with_no_rule_code": null
         }
       ]
+    },
+    {
+      "file": "EVCO_QUOTE_74026_DUMMY.pdf",
+      "quote_number": "74026 - 001",
+      "customer_name": "ACUITY BRANDS LIGHTING INC",
+      "customer_number": "10130",
+      "type": "Active",
+      "quote_level_rules": [
+        {
+          "code": "BR-001",
+          "title": "Process only active quotes",
+          "category": "BR",
+          "verifiability": "code-verifiable"
+        },
+        {
+          "code": "BRM-001",
+          "title": "Extract quote header information",
+          "category": "BRM",
+          "verifiability": "code-verifiable"
+        }
+      ],
+      "aggregate_row_rule_codes": [
+        "EX-003",
+        "BR-002",
+        "BRM-004",
+        "BRM-002"
+      ],
+      "rows": [
+        {
+          "row": 1,
+          "evco_pn": "9490003",
+          "scenarios": [
+            "BLANK_MOLD_SINGLE_ROW"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 2,
+          "evco_pn": "9490009",
+          "scenarios": [
+            "BLANK_PRICE_SINGLE_ROW"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 3,
+          "evco_pn": "9490025",
+          "scenarios": [
+            "BLANK_CUSTOMER_PN"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 4,
+          "evco_pn": "9490033",
+          "scenarios": [
+            "BLANK_DESCRIPTION"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 5,
+          "evco_pn": "9490043",
+          "scenarios": [
+            "BLANK_PARTS_BOX_SINGLE_ROW"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 6,
+          "evco_pn": "9490061",
+          "scenarios": [
+            "BLANK_CUSTOMER_PN",
+            "MULTI_TIER_PRICING"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            },
+            {
+              "code": "BR-002",
+              "title": "Support single pricing and tier pricing",
+              "category": "BR",
+              "verifiability": "llm-dependent"
+            },
+            {
+              "code": "BRM-004",
+              "title": "Create one pricing record per quantity tier",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 7,
+          "evco_pn": "9490079",
+          "scenarios": [
+            "BLANK_DESCRIPTION",
+            "MULTI_TIER_PRICING"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            },
+            {
+              "code": "BR-002",
+              "title": "Support single pricing and tier pricing",
+              "category": "BR",
+              "verifiability": "llm-dependent"
+            },
+            {
+              "code": "BRM-004",
+              "title": "Create one pricing record per quantity tier",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 8,
+          "evco_pn": "9490092",
+          "scenarios": [
+            "BLANK_PARTS_BOX_SINGLE_ROW",
+            "MULTI_TIER_PRICING"
+          ],
+          "applicable_rules": [
+            {
+              "code": "EX-003",
+              "title": "Required quote-line information is missing",
+              "category": "EX",
+              "verifiability": "code-verifiable",
+              "note": "No separate EX-003 check exists in parser.py - column-header failures are reported as EX-002 too (see the ExceptionCode class's own comment)."
+            },
+            {
+              "code": "BR-002",
+              "title": "Support single pricing and tier pricing",
+              "category": "BR",
+              "verifiability": "llm-dependent"
+            },
+            {
+              "code": "BRM-004",
+              "title": "Create one pricing record per quantity tier",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 9,
+          "evco_pn": "9490110",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 10,
+          "evco_pn": "9490126",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 11,
+          "evco_pn": "9490132",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 12,
+          "evco_pn": "9490141",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 13,
+          "evco_pn": "9490148",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 14,
+          "evco_pn": "9490151",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 15,
+          "evco_pn": "9490153",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 16,
+          "evco_pn": "9490166",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 17,
+          "evco_pn": "9490172",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 18,
+          "evco_pn": "9490184",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 19,
+          "evco_pn": "9490187",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 20,
+          "evco_pn": "9490190",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 21,
+          "evco_pn": "9490202",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 22,
+          "evco_pn": "9490213",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 23,
+          "evco_pn": "9490216",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        },
+        {
+          "row": 24,
+          "evco_pn": "9490224",
+          "scenarios": [
+            "VALID_BASELINE"
+          ],
+          "applicable_rules": [
+            {
+              "code": "BRM-002",
+              "title": "Extract quote line information",
+              "category": "BRM",
+              "verifiability": "llm-dependent"
+            }
+          ],
+          "scenarios_with_no_rule_code": null
+        }
+      ]
     }
   ]
 }

@@ -93,6 +93,12 @@ FICTIONAL_CUSTOMERS = {
         "address": ["902 Rotor Ave.", "Wichita, KS 67202"],
         "attention": "Attention: Owen Blackwell, o.blackwell@harley-mail.example",
     },
+    "skyline": {
+        "name": "ACUITY BRANDS LIGHTING INC",
+        "customer_number": "10130",
+        "address": ["2925 Lakeview Terrace", "Conyers, GA 30012"],
+        "attention": "Attention: Harper Lindqvist, h.lindqvist@acuitybrands-mail.example",
+    },
 }
 
 DUMMY_DISCLAIMER = (
@@ -839,5 +845,119 @@ def build_pdf5():
     }
 
 
+# ---------------------------------------------------------------------------
+# PDF 6 - "ACUITY BRANDS LIGHTING INC" - per-row blank-field template: one row
+# with Mold blank (soItemNumber gap), one row with Price blank (EX-003)
+# ---------------------------------------------------------------------------
+
+def build_pdf6():
+    rng = random.Random(74026)
+    rows = []
+    row_no = 0
+    mold_base = 7100
+    pn_base = 9490000
+
+    def next_ids():
+        nonlocal mold_base, pn_base
+        mold_base += rng.choice([1, 2, 4])
+        pn_base += rng.randint(2, 20)
+        return mold_base, pn_base
+
+    # Single-tier rows, one blank field each.
+    single_tier_specs = [
+        ("BLANK_MOLD_SINGLE_ROW", "Mold intentionally left blank on this single row only - soItemNumber "
+         "has nothing to populate from for this row, the rest of the row is otherwise valid."),
+        ("BLANK_PRICE_SINGLE_ROW", "Price intentionally left as 'TBD' on this single row only (MOQ still present)."),
+        ("BLANK_CUSTOMER_PN", "Customer PN intentionally left blank on this single row only."),
+        ("BLANK_DESCRIPTION", "Part Description intentionally left blank on this single row only."),
+        ("BLANK_PARTS_BOX_SINGLE_ROW", "Parts/Box intentionally left blank on this single row only "
+         "(MOQ and price still present)."),
+    ]
+    for tag, note in single_tier_specs:
+        mold, pn = next_ids()
+        cust_pn = f"{6600 + rng.randint(0, 300)}"
+        box_qty = rng.choice([10, 20, 30, 50])
+        moq = box_qty * rng.randint(3, 12)
+        row_no += 1
+        rows.append(make_row(
+            row_no, "" if tag == "BLANK_MOLD_SINGLE_ROW" else str(mold), str(pn), f"{mold}/{pn}",
+            "" if tag == "BLANK_CUSTOMER_PN" else cust_pn,
+            "" if tag == "BLANK_DESCRIPTION" else _description(rng),
+            "" if tag == "BLANK_PARTS_BOX_SINGLE_ROW" else str(box_qty),
+            [{"moq": str(moq), "price": "" if tag == "BLANK_PRICE_SINGLE_ROW" else _price(rng, 5, 40)}],
+            [tag], note,
+        ))
+
+    # Same blank-field gaps, but on genuinely multi-tier (2-break) pricing rows -
+    # proves the missing-field check fires per-row regardless of how many
+    # pricing tiers that row carries, not just on the simplest single-tier case.
+    multi_tier_specs = [
+        ("BLANK_CUSTOMER_PN", "Customer PN intentionally left blank on this multi-tier pricing row."),
+        ("BLANK_DESCRIPTION", "Part Description intentionally left blank on this multi-tier pricing row."),
+        ("BLANK_PARTS_BOX_SINGLE_ROW", "Parts/Box intentionally left blank on this multi-tier pricing row."),
+    ]
+    for tag, note in multi_tier_specs:
+        mold, pn = next_ids()
+        cust_pn = f"{6600 + rng.randint(0, 300)}"
+        box_qty = rng.choice([10, 20, 30, 50])
+        base_moq = box_qty * rng.randint(3, 8)
+        prices = _tiered_prices(rng, rng.uniform(10, 40), 2)
+        tiers = [{"moq": str(base_moq * (i + 1)), "price": f"${p:.2f}"} for i, p in enumerate(prices)]
+        row_no += 1
+        rows.append(make_row(
+            row_no, str(mold), str(pn), f"{mold}/{pn}",
+            "" if tag == "BLANK_CUSTOMER_PN" else cust_pn,
+            "" if tag == "BLANK_DESCRIPTION" else _description(rng),
+            "" if tag == "BLANK_PARTS_BOX_SINGLE_ROW" else str(box_qty),
+            tiers, [tag, "MULTI_TIER_PRICING"], note,
+        ))
+
+    while row_no < 24:
+        mold, pn = next_ids()
+        box_qty = rng.choice([10, 20, 30, 50])
+        moq = box_qty * rng.randint(3, 12)
+        row_no += 1
+        rows.append(make_row(
+            row_no, str(mold), str(pn), f"{mold}/{pn}", f"{6600 + rng.randint(0, 300)}", _description(rng),
+            str(box_qty), [{"moq": str(moq), "price": _price(rng, 5, 40)}],
+            ["VALID_BASELINE"],
+            "Plain valid baseline row.",
+        ))
+
+    return {
+        "file": "EVCO_QUOTE_74026_DUMMY.pdf",
+        "quote_number": "74026 - 001",
+        "opportunity_id": "74026",
+        "type": "Active",
+        "issue_date": "09-10-26",
+        "price_effective_date": "September 21, 2026",
+        "customer": FICTIONAL_CUSTOMERS["skyline"],
+        "template_style": "simple_decoy",
+        "header_repeats_each_page": True,
+        "effective_date_override": None,
+        "garbled_two_line_header": False,
+        "missing_required_column": None,
+        "supersedes_prior_quote": False,
+        "customer_similarity_test": False,
+        "sales": FICTIONAL_CONTACTS["sales"][0],
+        "cs": FICTIONAL_CONTACTS["cs"][0],
+        "engineer": FICTIONAL_CONTACTS["engineer"][0],
+        "plant": "DeForest/OSH",
+        "cavities": "1",
+        "mold_numbers": "See Table",
+        "credit_terms": "1% 10 Days Net 30",
+        "shipping": "FOB EVCO Dock DeForest/OSH",
+        "lead_time_note": "12 weeks for each unplanned order.",
+        "quote_comments": [
+            "Initial Active quote.",
+            "Individual rows intentionally omit one required field each - Mold, Price, Customer PN, "
+            "Part Description, or Parts/Box - to exercise EX-003 (required quote-line info missing) and "
+            "the soItemNumber gap (Mold) across both single-tier and multi-tier pricing rows.",
+        ],
+        "rows": rows,
+        "resin_rows": [],
+    }
+
+
 def build_all_quotes():
-    return [build_pdf1(), build_pdf2(), build_pdf3(), build_pdf4(), build_pdf5()]
+    return [build_pdf1(), build_pdf2(), build_pdf3(), build_pdf4(), build_pdf5(), build_pdf6()]

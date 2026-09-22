@@ -4196,6 +4196,329 @@
           "reason": "Row content is otherwise realistic and varied; this document's EX-002 trigger is quote-level (a missing 'PRICE EFFECTIVE DATE:' header line, and the EVCO MFG (BOM) column dropped from the table header entirely) and fires before any row-level check would run, per validate_before_extraction()'s fail-fast ordering in app/modules/extraction/parser.py."
         }
       ]
+    },
+    {
+      "file": "EVCO_QUOTE_74026_DUMMY.pdf",
+      "quote_number": "74026 - 001",
+      "customer_name": "ACUITY BRANDS LIGHTING INC",
+      "pricing_row_count": 24,
+      "rows": [
+        {
+          "row": 1,
+          "evco_pn": "9490003",
+          "bom": "7102/9490003",
+          "customer_pn": "6727",
+          "scenario": [
+            "BLANK_MOLD_SINGLE_ROW"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Mold intentionally left blank on this single row only - soItemNumber has nothing to populate from for this row, the rest of the row is otherwise valid."
+        },
+        {
+          "row": 2,
+          "evco_pn": "9490009",
+          "bom": "7106/9490009",
+          "customer_pn": "6705",
+          "scenario": [
+            "BLANK_PRICE_SINGLE_ROW"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Price intentionally left as 'TBD' on this single row only (MOQ still present)."
+        },
+        {
+          "row": 3,
+          "evco_pn": "9490025",
+          "bom": "7107/9490025",
+          "customer_pn": null,
+          "scenario": [
+            "BLANK_CUSTOMER_PN"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Customer PN intentionally left blank on this single row only."
+        },
+        {
+          "row": 4,
+          "evco_pn": "9490033",
+          "bom": "7109/9490033",
+          "customer_pn": "6768",
+          "scenario": [
+            "BLANK_DESCRIPTION"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Part Description intentionally left blank on this single row only."
+        },
+        {
+          "row": 5,
+          "evco_pn": "9490043",
+          "bom": "7110/9490043",
+          "customer_pn": "6817",
+          "scenario": [
+            "BLANK_PARTS_BOX_SINGLE_ROW"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Parts/Box intentionally left blank on this single row only (MOQ and price still present)."
+        },
+        {
+          "row": 6,
+          "evco_pn": "9490061",
+          "bom": "7112/9490061",
+          "customer_pn": null,
+          "scenario": [
+            "BLANK_CUSTOMER_PN",
+            "MULTI_TIER_PRICING"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Customer PN intentionally left blank on this multi-tier pricing row."
+        },
+        {
+          "row": 7,
+          "evco_pn": "9490079",
+          "bom": "7116/9490079",
+          "customer_pn": "6870",
+          "scenario": [
+            "BLANK_DESCRIPTION",
+            "MULTI_TIER_PRICING"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Part Description intentionally left blank on this multi-tier pricing row."
+        },
+        {
+          "row": 8,
+          "evco_pn": "9490092",
+          "bom": "7118/9490092",
+          "customer_pn": "6860",
+          "scenario": [
+            "BLANK_PARTS_BOX_SINGLE_ROW",
+            "MULTI_TIER_PRICING"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_ISOLATED_BLANK_FIELD",
+          "quote_level_exception_code": null,
+          "reason": "Parts/Box intentionally left blank on this multi-tier pricing row."
+        },
+        {
+          "row": 9,
+          "evco_pn": "9490110",
+          "bom": "7119/9490110",
+          "customer_pn": "6674",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 10,
+          "evco_pn": "9490126",
+          "bom": "7120/9490126",
+          "customer_pn": "6712",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 11,
+          "evco_pn": "9490132",
+          "bom": "7124/9490132",
+          "customer_pn": "6869",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 12,
+          "evco_pn": "9490141",
+          "bom": "7125/9490141",
+          "customer_pn": "6835",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 13,
+          "evco_pn": "9490148",
+          "bom": "7127/9490148",
+          "customer_pn": "6820",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 14,
+          "evco_pn": "9490151",
+          "bom": "7131/9490151",
+          "customer_pn": "6601",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 15,
+          "evco_pn": "9490153",
+          "bom": "7132/9490153",
+          "customer_pn": "6858",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 16,
+          "evco_pn": "9490166",
+          "bom": "7136/9490166",
+          "customer_pn": "6695",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 17,
+          "evco_pn": "9490172",
+          "bom": "7138/9490172",
+          "customer_pn": "6876",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 18,
+          "evco_pn": "9490184",
+          "bom": "7142/9490184",
+          "customer_pn": "6867",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 19,
+          "evco_pn": "9490187",
+          "bom": "7143/9490187",
+          "customer_pn": "6627",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 20,
+          "evco_pn": "9490190",
+          "bom": "7147/9490190",
+          "customer_pn": "6778",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 21,
+          "evco_pn": "9490202",
+          "bom": "7149/9490202",
+          "customer_pn": "6742",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 22,
+          "evco_pn": "9490213",
+          "bom": "7153/9490213",
+          "customer_pn": "6810",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 23,
+          "evco_pn": "9490216",
+          "bom": "7154/9490216",
+          "customer_pn": "6890",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        },
+        {
+          "row": 24,
+          "evco_pn": "9490224",
+          "bom": "7156/9490224",
+          "customer_pn": "6885",
+          "scenario": [
+            "VALID_BASELINE"
+          ],
+          "annotation": null,
+          "expected_result": "VALID_STRUCTURAL_INPUT",
+          "quote_level_exception_code": null,
+          "reason": "Plain valid baseline row."
+        }
+      ]
     }
   ]
 }

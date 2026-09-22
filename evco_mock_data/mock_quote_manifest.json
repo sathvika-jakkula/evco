@@ -147,6 +147,30 @@
         "MOQ_HIGH_VOLUME": 9,
         "BOX_QTY_MOQ_NOT_DIVISIBLE": 8
       }
+    },
+    {
+      "file": "EVCO_QUOTE_74026_DUMMY.pdf",
+      "quote_number": "74026 - 001",
+      "opportunity_id": "74026",
+      "type": "Active",
+      "customer_name": "ACUITY BRANDS LIGHTING INC",
+      "issue_date": "09-10-26",
+      "price_effective_date": "September 21, 2026",
+      "template_style": "simple_decoy",
+      "page_count": 3,
+      "pricing_row_count": 24,
+      "resin_row_count": 0,
+      "quote_level_exception": null,
+      "missing_required_column": null,
+      "scenario_row_counts": {
+        "BLANK_MOLD_SINGLE_ROW": 1,
+        "BLANK_PRICE_SINGLE_ROW": 1,
+        "BLANK_CUSTOMER_PN": 2,
+        "BLANK_DESCRIPTION": 2,
+        "BLANK_PARTS_BOX_SINGLE_ROW": 2,
+        "MULTI_TIER_PRICING": 3,
+        "VALID_BASELINE": 16
+      }
     }
   ]
 }

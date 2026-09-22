@@ -109,7 +109,7 @@ class InventoryMockStore:
                 "EA", aka.currency, aka.manufacturing_bom_number,
                 aka.minimum_selling_qty, aka.selling_multiples_of,
                 rev=aka.rev, customer_name=aka.customer_name, ship_to_attn=aka.ship_to_attn, status=status,
-                line_item_id=line_item_id,
+                line_item_id=line_item_id, so_item_number=aka.so_item_number,
             )
         except Exception:
             logger.exception("Failed to persist AKA record %s/%s/%s to aka_records",
@@ -154,6 +154,7 @@ class InventoryMockStore:
                     ship_to_attn=aka.get("shipToAttn") or "",
                     minimum_selling_qty=aka.get("minimumSellingQty") or 0,
                     selling_multiples_of=aka.get("sellingMultiplesOf") or 0,
+                    so_item_number=aka.get("soItemNumber") or "",
                 )
             if details:
                 self._aka_details[evco_pn] = details
@@ -225,6 +226,7 @@ class InventoryMockStore:
                 ship_to_attn=details_in.ship_to_attn,
                 minimum_selling_qty=details_in.minimum_selling_qty,
                 selling_multiples_of=details_in.selling_multiples_of,
+                so_item_number=details_in.so_item_number,
             )
             existing_for_item[key] = new_detail
 
@@ -274,6 +276,7 @@ class InventoryMockStore:
                 ship_to_attn=updates.ship_to_attn if updates.ship_to_attn is not None else existing.ship_to_attn,
                 minimum_selling_qty=updates.minimum_selling_qty if updates.minimum_selling_qty is not None else existing.minimum_selling_qty,
                 selling_multiples_of=updates.selling_multiples_of if updates.selling_multiples_of is not None else existing.selling_multiples_of,
+                so_item_number=updates.so_item_number if updates.so_item_number is not None else existing.so_item_number,
             )
             self._aka_details[req.item_number][key] = updated
 

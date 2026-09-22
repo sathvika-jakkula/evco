@@ -38,6 +38,7 @@ class AkaDetail(BaseModel):
     ship_to_attn: str = Field(default="", alias="shipToAttn")
     minimum_selling_qty: int = Field(default=0, alias="minimumSellingQty")
     selling_multiples_of: int = Field(default=0, alias="sellingMultiplesOf")
+    so_item_number: str = Field(default="", alias="soItemNumber", description="Mold number, called soItemNumber on the customer/IQMS side")
 
 
 class AkaSearchData(BaseModel):
@@ -75,6 +76,7 @@ class CreateAkaDetails(BaseModel):
     ship_to_attn: str = Field(default="", alias="shipToAttn")
     minimum_selling_qty: int = Field(default=0, alias="minimumSellingQty")
     selling_multiples_of: int = Field(default=0, alias="sellingMultiplesOf")
+    so_item_number: str = Field(default="", alias="soItemNumber", description="Mold number, called soItemNumber on the customer/IQMS side")
 
 
 class CreateAkaRequest(BaseModel):
@@ -101,6 +103,7 @@ class UpdateAkaDetails(BaseModel):
     ship_to_attn: Optional[str] = Field(default=None, alias="shipToAttn")
     minimum_selling_qty: Optional[int] = Field(default=None, alias="minimumSellingQty")
     selling_multiples_of: Optional[int] = Field(default=None, alias="sellingMultiplesOf")
+    so_item_number: Optional[str] = Field(default=None, alias="soItemNumber", description="Mold number, called soItemNumber on the customer/IQMS side")
 
 
 class UpdateAkaRequest(BaseModel):

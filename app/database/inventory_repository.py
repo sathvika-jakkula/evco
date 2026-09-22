@@ -33,6 +33,7 @@ class InventoryRepository:
         item_description: str, uom: str, currency: str, manufacturing_bom_number: str | None,
         moq: int, selling_multiples_of: int, rev: str = "", customer_name: str = "",
         ship_to_attn: str = "", status: str = "CREATED", line_item_id: UUID | None = None,
+        so_item_number: str = "",
     ) -> UUID:
         """Backs POST /inventory/get-aka, /create-aka, /update-aka
         (InventoryMockStore.get_aka/create_aka/update_aka).
@@ -54,8 +55,8 @@ class InventoryRepository:
                 """INSERT INTO aka_records (aka_record_id, customer_number, customer_part_number, item_number,
                        aka_description, item_description, uom, currency, manufacturing_bom_number, moq,
                        selling_multiples_of, rev, customer_name, ship_to_attn, status, line_item_id,
-                       created_at, updated_at)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                       so_item_number, created_at, updated_at)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                    ON CONFLICT (customer_number, item_number, manufacturing_bom_number) DO UPDATE SET
                        customer_part_number = EXCLUDED.customer_part_number,
                        aka_description = EXCLUDED.aka_description, item_description = EXCLUDED.item_description,
@@ -64,11 +65,12 @@ class InventoryRepository:
                        rev = EXCLUDED.rev, customer_name = EXCLUDED.customer_name,
                        ship_to_attn = EXCLUDED.ship_to_attn, status = EXCLUDED.status,
                        line_item_id = COALESCE(EXCLUDED.line_item_id, aka_records.line_item_id),
+                       so_item_number = EXCLUDED.so_item_number,
                        updated_at = EXCLUDED.updated_at
                    RETURNING aka_record_id""",
                 (uuid4(), customer_number, customer_part_number, item_number, aka_description, item_description,
                  uom, currency, manufacturing_bom_number, moq, selling_multiples_of, rev, customer_name,
-                 ship_to_attn, status, line_item_id, now, now),
+                 ship_to_attn, status, line_item_id, so_item_number, now, now),
             )
             row = cursor.fetchone()
             assert row is not None, "INSERT ... RETURNING always yields exactly one row"
@@ -79,7 +81,7 @@ class InventoryRepository:
             cursor.execute(
                 """SELECT aka_record_id, customer_number, customer_part_number, item_number, aka_description,
                           item_description, uom, currency, manufacturing_bom_number, moq, selling_multiples_of,
-                          rev, customer_name, ship_to_attn, status, created_at, updated_at
+                          rev, customer_name, ship_to_attn, status, so_item_number, created_at, updated_at
                    FROM aka_records WHERE customer_number = %s AND item_number = %s AND manufacturing_bom_number = %s""",
                 (customer_number, item_number, manufacturing_bom_number),
             )

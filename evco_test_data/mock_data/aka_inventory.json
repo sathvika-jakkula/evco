@@ -19,6 +19,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6601",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -68,6 +69,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6601",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -220,6 +222,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 42,
             "sellingMultiplesOf": 14,
+            "soItemNumber": "6602",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -271,6 +274,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 42,
             "sellingMultiplesOf": 14,
+            "soItemNumber": "6602",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -617,6 +621,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6604",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -668,6 +673,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6604",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1014,6 +1020,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6605",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1063,6 +1070,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6605",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1215,6 +1223,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 14,
             "sellingMultiplesOf": 14,
+            "soItemNumber": "6606",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1266,6 +1275,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 14,
             "sellingMultiplesOf": 14,
+            "soItemNumber": "6606",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1518,6 +1528,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6607",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1569,6 +1580,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6607",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1821,6 +1833,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6608",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -1870,6 +1883,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6608",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2022,6 +2036,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6610",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2073,6 +2088,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6610",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2325,6 +2341,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6612",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2376,6 +2393,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6612",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2628,6 +2646,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6615",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2679,6 +2698,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6615",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2931,6 +2951,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6616",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -2980,6 +3001,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6616",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3132,6 +3154,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6619",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3181,6 +3204,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6619",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3333,6 +3357,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6622",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3382,6 +3407,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6622",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3534,6 +3560,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6623",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3585,6 +3612,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6623",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3931,6 +3959,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6625",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -3982,6 +4011,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6625",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -4234,6 +4264,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6627",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -4283,6 +4314,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6627",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -4435,6 +4467,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6629",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -4486,6 +4519,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "6629",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -4738,6 +4772,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6631",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -4789,6 +4824,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6631",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_RESIN_VARIANT",
@@ -5041,6 +5077,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 50,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "6632",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -5132,6 +5169,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1,
             "sellingMultiplesOf": 12,
+            "soItemNumber": "6633",
             "_scenario": [
               "AKA_QTY_BREAK_OF_ONE"
             ],
@@ -5219,6 +5257,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 87,
             "sellingMultiplesOf": 12,
+            "soItemNumber": "6634",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -5306,6 +5345,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 3700,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6637",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -5397,6 +5437,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 275,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6640",
             "_scenario": [
               "BLANK_CUSTOMER_PN"
             ],
@@ -5484,6 +5525,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 600,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "6642",
             "_scenario": [
               "BLANK_DESCRIPTION"
             ],
@@ -5571,6 +5613,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 0,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6645",
             "_scenario": [
               "BLANK_MOQ_SINGLE_ROW"
             ],
@@ -5622,6 +5665,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 450,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "6646",
             "_scenario": [
               "BLANK_PRICE_SINGLE_ROW"
             ],
@@ -5673,6 +5717,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 450,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "6647",
             "_scenario": [
               "LONG_DESCRIPTION_WRAP"
             ],
@@ -5760,6 +5805,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 72,
             "sellingMultiplesOf": 12,
+            "soItemNumber": "6648",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -5843,6 +5889,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6650",
             "_scenario": [
               "COMBINED_MULTI_RULE"
             ],
@@ -6024,6 +6071,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 50,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6651",
             "_scenario": [
               "COMBINED_MULTI_RULE"
             ],
@@ -6123,6 +6171,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 24,
+            "soItemNumber": "6653",
             "_scenario": [
               "STRUCK_ROW_RED_ANNOTATION"
             ],
@@ -6210,6 +6259,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 30,
+            "soItemNumber": "6656",
             "_scenario": [
               "STRUCK_ROW_PINK_ANNOTATION"
             ],
@@ -6297,6 +6347,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 400,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6659",
             "_scenario": [
               "CELL_OVERRIDE_RED_BOX"
             ],
@@ -6384,6 +6435,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 30,
+            "soItemNumber": "6661",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -6477,6 +6529,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6663",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -6614,6 +6667,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6666",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -6707,6 +6761,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6668",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -6844,6 +6899,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 30,
+            "soItemNumber": "6670",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -6937,6 +6993,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 30,
+            "soItemNumber": "6673",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -7030,6 +7087,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 30,
+            "soItemNumber": "6674",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -7123,6 +7181,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6675",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -7216,6 +7275,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "6676",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -7309,6 +7369,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "2101",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -7365,6 +7426,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 50,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "2101",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -7421,6 +7483,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "2101",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -7646,6 +7709,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2102",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -7702,6 +7766,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 30,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2102",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -7758,6 +7823,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 30,
             "sellingMultiplesOf": 5,
+            "soItemNumber": "2102",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -7983,6 +8049,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2103",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8039,6 +8106,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 90,
+            "soItemNumber": "2103",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8095,6 +8163,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 480,
             "sellingMultiplesOf": 80,
+            "soItemNumber": "2103",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8320,6 +8389,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "2108",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8376,6 +8446,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "2108",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8432,6 +8503,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "2108",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8657,6 +8729,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2118",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8713,6 +8786,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2118",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8769,6 +8843,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 5,
             "sellingMultiplesOf": 5,
+            "soItemNumber": "2118",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -8994,6 +9069,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 30,
             "sellingMultiplesOf": 30,
+            "soItemNumber": "2138",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9050,6 +9126,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2138",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9106,6 +9183,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2138",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9331,6 +9409,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2148",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9387,6 +9466,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 90,
+            "soItemNumber": "2148",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9443,6 +9523,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 80,
+            "soItemNumber": "2148",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9668,6 +9749,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 600,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2153",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9724,6 +9806,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 540,
             "sellingMultiplesOf": 90,
+            "soItemNumber": "2153",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -9780,6 +9863,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 80,
+            "soItemNumber": "2153",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -10005,6 +10089,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 30,
+            "soItemNumber": "2154",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -10061,6 +10146,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2154",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -10117,6 +10203,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2154",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -10342,6 +10429,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2155",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -10398,6 +10486,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2155",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_SUFFIX_VARIANT"
@@ -10571,6 +10660,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 75,
             "sellingMultiplesOf": 15,
+            "soItemNumber": "2156",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -10688,6 +10778,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 45,
             "sellingMultiplesOf": 15,
+            "soItemNumber": "2157",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -10805,6 +10896,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 38,
             "sellingMultiplesOf": 38,
+            "soItemNumber": "2177",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -10922,6 +11014,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2178",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -11039,6 +11132,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2188",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -11156,6 +11250,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2193",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -11273,6 +11368,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 75,
             "sellingMultiplesOf": 15,
+            "soItemNumber": "2194",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -11390,6 +11486,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 250,
             "sellingMultiplesOf": 50,
+            "soItemNumber": "2204",
             "_scenario": [
               "VALID_BASELINE",
               "BOM_COMBINED_PLUS"
@@ -11507,6 +11604,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "2214",
             "_scenario": [
               "MOQ_EQUALS_BOX_QTY"
             ],
@@ -11618,6 +11716,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 85,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2234",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -11725,6 +11824,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 3276,
             "sellingMultiplesOf": 12,
+            "soItemNumber": "2254",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -11836,6 +11936,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2259",
             "_scenario": [
               "BLANK_CUSTOMER_PN"
             ],
@@ -11943,6 +12044,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 0,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2260",
             "_scenario": [
               "BLANK_MOQ_SINGLE_ROW"
             ],
@@ -12004,6 +12106,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2261",
             "_scenario": [
               "SPECIAL_CHAR_PART_NUMBER"
             ],
@@ -12107,6 +12210,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1000,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2262",
             "_scenario": [
               "COMBINED_MULTI_RULE"
             ],
@@ -12226,6 +12330,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 500,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2267",
             "_scenario": [
               "COMBINED_MULTI_RULE"
             ],
@@ -12345,6 +12450,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 600,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "2268",
             "_scenario": [
               "STRUCK_ROW_RED_ANNOTATION"
             ],
@@ -12452,6 +12558,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 800,
             "sellingMultiplesOf": 80,
+            "soItemNumber": "2278",
             "_scenario": [
               "CELL_OVERRIDE_RED_BOX"
             ],
@@ -12559,6 +12666,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2298",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -12672,6 +12780,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "2299",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -12785,6 +12894,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 50,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2319",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -12898,6 +13008,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2324",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13011,6 +13122,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "2344",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13124,6 +13236,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2354",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13237,6 +13350,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "2374",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13350,6 +13464,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 400,
             "sellingMultiplesOf": 80,
+            "soItemNumber": "2384",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13463,6 +13578,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 500,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2404",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13576,6 +13692,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1000,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2414",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13689,6 +13806,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 50,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2419",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13802,6 +13920,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 400,
             "sellingMultiplesOf": 80,
+            "soItemNumber": "2420",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -13915,6 +14034,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2425",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -14028,6 +14148,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2426",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -14141,6 +14262,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 500,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2446",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -14254,6 +14376,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "2451",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -14367,6 +14490,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2471",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -14480,6 +14604,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "2491",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -14593,6 +14718,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6101",
             "_scenario": [
               "AKA_QTY_BREAK_OF_ONE"
             ],
@@ -14672,6 +14798,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 154,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6102",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -14751,6 +14878,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 25,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6103",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -14834,6 +14962,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 3825,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6104",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -14917,6 +15046,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 280,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6105",
             "_scenario": [
               "BLANK_PRICE_SINGLE_ROW"
             ],
@@ -14964,6 +15094,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 425,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6106",
             "_scenario": [
               "BLANK_CUSTOMER_PN"
             ],
@@ -15043,6 +15174,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 150,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6107",
             "_scenario": [
               "MULTI_TIER_PRICING"
             ],
@@ -15159,6 +15291,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6108",
             "_scenario": [
               "COMBINED_MULTI_RULE"
             ],
@@ -15250,6 +15383,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6109",
             "_scenario": [
               "STRUCK_ROW_PINK_ANNOTATION"
             ],
@@ -15329,6 +15463,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 560,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6110",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15410,6 +15545,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 50,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6111",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15491,6 +15627,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 140,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6112",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15572,6 +15709,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 130,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6113",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15653,6 +15791,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 520,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6114",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15734,6 +15873,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 220,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6115",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15815,6 +15955,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 160,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6116",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15896,6 +16037,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 280,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6117",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -15977,6 +16119,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 275,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6118",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16058,6 +16201,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6119",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16139,6 +16283,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6120",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16220,6 +16365,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 275,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6121",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16301,6 +16447,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6122",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16382,6 +16529,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 600,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6123",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16463,6 +16611,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6124",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16544,6 +16693,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 30,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6125",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16625,6 +16775,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 150,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6126",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16706,6 +16857,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6127",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16787,6 +16939,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6128",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16868,6 +17021,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 110,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6129",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -16949,6 +17103,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6130",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17030,6 +17185,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 125,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6131",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17111,6 +17267,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6132",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17192,6 +17349,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 275,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6133",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17273,6 +17431,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 175,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6134",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17354,6 +17513,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 375,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6135",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17435,6 +17595,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6136",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17516,6 +17677,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 75,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6137",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17597,6 +17759,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 440,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6138",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17678,6 +17841,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 280,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6139",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17759,6 +17923,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 560,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6140",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17840,6 +18005,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 400,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6141",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -17921,6 +18087,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6142",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18002,6 +18169,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 225,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6143",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18083,6 +18251,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6144",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18164,6 +18333,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6145",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18245,6 +18415,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 150,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6146",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18326,6 +18497,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 320,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6147",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18407,6 +18579,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6148",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18488,6 +18661,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 280,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6149",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18569,6 +18743,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6150",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18650,6 +18825,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "6151",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18731,6 +18907,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 75,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "6152",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18812,6 +18989,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6153",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18893,6 +19071,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 160,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "6154",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -18974,6 +19153,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6155",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -19055,6 +19235,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "6156",
             "_scenario": [
               "VALID_BASELINE",
               "DECOY_QUANTITY_COLUMN_ROW"
@@ -19136,6 +19317,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3305",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -19205,6 +19387,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3306",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -19306,6 +19489,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3308",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -19373,6 +19557,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1720,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3313",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -19440,6 +19625,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "3315",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -19499,6 +19685,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3317",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -19576,6 +19763,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 660,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3318",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -19645,6 +19833,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 110,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3320",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -19746,6 +19935,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3322",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -19813,6 +20003,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1440,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3324",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -19880,6 +20071,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 200,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3329",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -19939,6 +20131,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3331",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -20016,6 +20209,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3333",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -20085,6 +20279,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "3338",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -20186,6 +20381,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3343",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -20253,6 +20449,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 4280,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3344",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -20320,6 +20517,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3349",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -20379,6 +20577,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 440,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3354",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -20456,6 +20655,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3355",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -20525,6 +20725,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 160,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3357",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -20626,6 +20827,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 25,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "3358",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -20693,6 +20895,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 5400,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3363",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -20760,6 +20963,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 540,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3365",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -20819,6 +21023,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3370",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -20896,6 +21101,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "3371",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -20965,6 +21171,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 660,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3376",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -21066,6 +21273,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3381",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -21133,6 +21341,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 5580,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3382",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -21200,6 +21409,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 440,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3387",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -21259,6 +21469,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 540,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3392",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -21336,6 +21547,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3393",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -21405,6 +21617,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 280,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3398",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -21506,6 +21719,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3399",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -21573,6 +21787,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 6600,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3404",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -21640,6 +21855,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 100,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3409",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -21699,6 +21915,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 140,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "3411",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -21776,6 +21993,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3413",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -21845,6 +22063,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3418",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -21946,6 +22165,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3419",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -22013,6 +22233,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 2000,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "3424",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -22080,6 +22301,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3426",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -22139,6 +22361,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3431",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -22216,6 +22439,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 275,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "3433",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -22285,6 +22509,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 480,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3434",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -22386,6 +22611,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3436",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -22453,6 +22679,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1525,
             "sellingMultiplesOf": 25,
+            "soItemNumber": "3437",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -22520,6 +22747,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 480,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3442",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -22579,6 +22807,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3444",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -22656,6 +22885,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3446",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -22725,6 +22955,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 420,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3451",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -22826,6 +23057,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3452",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -22893,6 +23125,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1480,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3457",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -22960,6 +23193,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3462",
             "_scenario": [
               "LEAD_TIME_EXTENDED"
             ],
@@ -23019,6 +23253,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3463",
             "_scenario": [
               "BOM_RESIN_VARIANT",
               "SINGLE_TIER_PRICING"
@@ -23096,6 +23331,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "3465",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -23165,6 +23401,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 540,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3470",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -23266,6 +23503,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "3472",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -23333,6 +23571,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 3660,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "3473",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -23400,6 +23639,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 140,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5201",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -23501,6 +23741,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 160,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5209",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -23650,6 +23891,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5212",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -23753,6 +23995,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 80,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5215",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -23852,6 +24095,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5218",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -23951,6 +24195,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 3540,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5219",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -24050,6 +24295,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 507,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5222",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -24145,6 +24391,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 540,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5223",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -24246,6 +24493,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5231",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -24395,6 +24643,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5239",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -24498,6 +24747,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5240",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -24597,6 +24847,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5241",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -24696,6 +24947,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 17700,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5242",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -24795,6 +25047,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 507,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5250",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -24890,6 +25143,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1000,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5253",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -24991,6 +25245,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 700,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5256",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -25140,6 +25395,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 400,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5259",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -25243,6 +25499,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 500,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5260",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -25342,6 +25599,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5261",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -25441,6 +25699,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1670,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5269",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -25540,6 +25799,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 107,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5270",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -25635,6 +25895,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5271",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -25736,6 +25997,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 400,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5274",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -25885,6 +26147,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 800,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5275",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -25988,6 +26251,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 30,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5283",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -26087,6 +26351,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5291",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -26186,6 +26451,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 4800,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5294",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -26285,6 +26551,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 107,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5302",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -26380,6 +26647,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5303",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -26481,6 +26749,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 280,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5306",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -26630,6 +26899,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5314",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -26733,6 +27003,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 700,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5315",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -26832,6 +27103,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 10,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5316",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -26931,6 +27203,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 12700,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5319",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -27030,6 +27303,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 207,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5320",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -27125,6 +27399,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5323",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -27226,6 +27501,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5324",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -27375,6 +27651,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 900,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5325",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -27478,6 +27755,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 280,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5333",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -27577,6 +27855,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5341",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -27676,6 +27955,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 1300,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5342",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -27775,6 +28055,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 207,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5350",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -27870,6 +28151,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 500,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5358",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -27971,6 +28253,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 120,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5366",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -28120,6 +28403,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5367",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -28223,6 +28507,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5370",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -28322,6 +28607,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 40,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5378",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -28421,6 +28707,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 7320,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5386",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -28520,6 +28807,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 307,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5394",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -28615,6 +28903,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5402",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -28716,6 +29005,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5410",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -28865,6 +29155,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5413",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -28968,6 +29259,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 360,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5421",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -29067,6 +29359,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 20,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5429",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -29166,6 +29459,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 3540,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5432",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -29265,6 +29559,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 57,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5440",
             "_scenario": [
               "BOX_QTY_MOQ_NOT_DIVISIBLE"
             ],
@@ -29360,6 +29655,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 90,
             "sellingMultiplesOf": 10,
+            "soItemNumber": "5448",
             "_scenario": [
               "VALID_BASELINE",
               "SINGLE_TIER_PRICING"
@@ -29461,6 +29757,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 180,
             "sellingMultiplesOf": 20,
+            "soItemNumber": "5449",
             "_scenario": [
               "VALID_BASELINE",
               "MULTI_TIER_PRICING"
@@ -29610,6 +29907,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 240,
             "sellingMultiplesOf": 40,
+            "soItemNumber": "5457",
             "_scenario": [
               "BOM_SUFFIX_VARIANT"
             ],
@@ -29713,6 +30011,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 300,
             "sellingMultiplesOf": 100,
+            "soItemNumber": "5460",
             "_scenario": [
               "BOM_COMBINED_PLUS"
             ],
@@ -29812,6 +30111,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 60,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5468",
             "_scenario": [
               "MOQ_LOW_BOUNDARY"
             ],
@@ -29911,6 +30211,7 @@
             "shipToAttn": "",
             "minimumSellingQty": 5100,
             "sellingMultiplesOf": 60,
+            "soItemNumber": "5476",
             "_scenario": [
               "MOQ_HIGH_VOLUME"
             ],
@@ -29988,6 +30289,1632 @@
           ],
           "_hasException": true,
           "_note": "Row content is otherwise realistic and varied; this document's EX-002 trigger is quote-level (a missing 'PRICE EFFECTIVE DATE:' header line, and the EVCO MFG (BOM) column dropped from the table header entirely) and fires before any row-level check would run, per validate_before_extraction()'s fail-fast ordering in app/modules/extraction/parser.py."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490003",
+          "Rev": "A",
+          "Description": "LOWER HANDLE"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6727",
+            "akaDescription": "LOWER HANDLE",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7102/9490003",
+            "shipToAttn": "",
+            "minimumSellingQty": 30,
+            "sellingMultiplesOf": 10,
+            "soItemNumber": "",
+            "_scenario": [
+              "BLANK_MOLD_SINGLE_ROW"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Mold intentionally left blank on this single row only - soItemNumber has nothing to populate from for this row, the rest of the row is otherwise valid."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 19.8,
+          "qty": 30,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7102/9490003",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_MOLD_SINGLE_ROW"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Mold intentionally left blank on this single row only - soItemNumber has nothing to populate from for this row, the rest of the row is otherwise valid."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490009",
+          "Rev": "A",
+          "Description": "FRONT DIVIDER"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6705",
+            "akaDescription": "FRONT DIVIDER",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7106/9490009",
+            "shipToAttn": "",
+            "minimumSellingQty": 150,
+            "sellingMultiplesOf": 50,
+            "soItemNumber": "7106",
+            "_scenario": [
+              "BLANK_PRICE_SINGLE_ROW"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Price intentionally left as 'TBD' on this single row only (MOQ still present)."
+          }
+        ]
+      },
+      "pricingDetails": []
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490025",
+          "Rev": "A",
+          "Description": "FRONT DIVIDER"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "",
+            "akaDescription": "FRONT DIVIDER",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7107/9490025",
+            "shipToAttn": "",
+            "minimumSellingQty": 500,
+            "sellingMultiplesOf": 50,
+            "soItemNumber": "7107",
+            "_scenario": [
+              "BLANK_CUSTOMER_PN"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Customer PN intentionally left blank on this single row only."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 39.23,
+          "qty": 500,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7107/9490025",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_CUSTOMER_PN"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Customer PN intentionally left blank on this single row only."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490033",
+          "Rev": "A",
+          "Description": ""
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6768",
+            "akaDescription": "",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7109/9490033",
+            "shipToAttn": "",
+            "minimumSellingQty": 120,
+            "sellingMultiplesOf": 30,
+            "soItemNumber": "7109",
+            "_scenario": [
+              "BLANK_DESCRIPTION"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Part Description intentionally left blank on this single row only."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 19.29,
+          "qty": 120,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7109/9490033",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_DESCRIPTION"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Part Description intentionally left blank on this single row only."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490043",
+          "Rev": "A",
+          "Description": "LH EMBLEM"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6817",
+            "akaDescription": "LH EMBLEM",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7110/9490043",
+            "shipToAttn": "",
+            "minimumSellingQty": 30,
+            "sellingMultiplesOf": 0,
+            "soItemNumber": "7110",
+            "_scenario": [
+              "BLANK_PARTS_BOX_SINGLE_ROW"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Parts/Box intentionally left blank on this single row only (MOQ and price still present)."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 19.6,
+          "qty": 30,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7110/9490043",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_PARTS_BOX_SINGLE_ROW"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Parts/Box intentionally left blank on this single row only (MOQ and price still present)."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490061",
+          "Rev": "A",
+          "Description": "INNER SEAL"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "",
+            "akaDescription": "INNER SEAL",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7112/9490061",
+            "shipToAttn": "",
+            "minimumSellingQty": 150,
+            "sellingMultiplesOf": 50,
+            "soItemNumber": "7112",
+            "_scenario": [
+              "BLANK_CUSTOMER_PN",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BRM-001",
+              "BRM-004",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Extract quote header information",
+              "Create one pricing record per quantity tier",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Customer PN intentionally left blank on this multi-tier pricing row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 21.99,
+          "qty": 150,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7112/9490061",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_CUSTOMER_PN",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BRM-001",
+            "BRM-004",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Customer PN intentionally left blank on this multi-tier pricing row."
+        },
+        {
+          "price": 18.91,
+          "qty": 300,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7112/9490061",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_CUSTOMER_PN",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BRM-001",
+            "BRM-004",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Customer PN intentionally left blank on this multi-tier pricing row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490079",
+          "Rev": "A",
+          "Description": ""
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6870",
+            "akaDescription": "",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7116/9490079",
+            "shipToAttn": "",
+            "minimumSellingQty": 240,
+            "sellingMultiplesOf": 30,
+            "soItemNumber": "7116",
+            "_scenario": [
+              "BLANK_DESCRIPTION",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BRM-001",
+              "BRM-004",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Extract quote header information",
+              "Create one pricing record per quantity tier",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Part Description intentionally left blank on this multi-tier pricing row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 29.29,
+          "qty": 240,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7116/9490079",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_DESCRIPTION",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BRM-001",
+            "BRM-004",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Part Description intentionally left blank on this multi-tier pricing row."
+        },
+        {
+          "price": 25.19,
+          "qty": 480,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7116/9490079",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_DESCRIPTION",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BRM-001",
+            "BRM-004",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Part Description intentionally left blank on this multi-tier pricing row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490092",
+          "Rev": "A",
+          "Description": "AUX SKIRT"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6860",
+            "akaDescription": "AUX SKIRT",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7118/9490092",
+            "shipToAttn": "",
+            "minimumSellingQty": 250,
+            "sellingMultiplesOf": 0,
+            "soItemNumber": "7118",
+            "_scenario": [
+              "BLANK_PARTS_BOX_SINGLE_ROW",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BRM-001",
+              "BRM-004",
+              "EX-003"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Extract quote header information",
+              "Create one pricing record per quantity tier",
+              "Required quote-line information is missing"
+            ],
+            "_hasException": true,
+            "_note": "Parts/Box intentionally left blank on this multi-tier pricing row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 15.59,
+          "qty": 250,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7118/9490092",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_PARTS_BOX_SINGLE_ROW",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BRM-001",
+            "BRM-004",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Parts/Box intentionally left blank on this multi-tier pricing row."
+        },
+        {
+          "price": 13.41,
+          "qty": 500,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7118/9490092",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "BLANK_PARTS_BOX_SINGLE_ROW",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BRM-001",
+            "BRM-004",
+            "EX-003"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Required quote-line information is missing"
+          ],
+          "_hasException": true,
+          "_note": "Parts/Box intentionally left blank on this multi-tier pricing row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490110",
+          "Rev": "A",
+          "Description": "MAIN BRACKET"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6674",
+            "akaDescription": "MAIN BRACKET",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7119/9490110",
+            "shipToAttn": "",
+            "minimumSellingQty": 50,
+            "sellingMultiplesOf": 10,
+            "soItemNumber": "7119",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 23.72,
+          "qty": 50,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7119/9490110",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490126",
+          "Rev": "A",
+          "Description": "ASSY HANDLE"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6712",
+            "akaDescription": "ASSY HANDLE",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7120/9490126",
+            "shipToAttn": "",
+            "minimumSellingQty": 400,
+            "sellingMultiplesOf": 50,
+            "soItemNumber": "7120",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 33.05,
+          "qty": 400,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7120/9490126",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490132",
+          "Rev": "A",
+          "Description": "GREY PANEL"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6869",
+            "akaDescription": "GREY PANEL",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7124/9490132",
+            "shipToAttn": "",
+            "minimumSellingQty": 600,
+            "sellingMultiplesOf": 50,
+            "soItemNumber": "7124",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 28.32,
+          "qty": 600,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7124/9490132",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490141",
+          "Rev": "A",
+          "Description": "GREY SKIN"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6835",
+            "akaDescription": "GREY SKIN",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7125/9490141",
+            "shipToAttn": "",
+            "minimumSellingQty": 360,
+            "sellingMultiplesOf": 30,
+            "soItemNumber": "7125",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 27.92,
+          "qty": 360,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7125/9490141",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490148",
+          "Rev": "A",
+          "Description": "VENT SUPPORT"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6820",
+            "akaDescription": "VENT SUPPORT",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7127/9490148",
+            "shipToAttn": "",
+            "minimumSellingQty": 80,
+            "sellingMultiplesOf": 10,
+            "soItemNumber": "7127",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 36.35,
+          "qty": 80,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7127/9490148",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490151",
+          "Rev": "A",
+          "Description": "LH BAFFLE"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6601",
+            "akaDescription": "LH BAFFLE",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7131/9490151",
+            "shipToAttn": "",
+            "minimumSellingQty": 120,
+            "sellingMultiplesOf": 10,
+            "soItemNumber": "7131",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 15.18,
+          "qty": 120,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7131/9490151",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490153",
+          "Rev": "A",
+          "Description": "REAR GRILLE"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6858",
+            "akaDescription": "REAR GRILLE",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7132/9490153",
+            "shipToAttn": "",
+            "minimumSellingQty": 70,
+            "sellingMultiplesOf": 10,
+            "soItemNumber": "7132",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 30.78,
+          "qty": 70,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7132/9490153",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490166",
+          "Rev": "A",
+          "Description": "OUTER HANDLE"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6695",
+            "akaDescription": "OUTER HANDLE",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7136/9490166",
+            "shipToAttn": "",
+            "minimumSellingQty": 550,
+            "sellingMultiplesOf": 50,
+            "soItemNumber": "7136",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 21.04,
+          "qty": 550,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7136/9490166",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490172",
+          "Rev": "A",
+          "Description": "AUX BAFFLE"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6876",
+            "akaDescription": "AUX BAFFLE",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7138/9490172",
+            "shipToAttn": "",
+            "minimumSellingQty": 180,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "7138",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 34.7,
+          "qty": 180,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7138/9490172",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490184",
+          "Rev": "A",
+          "Description": "FRONT SHROUD"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6867",
+            "akaDescription": "FRONT SHROUD",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7142/9490184",
+            "shipToAttn": "",
+            "minimumSellingQty": 220,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "7142",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 21.47,
+          "qty": 220,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7142/9490184",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490187",
+          "Rev": "A",
+          "Description": "ASSY HOUSING"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6627",
+            "akaDescription": "ASSY HOUSING",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7143/9490187",
+            "shipToAttn": "",
+            "minimumSellingQty": 600,
+            "sellingMultiplesOf": 50,
+            "soItemNumber": "7143",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 11.58,
+          "qty": 600,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7143/9490187",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490190",
+          "Rev": "A",
+          "Description": "BLACK GRILLE"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6778",
+            "akaDescription": "BLACK GRILLE",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7147/9490190",
+            "shipToAttn": "",
+            "minimumSellingQty": 240,
+            "sellingMultiplesOf": 30,
+            "soItemNumber": "7147",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 25.6,
+          "qty": 240,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7147/9490190",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490202",
+          "Rev": "A",
+          "Description": "OUTER DUCT"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6742",
+            "akaDescription": "OUTER DUCT",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7149/9490202",
+            "shipToAttn": "",
+            "minimumSellingQty": 100,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "7149",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 14.25,
+          "qty": 100,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7149/9490202",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490213",
+          "Rev": "A",
+          "Description": "ASSY DUCT"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6810",
+            "akaDescription": "ASSY DUCT",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7153/9490213",
+            "shipToAttn": "",
+            "minimumSellingQty": 240,
+            "sellingMultiplesOf": 30,
+            "soItemNumber": "7153",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 30.03,
+          "qty": 240,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7153/9490213",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490216",
+          "Rev": "A",
+          "Description": "MAIN TRAY"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6890",
+            "akaDescription": "MAIN TRAY",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7154/9490216",
+            "shipToAttn": "",
+            "minimumSellingQty": 40,
+            "sellingMultiplesOf": 10,
+            "soItemNumber": "7154",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 23.95,
+          "qty": 40,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7154/9490216",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9490224",
+          "Rev": "A",
+          "Description": "ASSY SKIRT"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "6885",
+            "akaDescription": "ASSY SKIRT",
+            "rev": "A",
+            "customer#": "10130",
+            "currency": "US Dollar",
+            "customername": "ACUITY BRANDS LIGHTING INC",
+            "mfg#": "7156/9490224",
+            "shipToAttn": "",
+            "minimumSellingQty": 50,
+            "sellingMultiplesOf": 10,
+            "soItemNumber": "7156",
+            "_scenario": [
+              "VALID_BASELINE"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Plain valid baseline row."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 26.65,
+          "qty": 50,
+          "effectiveDate": "September 21, 2026",
+          "Comment": "7156/9490224",
+          "inactiveDate": "",
+          "priceDate": "September 21, 2026",
+          "_scenario": [
+            "VALID_BASELINE"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Plain valid baseline row."
         }
       ]
     }

@@ -15076,6 +15076,37 @@
       "_hasException": true,
       "_soScenario": "correct_quantity_and_price",
       "_note": "quoted_qty=5100, quoted_price=23.52 (from EVCO_QUOTE_74025_DUMMY.pdf row 62)"
+    },
+    {
+      "Id": 500298,
+      "OrdDetailId": 600298,
+      "ArInvtId": 700298,
+      "OrderNumber": "SO-500298",
+      "PONumber": "PO-10130-1",
+      "CustomerNumber": "10130",
+      "Company": "ACUITY BRANDS LIGHTING INC",
+      "ItemNumber": "9490003",
+      "Description": null,
+      "CustomerItemNumber": "6634",
+      "CustomerDescription": null,
+      "Status": "Open",
+      "Rev": "A",
+      "TotalQTYOrdered": 30,
+      "UnitPrice": 17.5,
+      "DateTaken": "2026-09-05T00:00:00",
+      "DeliveryDate": "2026-11-01T00:00:00",
+      "_scenario": [
+        "BLANK_MOLD_SINGLE_ROW"
+      ],
+      "_ruleCodes": [
+        "EX-003"
+      ],
+      "_ruleNames": [
+        "Required quote-line information is missing"
+      ],
+      "_hasException": true,
+      "_soScenario": "existing_so_before_quote_price_change",
+      "_note": "quoted_qty=30, quoted_price=19.80 (from EVCO_QUOTE_74026_DUMMY.pdf row 1, Mold column blank on that row)"
     }
   ]
 }

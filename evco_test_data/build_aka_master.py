@@ -127,6 +127,9 @@ def main():
                 "shipToAttn": "",
                 "minimumSellingQty": clean_int(row["tiers"][0]["moq"]) if row.get("tiers") else 0,
                 "sellingMultiplesOf": clean_int(row["box_qty"]) if row.get("box_qty") else 0,
+                # The quote PDF's "Mold" column - called soItemNumber in the AKA API
+                # contract, not mold, since that's the name the customer/IQMS side uses.
+                "soItemNumber": row.get("mold") or "",
                 "_scenario": scenarios,
                 "_ruleCodes": row_rule_codes,
                 "_ruleNames": [RULE_CATALOG[c]["title"] for c in row_rule_codes if c in RULE_CATALOG],
