@@ -410,7 +410,7 @@ system
 
 ## POST /inventory/get-pricebreaks
 
-Request: evco_part_number, customer_number, manufacturing_bom_number, line_item_id Response: [{ unit_price, quantity, comment }] pricing_results (upsert, key = line_item_id)
+Request: `Item #`, `customer#`, `mfg#`, line_item_id (payload keys; map to evco_part_number/customer_number/manufacturing_bom_number below) Response: [{ unit_price, quantity, comment }] pricing_results (upsert, key = line_item_id)
 
 
 Column
@@ -459,7 +459,7 @@ exception_code='PRICE_NOT_FOUND'
 
 ## POST /inventory/add-pricebreak
 
-Request: quantity, price, effective_date, evco_part_number, customer_number, manufacturing_bom_number, currency, source_quote_number, processing_id, line_item_id
+Request: quantity, price, effective_date, `Item #`, `customer#`, `mfg#`, currency, source_quote_number, processing_id, line_item_id (payload keys; map to evco_part_number/customer_number/manufacturing_bom_number below)
 
 pricing_history (new row, key = business key)
 
@@ -506,7 +506,7 @@ exception_logs (new row, only on unique-constraint race) — exception_code='PRI
 
 ## POST /inventory/update-pricebreak
 
-Request: quantity, price, effective_date, inactive_date, evco_part_number, customer_number, manufacturing_bom_number, currency, source_quote_number, processing_id, line_item_id pricing_history — two rows written in one transaction:
+Request: quantity, price, effective_date, inactive_date, `Item #`, `customer#`, `mfg#`, currency, source_quote_number, processing_id, line_item_id (payload keys; map to evco_part_number/customer_number/manufacturing_bom_number below) pricing_history — two rows written in one transaction:
 
 Old row (update):
 

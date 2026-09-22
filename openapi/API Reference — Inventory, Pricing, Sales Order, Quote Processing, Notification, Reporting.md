@@ -88,13 +88,24 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 ## `/inventory/get-pricebreaks`
 
 **Request:**
-| Field | Type | Required |
+| Payload key | Type | Required |
 |---|---|---|
-| evco_part_number | string | yes |
-| customer_number | string | yes |
-| manufacturing_bom_number | string | yes |
-| processing_id | UUID | no |
-| line_item_id | UUID | no |
+| `Item #` | string | yes |
+| `customer#` | string | yes |
+| `mfg#` | string | yes |
+| `processing_id` | UUID | no |
+| `line_item_id` | UUID | no |
+
+**Example request:**
+```json
+{
+  "Item #": "EVCO-10023",
+  "customer#": "CUST-4471",
+  "mfg#": "MFG-8890",
+  "processing_id": "8b1a9953-c461-4359-9dee-0b8a1b3c1e6f",
+  "line_item_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
 
 **Response `200`** — `StandardInventoryResponse[List[PriceBreakData]]`:
 ```json
@@ -112,18 +123,34 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 ## `/inventory/add-pricebreak`
 
 **Request:**
-| Field | Type | Required |
+| Payload key | Type | Required |
 |---|---|---|
-| quantity | int (>0) | yes |
-| price | float (>0) | yes |
-| effective_date | datetime | yes |
-| evco_part_number | string | no |
-| customer_number | string | no |
-| manufacturing_bom_number | string | no |
-| currency | string | no |
-| source_quote_number | string | no |
-| processing_id | UUID | no |
-| line_item_id | UUID | no |
+| `quantity` | int (>0) | yes |
+| `price` | float (>0) | yes |
+| `effective_date` | datetime | yes |
+| `Item #` | string | no |
+| `customer#` | string | no |
+| `mfg#` | string | no |
+| `currency` | string | no |
+| `source_quote_number` | string | no |
+| `processing_id` | UUID | no |
+| `line_item_id` | UUID | no |
+
+**Example request:**
+```json
+{
+  "quantity": 500,
+  "price": 2.35,
+  "effective_date": "2026-10-01T00:00:00Z",
+  "Item #": "EVCO-10023",
+  "customer#": "CUST-4471",
+  "mfg#": "MFG-8890",
+  "currency": "USD",
+  "source_quote_number": "Q-2026-00456",
+  "processing_id": "8b1a9953-c461-4359-9dee-0b8a1b3c1e6f",
+  "line_item_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
 
 **Response `201`** — `StandardInventoryResponse[AddPriceBreakResponseData]`:
 ```json
@@ -141,19 +168,36 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 ## `/inventory/update-pricebreak`
 
 **Request:**
-| Field | Type | Required |
+| Payload key | Type | Required |
 |---|---|---|
-| quantity | int (>0) | yes |
-| price | float (>0) | yes |
-| effective_date | datetime | yes |
-| inactive_date | datetime | no |
-| evco_part_number | string | no |
-| customer_number | string | no |
-| manufacturing_bom_number | string | no |
-| currency | string | no |
-| source_quote_number | string | no |
-| processing_id | UUID | no |
-| line_item_id | UUID | no |
+| `quantity` | int (>0) | yes |
+| `price` | float (>0) | yes |
+| `effective_date` | datetime | yes |
+| `inactive_date` | datetime | no |
+| `Item #` | string | no |
+| `customer#` | string | no |
+| `mfg#` | string | no |
+| `currency` | string | no |
+| `source_quote_number` | string | no |
+| `processing_id` | UUID | no |
+| `line_item_id` | UUID | no |
+
+**Example request:**
+```json
+{
+  "quantity": 500,
+  "price": 2.15,
+  "effective_date": "2026-10-01T00:00:00Z",
+  "inactive_date": "2027-01-01T00:00:00Z",
+  "Item #": "EVCO-10023",
+  "customer#": "CUST-4471",
+  "mfg#": "MFG-8890",
+  "currency": "USD",
+  "source_quote_number": "Q-2026-00456",
+  "processing_id": "8b1a9953-c461-4359-9dee-0b8a1b3c1e6f",
+  "line_item_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}
+```
 
 **Response `200`** — `StandardInventoryResponse[UpdatePriceBreakResponseData]`:
 ```json
