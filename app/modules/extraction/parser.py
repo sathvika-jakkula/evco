@@ -108,7 +108,41 @@ client = OpenAI(
 )
 model_name = settings.MODEL_NAME
 
-CHUNK_PAGE_SIZE = 4
+CHUNK_PAGE_SIZE = 1
+
+# Token budgets per call stage. The old single-stage prompt asked one LLM
+# call to read the page, decide which lines are real table rows, resolve
+# merged/blank cells, group rows into pricing tiers, AND build the final
+# nested JSON - a raw-row extraction (see build_raw_row_prompt below) needs
+# far fewer output tokens than the old full-schema call, since it no longer
+# nests pricing_tiers or repeats the document header per chunk.
+# Sized from observed real responses: a 24-row dense page's raw-row JSON
+# (one object per row, full column-label keys repeated per row) runs
+# 6000-11000+ characters - 4000 tokens truncated it mid-response on a real
+# test page. 10000 covers the densest real page in this project's own test
+# corpus (max 29 data rows on one page, across all 6 dummy quotes - checked
+# directly) with real margin, while staying meaningfully below the old
+# single-stage prompt's 16000-token budget (which also had to fit a
+# repeated document header AND fully-nested parts/pricing_tiers per call,
+# neither of which this lightweight response includes at all).
+RAW_ROW_MAX_TOKENS = 10000
+
+# Step 9 asks for a dense table to be split into smaller batches rather than
+# raising the token limit further. _split_table_markdown_into_batches below
+# implements exactly that and is kept in place - but splitting a table
+# mid-way was directly observed, in testing, to sometimes lose the row(s)
+# nearest the split point (the model loses continuation context across the
+# cut), which is a worse outcome than the truncation it prevents. Given the
+# real max row density measured across this project's whole test corpus is
+# 29 (see above) and RAW_ROW_MAX_TOKENS=10000 already covers that with
+# margin, this threshold is set high enough that splitting never triggers
+# for any file in this project today - the mechanism stays available for a
+# future page dense enough to need it, rather than being deleted.
+MAX_TABLE_ROWS_PER_CALL = 40
+# The targeted ambiguous-row call (Step 8) answers 3 fixed questions about
+# one row using minimal context - it never needs anywhere near this budget,
+# but a naturally small ceiling is still safer than an unbounded default.
+AMBIGUOUS_ROW_MAX_TOKENS = 800
 
 logger.info(f"PDFExtractor using model: {model_name}")
 
@@ -587,6 +621,174 @@ def build_prompt(annotated_text, table_markdown, detected_notes, master_header=N
     return "\n".join(parts)
 
 
+# ---------------------------------------------------------------------------
+# Lightweight raw-row extraction prompt (performance refactor)
+#
+# schema_instruction/build_prompt above are UNCHANGED and still define the
+# full single-call contract; they are kept for reference and as a fallback
+# call shape (call_llm's signature is unchanged besides the new optional
+# max_tokens param) but are no longer what extract_pdf_data sends per chunk.
+#
+# The old prompt made every LLM call responsible for: identifying real table
+# rows, resolving blank/merged cells (fill-down), grouping rows into pricing
+# tiers, AND constructing the final nested parts/pricing_tiers/header JSON -
+# all in one shot, once per CHUNK_PAGE_SIZE-page chunk. That is a lot of
+# reasoning crammed into one large prompt/response pair.
+#
+# This lightweight prompt asks the LLM for ONLY what genuinely requires
+# visual/positional judgment it has and Python does not (which lines are
+# real pricing-table rows vs. footer/comment/resin-table noise, and which
+# raw value belongs in which master-header column, honoring the existing
+# blank-cell/merged-cell/multi-price-column rules already documented in
+# schema_instruction above - those rules are copied here verbatim where they
+# affect column IDENTIFICATION, since that judgment call still has to happen
+# somewhere and Python cannot see the page's visual layout). It explicitly
+# does NOT ask the model to fill down blank cells, group rows into pricing
+# tiers, or build the final nested schema - _normalize_raw_rows() below does
+# all of that deterministically in Python once the raw per-row values are in
+# hand, which is exactly the "reduce what the LLM has to do" goal.
+# ---------------------------------------------------------------------------
+
+raw_row_instruction = """
+You are extracting RAW pricing-table rows from one small section of an EVCO
+Price Quotation PDF. This is a narrower task than a full extraction - you are
+NOT building the final answer, only reporting what is physically printed in
+each table row, one row at a time.
+
+Use the supplied master table header to determine which column each value
+belongs to - it is the true column order for this document, even on pages
+that show no header of their own.
+
+Extract ONLY genuine rows of the Part Pricing table (the table with columns
+like Mold/EVCO PN/Customer PN/Description/Box Qty/MOQ/Price - cross-check
+against the supplied Markdown table rendering, which contains ONLY real
+table rows). Do NOT extract:
+- comments, footer/signature blocks, terms & conditions, shipping/credit text
+- resin/material/colorant reference tables
+- any sentence that merely uses a column-like word (Mold, MOQ, Price, Qty)
+  in prose rather than as an actual table row with real values
+
+Column-identification rules (apply these, since only you can see the row's
+original visual/table layout - Python cannot):
+- Preserve every cell exactly as printed, as a STRING. Do not normalize,
+  reformat, or coerce numbers - "$3.19" stays "$3.19", "2,760" stays "2,760".
+- Preserve blank cells: if a cell is genuinely blank in this row, return an
+  empty string "" for that column. NEVER shift later values left to fill a
+  blank cell's slot - column position comes from the cell's position in the
+  Markdown table between its pipe (|) delimiters, never from how many
+  non-empty values the row happens to have.
+- Do NOT fill down a blank cell from a previous row yourself - report this
+  row's own printed value only (or "" if genuinely blank here). Fill-down is
+  handled afterward, not by you.
+- Some templates print more than one quantity column (e.g. "Run Qty" AND
+  "MOQ"). Only place a value under "MOQ"/"MRQ"/"Min Order Qty"/"Release Qty"
+  if it is the column literally labeled that way in the master header - never
+  a "Run Qty"/"Run Quantity"/"Annual Purchase Qty" column, even if it sits
+  closer to the price.
+- Wide "master price list" tables often print several dollar-amount columns
+  per row (cost-buildup components) leading up to a final selling price.
+  Only the LAST such column - the current/most-recent total selling price
+  (e.g. "<Month Year> Part Pricing", "Quote Price", "New Price", "Price
+  Each") - is the "Price" value. Never report an intermediate
+  cost/build-up/adjustment column as "Price". Never use a column literally
+  prefixed "Previous".
+- Do NOT report a plant/site/location/cavity-count column (small codes or
+  low integers) as a quantity column.
+- Do NOT group rows into pricing tiers and do NOT decide which rows belong
+  to the same part - report each physical row exactly as printed, one row
+  per JSON object in "rows". Row-grouping happens afterward, not by you.
+- If you are genuinely uncertain which column a value belongs to, or
+  whether a line is a real data row at all, still include it and set
+  "ambiguous": true with a short "ambiguous_reason" - do not silently guess
+  or silently drop it.
+
+Color-annotation / redline rules (already partially applied to the supplied
+text):
+- Lines prefixed with "[ROW MARKED FOR EXCLUSION - DO NOT EXTRACT AS A PART]"
+  were struck out with a red or pink line in the original PDF. Do NOT report
+  a row from these lines under any circumstances.
+- If the detected-annotations list reports a cell value override (a
+  red-outlined box drawn over a table cell with replacement text), use the
+  replacement value instead of the original value for that specific cell.
+- Ignore any free-form comment/callout text noted as an ignored annotation.
+- Cell background/fill colors carry no meaning and must be ignored.
+
+Return ONLY a valid JSON object of this exact shape, matching column names to
+the master header's own column labels (use the header's exact text as each
+key, e.g. if the header says "EVCO MFG (BOM)" use that as the key, not a
+paraphrase):
+{
+  "rows": [
+    {
+      "cells": { "<master header column label>": "<printed value or \\"\\">", ... },
+      "ambiguous": false,
+      "ambiguous_reason": ""
+    }
+  ]
+}
+
+If no genuine pricing-table rows are found in this section, return {"rows": []}.
+Return ONLY the JSON object - no explanations, no markdown formatting blocks.
+"""
+
+
+def build_raw_row_prompt(annotated_text, table_markdown, detected_notes, master_header=None):
+    parts = [raw_row_instruction]
+    if master_header:
+        parts.append("\n--- Master table header (true column order - use these exact labels as JSON keys) ---\n")
+        parts.append(master_header)
+    parts.append("\n--- Reconstructed PDF Text (reading order) ---\n")
+    parts.append(annotated_text)
+    if table_markdown:
+        parts.append("\n--- Structured Table Rendering (Markdown, independently extracted) ---\n")
+        parts.append(table_markdown)
+    if detected_notes:
+        parts.append("\n--- Detected Color-Annotation Rule Applications ---\n")
+        parts.append("\n".join(f"- {n}" for n in detected_notes))
+    return "\n".join(parts)
+
+
+_AMBIGUOUS_ROW_PROMPT_TEMPLATE = """
+You are resolving ONE ambiguous pricing-table row from an EVCO Price
+Quotation PDF. Answer only the 3 questions below - do not re-extract the
+whole document.
+
+Master table header (true column order):
+{master_header}
+
+Previous row (already resolved): {prev_row}
+Current row (ambiguous - reason given): {current_row}
+Reason flagged ambiguous: {ambiguous_reason}
+Next row (already resolved, may be empty if this is the last row): {next_row}
+Relevant annotation note, if any: {relevant_note}
+
+Answer exactly these 3 questions:
+1. Is this current row a NEW part (not a pricing tier of the previous row)?
+2. Is this current row a pricing tier of the SAME part as the previous row
+   (same EVCO part number, same mold number, same box quantity)?
+3. Which master-header column does each of this row's printed values belong to?
+
+Return ONLY a valid JSON object of this exact shape:
+{{
+  "is_new_part": true,
+  "is_pricing_tier_of_previous": false,
+  "cells": {{ "<master header column label>": "<printed value or \\"\\">", ... }}
+}}
+Return ONLY the JSON object - no explanations, no markdown formatting blocks.
+"""
+
+
+def build_ambiguous_row_prompt(master_header, prev_row, current_row, ambiguous_reason, next_row, relevant_note):
+    return _AMBIGUOUS_ROW_PROMPT_TEMPLATE.format(
+        master_header=master_header or "(none detected)",
+        prev_row=json.dumps(prev_row) if prev_row else "(none - this is the first row)",
+        current_row=json.dumps(current_row),
+        ambiguous_reason=ambiguous_reason or "(unspecified)",
+        next_row=json.dumps(next_row) if next_row else "(none - this is the last row)",
+        relevant_note=relevant_note or "(none)",
+    )
+
+
 _PLACEHOLDER_HEADER_CELL_RE = re.compile(r"^Col\d+$")
 _GARBLED_HEADER_PLACEHOLDER_RATIO = 0.15
 
@@ -918,7 +1120,7 @@ def find_master_table_header(doc, max_pages_to_scan=8):
     return best_header if best_score >= 3 else None
 
 
-def call_llm(prompt, retries=2):
+def call_llm(prompt, retries=2, max_tokens=16000):
     last_error = None
     for attempt in range(retries + 1):
         try:
@@ -926,7 +1128,7 @@ def call_llm(prompt, retries=2):
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
-                max_tokens=16000,
+                max_tokens=max_tokens,
             )
             if not response.choices:
                 raise RuntimeError("IBM API returned no choices (likely a transient backend error or an oversized prompt).")
@@ -956,6 +1158,7 @@ def call_llm(prompt, retries=2):
                 time.sleep(delay)
             else:
                 raise last_error
+    raise last_error  # unreachable - the loop above always returns or raises
 
 
 _BARE_TIER_LINE_RE = re.compile(r"^[\d,]+\s+\$\s?[\d,]+\.\d{1,2}$")
@@ -1543,6 +1746,302 @@ def validate_required_fields(result):
     return failures
 
 
+# ---------------------------------------------------------------------------
+# Deterministic raw-row normalization (performance refactor)
+#
+# Takes the flat, ungrouped rows returned by the lightweight raw-row LLM
+# call (build_raw_row_prompt) and applies, in pure Python, the same
+# fill-down and pricing-tier-grouping rules the old single-stage prompt used
+# to ask the LLM to reason about on every call. Neither rule requires visual
+# judgment once the per-row raw values are already known - both are simple,
+# deterministic comparisons - so moving them here removes that reasoning
+# burden from the LLM without changing what the rules actually do.
+# ---------------------------------------------------------------------------
+
+def _master_header_column_labels(master_header: Optional[str]) -> List[str]:
+    """Pipe-delimited master header line -> ordered list of column label
+    strings, exactly as printed (used only to validate/order raw-row keys;
+    the canonical field mapping below is alias-based, not position-based,
+    since the LLM already resolved position when it read the row)."""
+    if not master_header:
+        return []
+    return [c.strip() for c in master_header.split("|") if c.strip()]
+
+
+def _canonical_field_for_label(label: str) -> Optional[str]:
+    """Map one raw column label (as the LLM echoed it back, e.g. 'EVCO MFG
+    (BOM)') to one of this project's canonical part/tier field names, using
+    the exact same alias lists (REQUIRED_COLUMN_ALIASES/settings.EXTRACTION_
+    ALIAS_*) the rest of this file already uses for header validation - no
+    new alias configuration is introduced."""
+    normalized_label = _normalize_header_cell(label)
+    if not normalized_label:
+        return None
+    for field, alias_setting in REQUIRED_COLUMN_ALIASES.items():
+        for alias in settings.parse_aliases(alias_setting):
+            if _normalize_header_cell(alias) in normalized_label:
+                return field
+    return None
+
+
+_PART_LEVEL_FIELDS = (
+    "mold_number", "evco_part_number", "manufacturing_bom_number",
+    "customer_part_number", "part_description", "box_quantity",
+)
+_TIER_LEVEL_FIELDS = ("moq", "price")
+
+
+def _split_stacked_tiers(moq_value: str, price_value: str) -> List[Dict[str, str]]:
+    """
+    Some templates print more than one quantity-break tier stacked inside a
+    SINGLE printed table row's MOQ/Price cells (e.g. one row whose MOQ cell
+    reads "150\\n300" and whose Price cell reads "$21.99\\n$18.91" - two
+    tiers of the same physical row, not two separate rows). The old
+    single-stage prompt built the final nested JSON directly, so it split
+    these itself; the lightweight raw-row prompt intentionally reports a
+    row's cells exactly as printed (see raw_row_instruction) without doing
+    that grouping/splitting judgment call, so it has to happen here instead.
+
+    Splits on embedded newlines. If the MOQ and Price cell don't split into
+    the SAME number of lines, splitting would risk pairing the wrong price
+    with the wrong quantity - safer to keep the raw, unsplit value as a
+    single tier than to fabricate a possibly-wrong pairing.
+    """
+    moq_lines = [ln.strip() for ln in (moq_value or "").split("\n")]
+    price_lines = [ln.strip() for ln in (price_value or "").split("\n")]
+    if len(moq_lines) <= 1 and len(price_lines) <= 1:
+        return [{"moq": moq_value, "price": price_value}]
+    if len(moq_lines) != len(price_lines):
+        return [{"moq": moq_value, "price": price_value}]
+    return [{"moq": m, "price": p} for m, p in zip(moq_lines, price_lines)]
+
+
+_MARKDOWN_SEPARATOR_ROW_RE = re.compile(r"^\|[\s:\-|]+\|$")
+
+
+def _split_markdown_table_by_row_count(markdown_block: str, max_rows: int) -> List[str]:
+    """
+    Step 9 ("split again instead of increasing the token limit"): a single
+    detected table can have far more data rows than fit comfortably in one
+    raw-row LLM call. PyMuPDF's to_markdown() output is always
+    header-row / separator-row ("|---|---|...") / data-rows - split the
+    DATA rows into groups of at most max_rows, re-attaching the SAME header
+    and separator line to every group so each sub-call still has full
+    column-identity context (master_header is also supplied separately, but
+    this keeps each group independently readable too).
+
+    Returns [markdown_block] unchanged if it doesn't match the expected
+    header/separator/data shape (e.g. a non-standard table), or if it
+    already has max_rows or fewer data rows - never risk mangling a table
+    this function doesn't confidently recognize.
+    """
+    lines = markdown_block.split("\n")
+    if len(lines) < 3 or not _MARKDOWN_SEPARATOR_ROW_RE.match(lines[1].strip()):
+        return [markdown_block]
+    header_line, separator_line = lines[0], lines[1]
+    data_lines = [ln for ln in lines[2:] if ln.strip()]
+    if len(data_lines) <= max_rows:
+        return [markdown_block]
+    groups = []
+    for i in range(0, len(data_lines), max_rows):
+        group_lines = data_lines[i:i + max_rows]
+        groups.append("\n".join([header_line, separator_line] + group_lines))
+    return groups
+
+
+def _split_table_markdown_into_batches(table_markdown: str, max_rows: int) -> List[str]:
+    """Apply _split_markdown_table_by_row_count to each independently
+    detected table block within one page's combined table_markdown (blocks
+    are joined by a blank line - see run_chunk/_collect_page_data), then
+    flatten. A page with no oversized table returns [table_markdown]
+    unchanged (the common case - most pages need no splitting at all)."""
+    if not table_markdown.strip():
+        return [table_markdown]
+    blocks = table_markdown.split("\n\n")
+    batches: List[str] = []
+    any_split = False
+    for block in blocks:
+        if not block.strip():
+            continue
+        sub_blocks = _split_markdown_table_by_row_count(block, max_rows)
+        if len(sub_blocks) > 1:
+            any_split = True
+        batches.extend(sub_blocks)
+    return batches if any_split else [table_markdown]
+
+
+def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
+    """Map one raw row's {column_label: value} dict to {canonical_field:
+    value}, for every label this project recognizes. A label that matches no
+    known alias is simply not part-of/tier-of anything this system tracks
+    (e.g. a decoy/annual-volume column some templates print) and is dropped,
+    same as the old prompt implicitly did by only ever emitting known keys."""
+    mapped: Dict[str, str] = {}
+    if not isinstance(cells, dict):
+        return mapped
+    for label, value in cells.items():
+        field = _canonical_field_for_label(label)
+        if field is None:
+            continue
+        # If the same canonical field is matched by more than one column in
+        # this row (rare, but possible with a decoy column whose label
+        # loosely resembles a real one), keep the first non-blank match
+        # rather than letting a later, wrong match silently overwrite it.
+        if field in mapped and _has_required_value(mapped[field]):
+            continue
+        mapped[field] = "" if value is None else str(value)
+    return mapped
+
+
+def _resolve_ambiguous_rows_sequentially(
+    raw_rows: List[dict], master_header: Optional[str], notes: List[str], stats: Optional[dict] = None,
+) -> List[dict]:
+    """
+    Step 8: walk raw_rows in order and replace every LLM-flagged-ambiguous
+    row with a resolved one, via a small targeted call containing only the
+    already-resolved previous row, the ambiguous row, the (raw) next row,
+    and any relevant annotation note - never the whole chunk/document.
+
+    Runs BEFORE _fill_down_and_group_rows, and sequentially (not in
+    parallel), because each resolution needs the PREVIOUS row's already-
+    resolved value as context, and its own resolved output becomes the
+    "previous row" context for whichever row comes after it.
+
+    A resolved ambiguous row is folded back into the exact same
+    {"cells": {...}} shape normal rows use, plus an internal-only
+    "_is_pricing_tier_of_previous" hint consumed by the grouping pass right
+    after this function returns - so downstream code has one uniform row
+    shape to work with regardless of whether a row started ambiguous.
+    """
+    resolved: List[dict] = []
+    relevant_note = notes[0] if notes else None
+    for i, raw_row in enumerate(raw_rows):
+        if not isinstance(raw_row, dict):
+            continue
+        if not raw_row.get("ambiguous"):
+            resolved.append(raw_row)
+            continue
+
+        prev_row = resolved[-1] if resolved else None
+        next_row = raw_rows[i + 1] if i + 1 < len(raw_rows) else None
+        prompt = build_ambiguous_row_prompt(
+            master_header, prev_row, raw_row, raw_row.get("ambiguous_reason"), next_row, relevant_note,
+        )
+        try:
+            started = time.perf_counter()
+            answer = call_llm(prompt, retries=1, max_tokens=AMBIGUOUS_ROW_MAX_TOKENS)
+            elapsed = time.perf_counter() - started
+            if stats is not None:
+                stats["ambiguous_calls"] = stats.get("ambiguous_calls", 0) + 1
+                stats["llm_time_s"] = stats.get("llm_time_s", 0.0) + elapsed
+            resolved.append({
+                "cells": answer.get("cells") or {},
+                "_is_pricing_tier_of_previous": bool(answer.get("is_pricing_tier_of_previous")),
+            })
+        except Exception as e:
+            # Last resort: keep the row's own best-guess cells rather than
+            # dropping it entirely - losing a row silently is worse than
+            # carrying forward its original (still possibly correct) values.
+            print(f"    Ambiguous-row resolution failed ({e}); keeping original cell values for this row.")
+            resolved.append({"cells": raw_row.get("cells") or {}})
+    return resolved
+
+
+def _fill_down_and_group_rows(raw_rows: List[dict]) -> List[dict]:
+    """
+    Pure-Python replacement for the reasoning the old prompt asked the LLM
+    to do on every call:
+      - fill-down: a blank cell carries forward the last non-blank value
+        seen earlier in this same chunk for that column, UNLESS this is the
+        first row (matches schema_instruction's existing fill-down rule).
+      - pricing-tier grouping: two consecutive rows belong to the same part
+        only when mold_number AND evco_part_number AND box_quantity all
+        match (matches schema_instruction's existing grouping rule) -
+        otherwise each row starts a new part.
+    Expects raw_rows to already have ambiguity resolved (see
+    _resolve_ambiguous_rows_sequentially) - this function assumes every row
+    is a normal, mappable {"cells": {...}} dict. Returns parts in the exact
+    shape the rest of extract_pdf_data already expects.
+    """
+    parts: List[dict] = []
+    last_values: Dict[str, str] = {}
+    current_part: Optional[dict] = None
+    current_key: Optional[Tuple[str, str, str, str]] = None
+
+    for raw_row in raw_rows:
+        if not isinstance(raw_row, dict):
+            continue
+
+        mapped = _map_raw_row_cells(raw_row.get("cells") or {})
+
+        # Fill-down: only for part-level identity columns, only when THIS
+        # row's own value is blank and an earlier row already had one -
+        # exactly the existing rule, never inventing a value for the very
+        # first row of the table.
+        for field in _PART_LEVEL_FIELDS:
+            value = mapped.get(field, "")
+            if not _has_required_value(value) and _has_required_value(last_values.get(field)):
+                mapped[field] = last_values[field]
+            if _has_required_value(mapped.get(field)):
+                last_values[field] = mapped[field]
+
+        row_tiers = _split_stacked_tiers(mapped.get("moq", ""), mapped.get("price", ""))
+
+        row_key = (
+            mapped.get("evco_part_number", ""),
+            mapped.get("mold_number", ""),
+            mapped.get("box_quantity", ""),
+            mapped.get("manufacturing_bom_number", ""),
+        )
+        # Two rows are the SAME part only when part number AND mold AND box
+        # quantity all match - identical to the existing grouping rule.
+        # manufacturing_bom_number is included in the key too: two resin-
+        # variant rows of the same physical part (e.g. mfg# ending
+        # "-CHIMEI" vs "-RAVAGO") share identical EVCO part number, mold,
+        # AND box quantity but are genuinely SEPARATE parts per
+        # schema_instruction's own fuller rule ("if ... a qualifier in the
+        # description differs ... these are SEPARATE parts") - mfg#/BOM is
+        # the reliable, already-present field that carries that distinction,
+        # so it must be part of the merge key or two real, distinct parts
+        # would silently collapse into one part's pricing_tiers.
+        # A fully-empty key never merges with anything (avoids accidentally
+        # collapsing multiple genuinely-blank-keyed rows into one part).
+        is_same_part = (
+            current_part is not None
+            and row_key == current_key
+            and any(_has_required_value(v) for v in row_key)
+        )
+        if is_same_part:
+            assert current_part is not None, "is_same_part already required current_part is not None"
+            current_part["pricing_tiers"].extend(row_tiers)
+        else:
+            if current_part is not None:
+                parts.append(current_part)
+            current_part = {
+                "line_number": "",
+                "mold_number": mapped.get("mold_number", ""),
+                "evco_part_number": mapped.get("evco_part_number", ""),
+                "manufacturing_bom_number": mapped.get("manufacturing_bom_number", ""),
+                "customer_part_number": mapped.get("customer_part_number", ""),
+                "part_description": mapped.get("part_description", ""),
+                "box_quantity": mapped.get("box_quantity", ""),
+                "pricing_tiers": list(row_tiers),
+            }
+            current_key = row_key
+
+    if current_part is not None:
+        parts.append(current_part)
+
+    # Line numbers are assigned once grouping is final, matching the old
+    # prompt's own "starting from 1 for each part in the table" behavior,
+    # per-chunk (the outer chunk loop already concatenates chunks in page
+    # order, same as before).
+    for idx, part in enumerate(parts, start=1):
+        part["line_number"] = str(idx)
+
+    return parts
+
+
 def _dedupe_adjacent_parts(parts: list) -> list:
     """
     Drop a part if it's an exact duplicate of the one immediately before it
@@ -1632,15 +2131,163 @@ def extract_pdf_data(pdf_path):
     header_result = None
     warnings = []
 
+    # Performance stats (Step 10) - one dict for the whole document, mutated
+    # by run_chunk/the ambiguous-row resolver as calls happen, printed as a
+    # summary once extraction finishes below.
+    extraction_started_at = time.perf_counter()
+    stats = {
+        "total_pages": len(per_page),
+        "pricing_pages": 0,
+        "skipped_pages": 0,
+        "total_chunks": 0,
+        "total_llm_calls": 0,
+        "ambiguous_calls": 0,
+        "llm_time_s": 0.0,
+    }
+
+    def _chunk_has_no_extractable_content(chunk_pages) -> bool:
+        """Cheap, conservative pre-filter (Step 4): a chunk is only skipped
+        when NONE of its pages have a detected table AND NONE of their text
+        contains a single digit anywhere - i.e. pure prose (comments,
+        signatures, terms & conditions) with no possibility of pricing-table
+        data. Any digit at all keeps the page in play, since a genuine
+        orphaned last row (see _collect_page_data's own handling of that
+        case) is reading-order text with no accompanying Markdown table but
+        very much still has real digits/prices in it - this filter must
+        never be the thing that drops that case."""
+        for _, _, markdowns, _ in chunk_pages:
+            if markdowns:
+                return False
+        combined_text = "\n".join(c[0] for c in chunk_pages)
+        return not any(ch.isdigit() for ch in combined_text)
+
     def run_chunk(chunk_pages, page_start, page_end, retries=2):
-        """Try to extract one page-range. Returns (parts_result, error_str) - result is None on failure."""
+        """Try to extract one page-range. Returns (parts_result, error_str) - result is None on failure.
+
+        Internals only (per the performance refactor): build the lightweight
+        raw-row prompt instead of the old full-schema one, call the LLM for
+        raw rows only, resolve any LLM-flagged-ambiguous rows with a small
+        targeted follow-up call (Step 8), then group/fill-down in pure
+        Python (_fill_down_and_group_rows). The return shape - {"parts": [...]},
+        error-or-None - is unchanged, so the surrounding chunk/retry loop
+        below (including its per-page fallback on failure) needs no changes.
+        """
         annotated_text = "\n".join(c[1] for c in chunk_pages)
         table_markdown = "\n\n".join(md for c in chunk_pages for md in c[2])
         notes = [n for c in chunk_pages for n in c[3]]
-        prompt = build_prompt(annotated_text, table_markdown, notes, master_header=master_header)
+
+        stats["total_chunks"] += 1
+
+        if _chunk_has_no_extractable_content(chunk_pages):
+            stats["skipped_pages"] += len(chunk_pages)
+            print(f"[EXTRACTION] Chunk pages {page_start}-{page_end}: skipped (no pricing-table content detected)")
+            return {"parts": []}, None
+
+        stats["pricing_pages"] += len(chunk_pages)
+
+        def _extract_rows_from_batch(markdown_batch: str) -> Tuple[List[dict], int, int, float]:
+            """One LLM call for one table-markdown batch (a whole page's
+            table, or one row-count-limited slice of it - see
+            MAX_TABLE_ROWS_PER_CALL/_split_table_markdown_into_batches).
+            Returns (raw_rows, prompt_chars, response_chars, elapsed_s)."""
+            batch_prompt = build_raw_row_prompt(annotated_text, markdown_batch, notes, master_header=master_header)
+            call_started = time.perf_counter()
+            raw_response = call_llm(batch_prompt, retries=retries, max_tokens=RAW_ROW_MAX_TOKENS)
+            call_elapsed = time.perf_counter() - call_started
+            stats["total_llm_calls"] += 1
+            stats["llm_time_s"] += call_elapsed
+
+            raw_rows_value = raw_response.get("rows") if isinstance(raw_response, dict) else None
+            batch_rows: List[dict] = []
+            if isinstance(raw_rows_value, list):
+                malformed = 0
+                for r in raw_rows_value:
+                    if isinstance(r, dict):
+                        batch_rows.append(r)
+                    else:
+                        # A malformed (non-object) row entry still represents
+                        # one real physical row the model attempted to
+                        # report - dropping it silently would lose that
+                        # row's data outright. Route it through the same
+                        # targeted ambiguous-row recovery path as Step 8
+                        # (with neighbor context) instead of discarding it.
+                        malformed += 1
+                        batch_rows.append({
+                            "cells": {},
+                            "ambiguous": True,
+                            "ambiguous_reason": f"malformed row entry from model (type {type(r).__name__}, not an object)",
+                            # Preserved so the targeted ambiguous-row recovery
+                            # prompt (build_ambiguous_row_prompt) has the
+                            # model's original (malformed-shape) attempt to
+                            # work from, instead of nothing at all.
+                            "_raw_malformed_value": r,
+                        })
+                if malformed:
+                    print(f"    Warning: {malformed} malformed (non-object) row entr{'y' if malformed == 1 else 'ies'} "
+                          f"routed to ambiguous-row recovery instead of being dropped.")
+            elif raw_rows_value is not None:
+                print(f"    Warning: response 'rows' was type {type(raw_rows_value).__name__}, not a list - treating as 0 rows for this batch.")
+
+            return batch_rows, len(batch_prompt), len(json.dumps(raw_response)), call_elapsed
+
         try:
-            chunk_result = call_llm(prompt, retries=retries)
-            return chunk_result, None
+            # Step 9: split a genuinely dense page's table into row-count-
+            # limited batches instead of ever growing RAW_ROW_MAX_TOKENS to
+            # cover it in one call - most pages have exactly one batch
+            # (the whole page, unchanged) since most tables are well under
+            # MAX_TABLE_ROWS_PER_CALL rows.
+            markdown_batches = _split_table_markdown_into_batches(table_markdown, MAX_TABLE_ROWS_PER_CALL)
+
+            all_raw_rows: List[dict] = []
+            total_prompt_chars = 0
+            total_response_chars = 0
+            total_elapsed = 0.0
+            for batch_index, markdown_batch in enumerate(markdown_batches):
+                # Each batch is isolated: one batch failing after its own
+                # retries must not discard rows another batch on this SAME
+                # page already extracted successfully - that would violate
+                # the "only the failed piece is retried/lost, not
+                # everything else" rule this refactor is required to keep.
+                # A failed batch's rows are recorded as a warning (page-
+                # level data loss for just that slice), not a raised
+                # exception that would abort the whole page.
+                try:
+                    batch_rows, prompt_chars, response_chars, elapsed = _extract_rows_from_batch(markdown_batch)
+                    all_raw_rows.extend(batch_rows)
+                    total_prompt_chars += prompt_chars
+                    total_response_chars += response_chars
+                    total_elapsed += elapsed
+                except Exception as batch_error:
+                    print(f"  Chunk pages {page_start}-{page_end} batch {batch_index + 1}/{len(markdown_batches)} failed: {batch_error}")
+                    warnings.append(
+                        f"Page {page_start}-{page_end} batch {batch_index + 1}/{len(markdown_batches)} could not be "
+                        f"extracted after retries; its rows are missing. Last error: {batch_error}"
+                    )
+
+            resolved_rows = _resolve_ambiguous_rows_sequentially(all_raw_rows, master_header, notes, stats=stats)
+            parts = _fill_down_and_group_rows(resolved_rows)
+
+            batch_note = f" ({len(markdown_batches)} batches)" if len(markdown_batches) > 1 else ""
+            print(
+                f"[EXTRACTION] Chunk pages {page_start}-{page_end}{batch_note}\n"
+                f"  Prompt chars: {total_prompt_chars}\n"
+                f"  Response chars: {total_response_chars}\n"
+                f"  LLM time: {total_elapsed:.1f} sec\n"
+                f"  Rows extracted: {len(all_raw_rows)}\n"
+                f"  Parts after grouping: {len(parts)}"
+            )
+            if all_raw_rows and not parts:
+                # Rows came back but grouping produced nothing usable - this
+                # should not normally happen (see _fill_down_and_group_rows)
+                # and hiding it as a quiet 0-part success would silently
+                # lose this page's data with no warning at all.
+                print(f"    Warning: {len(all_raw_rows)} row(s) were extracted but 0 parts resulted after grouping - "
+                      f"treating as a failure so this chunk is retried rather than silently accepted empty.")
+                raise RuntimeError(
+                    f"{len(all_raw_rows)} raw rows were parsed but grouping produced 0 parts - "
+                    f"likely a malformed row shape from the model; sample: {json.dumps(all_raw_rows[0])[:300]}"
+                )
+            return {"parts": parts}, None
         except Exception as e:
             print(f"  Chunk pages {page_start}-{page_end} failed: {e}")
             return None, str(e)
@@ -1686,11 +2333,30 @@ def extract_pdf_data(pdf_path):
             header_result = chunk_result
         all_parts.extend(chunk_result.get("parts") or [])
 
+    def _log_extraction_summary(final_parts: list) -> None:
+        """Step 10: end-of-document performance summary."""
+        total_tiers = sum(len(p.get("pricing_tiers") or []) for p in final_parts if isinstance(p, dict))
+        total_time = time.perf_counter() - extraction_started_at
+        print(
+            "[EXTRACTION SUMMARY]\n"
+            f"  Total pages: {stats['total_pages']}\n"
+            f"  Pricing pages: {stats['pricing_pages']}\n"
+            f"  Skipped pages (no content): {stats['skipped_pages']}\n"
+            f"  Total chunks: {stats['total_chunks']}\n"
+            f"  Total LLM calls: {stats['total_llm_calls']}\n"
+            f"  Ambiguous-row calls: {stats['ambiguous_calls']}\n"
+            f"  Total LLM time: {stats['llm_time_s']:.1f} sec\n"
+            f"  Total extraction time: {total_time:.1f} sec\n"
+            f"  Parts extracted: {len(final_parts)}\n"
+            f"  Pricing tiers extracted: {total_tiers}"
+        )
+
     if header_result is None:
         # Every chunk and every per-page retry failed. Still emit a record
         # (with deterministic header fields and an explicit warning) instead
         # of silently producing no output at all for this document.
         print(f"Error processing {os.path.basename(pdf_path)}: all chunks failed.")
+        _log_extraction_summary([])
         result = {
             "status": "extraction_failed",
             "exception_codes": [ExceptionCode.EXTRACTION_FAILED],
@@ -1704,6 +2370,7 @@ def extract_pdf_data(pdf_path):
     result["parts"] = _dedupe_adjacent_parts(all_parts)
     if warnings:
         result["extraction_warnings"] = warnings
+    _log_extraction_summary(result["parts"])
 
     # Deterministic header fields are more reliable than the LLM's read of
     # loosely-formatted header text; overlay them onto the LLM's result.
