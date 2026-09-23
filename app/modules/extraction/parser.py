@@ -20,6 +20,8 @@ import logging
 import os
 import re
 import time
+from contextvars import ContextVar
+from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
@@ -110,39 +112,49 @@ model_name = settings.MODEL_NAME
 
 CHUNK_PAGE_SIZE = 1
 
-# Token budgets per call stage. The old single-stage prompt asked one LLM
-# call to read the page, decide which lines are real table rows, resolve
-# merged/blank cells, group rows into pricing tiers, AND build the final
-# nested JSON - a raw-row extraction (see build_raw_row_prompt below) needs
-# far fewer output tokens than the old full-schema call, since it no longer
-# nests pricing_tiers or repeats the document header per chunk.
-# Sized from observed real responses: a 24-row dense page's raw-row JSON
-# (one object per row, full column-label keys repeated per row) runs
-# 6000-11000+ characters - 4000 tokens truncated it mid-response on a real
-# test page. 10000 covers the densest real page in this project's own test
-# corpus (max 29 data rows on one page, across all 6 dummy quotes - checked
-# directly) with real margin, while staying meaningfully below the old
-# single-stage prompt's 16000-token budget (which also had to fit a
-# repeated document header AND fully-nested parts/pricing_tiers per call,
-# neither of which this lightweight response includes at all).
-RAW_ROW_MAX_TOKENS = 10000
+# Raw-row JSON repeats printed column labels for every row. The previous
+# 10000-token ceiling was insufficient in production batch runs (including
+# explicit finish_reason="length" failures), despite covering the original
+# max-29-row dummy corpus. Allow 16000 tokens without changing row batching.
+# A valid response with the wrong JSON shape can ALSO yield zero parsed rows;
+# diagnostics below distinguish that from actual token-limit truncation.
+RAW_ROW_MAX_TOKENS = 16000
 
-# Step 9 asks for a dense table to be split into smaller batches rather than
-# raising the token limit further. _split_table_markdown_into_batches below
-# implements exactly that and is kept in place - but splitting a table
-# mid-way was directly observed, in testing, to sometimes lose the row(s)
-# nearest the split point (the model loses continuation context across the
-# cut), which is a worse outcome than the truncation it prevents. Given the
-# real max row density measured across this project's whole test corpus is
-# 29 (see above) and RAW_ROW_MAX_TOKENS=10000 already covers that with
-# margin, this threshold is set high enough that splitting never triggers
-# for any file in this project today - the mechanism stays available for a
-# future page dense enough to need it, rather than being deleted.
+# Preserve the existing 40-row split threshold and all splitting rules.
+# The larger output budget complements batching; it does not replace it.
 MAX_TABLE_ROWS_PER_CALL = 40
-# The targeted ambiguous-row call (Step 8) answers 3 fixed questions about
-# one row using minimal context - it never needs anywhere near this budget,
-# but a naturally small ceiling is still safer than an unbounded default.
-AMBIGUOUS_ROW_MAX_TOKENS = 800
+# Targeted recovery includes the current row, neighbours and reasoning.
+# 800 tokens was tight for malformed rows; 1500 leaves recovery headroom.
+AMBIGUOUS_ROW_MAX_TOKENS = 1500
+LLM_SEED = 42
+
+# Each API worker/document needs its own diagnostic state: a module-level
+# mutable set would leak labels between PDFs or race during concurrent runs.
+_DOCUMENT_DIAGNOSTICS: ContextVar[Optional[Dict[str, Any]]] = ContextVar(
+    "evco_document_diagnostics", default=None,
+)
+
+
+def _with_document_diagnostics(func):
+    """Scope diagnostic labels to one extraction, including early returns.
+
+    ContextVar isolates simultaneous API worker threads/tasks. Finally logs
+    the distinct dropped-label count even for precheck/validation failures,
+    and resets the context so later PDFs cannot inherit another file's labels.
+    This wrapper changes neither return values nor exception propagation.
+    """
+    @wraps(func)
+    def wrapped(pdf_path):
+        state = {"file": os.path.basename(pdf_path), "dropped_labels": set()}
+        token = _DOCUMENT_DIAGNOSTICS.set(state)
+        try:
+            return func(pdf_path)
+        finally:
+            logger.info("DROPPED_LABEL_SUMMARY file=%s distinct_labels=%d",
+                        state["file"], len(state["dropped_labels"]))
+            _DOCUMENT_DIAGNOSTICS.reset(token)
+    return wrapped
+
 
 logger.info(f"PDFExtractor using model: {model_name}")
 
@@ -793,6 +805,25 @@ _PLACEHOLDER_HEADER_CELL_RE = re.compile(r"^Col\d+$")
 _GARBLED_HEADER_PLACEHOLDER_RATIO = 0.15
 
 
+def _debug_extraction(event, **details):
+    """Expose full extraction diagnostics only when explicitly enabled."""
+    if os.getenv("DEBUG_EXTRACTION", "").lower() not in {"1", "true", "yes"}:
+        return
+    state = _DOCUMENT_DIAGNOSTICS.get()
+    logger.info("DEBUG_EXTRACTION %s %s", event, json.dumps(
+        {"file": state["file"] if state else "unknown", **details}, ensure_ascii=False))
+
+
+def _debug_header_repair(func):
+    """Include unsuccessful layout repairs in opt-in diagnostics."""
+    @wraps(func)
+    def wrapped(page, table):
+        result = func(page, table)
+        _debug_extraction("LAYOUT_REPAIR", page=page.number + 1, result=result)
+        return result
+    return wrapped
+
+
 def _table_header_is_garbled(markdown_table: str) -> bool:
     """
     PyMuPDF names a column 'ColN' when a header cell's text wraps across
@@ -826,7 +857,9 @@ def _table_header_is_garbled(markdown_table: str) -> bool:
     if not cells:
         return False
     placeholder_count = sum(1 for c in cells if _PLACEHOLDER_HEADER_CELL_RE.match(c))
-    return placeholder_count > 0 and (placeholder_count / len(cells)) >= _GARBLED_HEADER_PLACEHOLDER_RATIO
+    garbled = placeholder_count > 0 and (placeholder_count / len(cells)) >= _GARBLED_HEADER_PLACEHOLDER_RATIO
+    _debug_extraction("GARBLED_CHECK", garbled=garbled, placeholder_count=placeholder_count, cells=len(cells), ratio=placeholder_count / len(cells))
+    return garbled
 
 
 def _degroup_repeated_markdown_columns(markdown_table: str) -> Optional[str]:
@@ -1082,45 +1115,77 @@ def find_master_table_header(doc, max_pages_to_scan=8):
     and keeping the best-scoring one picks the real table even when it's
     imperfectly parsed, since it still matches far more required columns
     than an unrelated reference table ever will.
+
+    If the first window has no header scoring at least three, inspect one
+    additional window (normally pages 9-16). Cap both windows at 20 unique
+    pages in total: long documents need a bounded fallback, not an expensive
+    unconditional full-document scan. A good first-window result is reused.
     """
     best_header = None
     best_score = 0
-    for page_idx in range(min(len(doc), max_pages_to_scan)):
-        page = doc[page_idx]
-        for t in page.find_tables().tables:
-            try:
-                md = t.to_markdown()
-            except Exception:
-                continue
-            if not md:
-                continue
-            md = _degroup_repeated_markdown_columns(md) or md
-            header_line = md.split("\n", 1)[0]
-            if _header_has_placeholder_cells(header_line):
-                repaired = _fill_garbled_header_from_layout(page, t)
-                if repaired:
-                    header_line = "|" + "|".join(repaired) + "|"
-            score = _count_matched_required_columns(header_line)
-            if score > best_score:
-                best_score, best_header = score, header_line
 
-    # When a spreadsheet column-letter guide row is present, a header
-    # rebuilt from raw text positions is more trustworthy than the
-    # table-grid parse (which, on these wide templates, tends to be the
-    # ColN-riddled one). Use it only when it identifies at least as many
-    # required columns as the best table-parse header did - so a
-    # reconstruction that accidentally drops a column can never replace a
-    # more complete table header.
-    reconstructed = _reconstruct_header_from_column_letters(doc, max_pages_to_scan)
-    if reconstructed:
-        recon_score = _count_matched_required_columns(reconstructed)
-        if recon_score >= best_score and recon_score >= 3:
-            return reconstructed
+    def scan_batch(start, end):
+        """Score only this page window so the fallback never rescans old grids."""
+        nonlocal best_header, best_score
+        pages = [doc[index] for index in range(start, end)]
+        for page in pages:
+            for t in page.find_tables().tables:
+                try:
+                    md = t.to_markdown()
+                    _debug_extraction("TABLE_BEFORE_REPAIR", stage="master", page=page.number + 1, markdown=md)
+                    if md:
+                        _table_header_is_garbled(md)
+                except Exception:
+                    continue
+                if not md:
+                    continue
+                md = _degroup_repeated_markdown_columns(md) or md
+                header_line = md.split("\n", 1)[0]
+                if _header_has_placeholder_cells(header_line):
+                    repaired = _fill_garbled_header_from_layout(page, t)
+                    if repaired:
+                        header_line = "|" + "|".join(repaired) + "|"
+                score = _count_matched_required_columns(header_line)
+                if score > best_score:
+                    best_score, best_header = score, header_line
 
-    return best_header if best_score >= 3 else None
+        # Keep the existing preference for a trustworthy reconstructed header
+        # at equal score, but limit reconstruction to this same page window.
+        reconstructed = _reconstruct_header_from_column_letters(pages, len(pages))
+        if reconstructed:
+            recon_score = _count_matched_required_columns(reconstructed)
+            if recon_score >= best_score and recon_score >= 3:
+                best_score, best_header = recon_score, reconstructed
+
+    first_end = min(len(doc), max(0, max_pages_to_scan), 20)
+    scan_batch(0, first_end)
+    if best_score < 3 and 0 < first_end < min(len(doc), 20):
+        second_end = min(len(doc), first_end * 2, 20)
+        state = _DOCUMENT_DIAGNOSTICS.get()
+        file_name = state["file"] if state else getattr(doc, "name", "unknown")
+        logger.info("HEADER_SCAN_EXTENDED file=%s pages=%d-%d first_pass_score=%d",
+                    file_name, first_end + 1, second_end, best_score)
+        scan_batch(first_end, second_end)
+        logger.info("HEADER_SCAN_EXTENDED_RESULT file=%s found=%s score=%d pages_scanned=%d",
+                    file_name, best_score >= 3, best_score, second_end)
+    selected = best_header if best_score >= 3 else None
+    _debug_extraction("MASTER_HEADER", header=selected, score=_count_matched_required_columns(selected) if selected else 0)
+    return selected
 
 
-def call_llm(prompt, retries=2, max_tokens=16000):
+def call_llm(prompt, retries=2, max_tokens=16000, chunk_label="unknown"):
+    """Request JSON with pinned sampling while preserving chunk-local retries.
+
+    The configured IBM backend accepts seed alongside JSON response format.
+    Pinning sampling reduces avoidable batch variation; it cannot guarantee
+    identical output across backend/model revisions. Report an explicit token
+    limit hit separately from invalid JSON/other failures, using document and
+    page context so a zero-row outcome can be traced to its actual cause.
+    """
+    if retries < 0:
+        raise ValueError("retries must be non-negative")
+    state = _DOCUMENT_DIAGNOSTICS.get()
+    file_name = state["file"] if state else "unknown"
     last_error = None
     for attempt in range(retries + 1):
         try:
@@ -1128,6 +1193,9 @@ def call_llm(prompt, retries=2, max_tokens=16000):
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
+                # Pin sampling for reproducible batch runs (best effort).
+                temperature=0,
+                seed=LLM_SEED,
                 max_tokens=max_tokens,
             )
             if not response.choices:
@@ -1138,6 +1206,10 @@ def call_llm(prompt, retries=2, max_tokens=16000):
                 raise RuntimeError("IBM API returned an empty response.")
             finish_reason = getattr(choice, "finish_reason", None)
             if finish_reason == "length":
+                logger.warning(
+                    "LLM_TRUNCATED file=%s chunk=%s max_tokens=%d attempt=%d response_chars=%d",
+                    file_name, chunk_label, max_tokens, attempt + 1, len(content),
+                )
                 # The response was cut off before the model finished writing
                 # the JSON - this is a hard truncation, not a transient blip,
                 # and json.loads() below would just fail with a confusing
@@ -1149,7 +1221,14 @@ def call_llm(prompt, retries=2, max_tokens=16000):
                     f"The table on this page is too large/dense for the "
                     f"current max_tokens budget."
                 )
-            return json.loads(content)
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
+                logger.warning(
+                    "LLM_INVALID_JSON file=%s chunk=%s finish_reason=%s response_chars=%d",
+                    file_name, chunk_label, finish_reason, len(content),
+                )
+                raise
         except Exception as e:
             last_error = e
             if attempt < retries:
@@ -1158,7 +1237,7 @@ def call_llm(prompt, retries=2, max_tokens=16000):
                 time.sleep(delay)
             else:
                 raise last_error
-    raise last_error  # unreachable - the loop above always returns or raises
+    raise RuntimeError("LLM retry loop exited without a response") from last_error
 
 
 _BARE_TIER_LINE_RE = re.compile(r"^[\d,]+\s+\$\s?[\d,]+\.\d{1,2}$")
@@ -1201,56 +1280,59 @@ def _reorder_orphaned_tier_lines(text: str) -> str:
 _MD_PRICE_CELL_RE = re.compile(r"^[*_]{0,2}\$?\s?[\d,]+\.\d+[*_]{0,2}$")
 
 
+@_debug_header_repair
 def _fill_garbled_header_from_layout(page, table) -> Optional[List[str]]:
-    """
-    A ColN-garbled table whose DATA rows are still cleanly column-aligned:
-    PyMuPDF kept the row grid but lost some header labels to placeholders
-    (a header cell whose text wraps or sits slightly outside the cell box
-    it computed). Rebuild only the missing labels from the header region's
-    reading-order text, snapped to the table's own column x-anchors, and
-    trust the labels PyMuPDF did resolve. Returns one name per column, or
-    None when a gap can't be filled confidently.
+    """Recover wrapped labels without discarding partially repaired grids.
+
+    Phantom narrow columns can remain empty, while nonempty labels such as
+    'EVCO' can themselves be incomplete. Gather all physical header lines
+    by horizontal containment, retaining column count and unresolved slots.
+    Keep the lower band tight: the first data row can start just six points
+    below the header, so widening it would turn values into column names.
     """
     try:
         names = list(table.header.names)
-        anchors = [c[0] for c in table.header.cells if c]
+        cells = list(table.header.cells)
         y0h, y1h = table.header.bbox[1], table.header.bbox[3]
     except Exception:
         return None
-    if not names or len(anchors) != len(names):
+    if not names or len(cells) != len(names):
         return None
 
-    empty_idx = {i for i, n in enumerate(names) if not (n or "").strip()}
-    if not empty_idx:
-        return [(n or "").replace("\n", " ").strip() for n in names]
-
-    frags: Dict[int, list] = {i: [] for i in empty_idx}
+    frags: Dict[int, list] = {i: [] for i in range(len(names))}
     for block in page.get_text("dict")["blocks"]:
         if block.get("type") != 0:
             continue
         for ln in block["lines"]:
-            text = "".join(s["text"] for s in ln["spans"]).strip()
+            text = "".join(span["text"] for span in ln["spans"]).strip()
             if not text:
                 continue
-            x0, y0 = ln["bbox"][0], ln["bbox"][1]
-            # Stay strictly inside the header band. PyMuPDF's header.bbox can
-            # run taller than the actual labels, so a loose lower bound would
-            # vacuum up the first data row's text.
+            x0, y0, x1, _ = ln["bbox"]
             if y0 < y0h - 6 or y0 > y1h + 2:
                 continue
-            idx = min(range(len(anchors)), key=lambda i: abs(anchors[i] - x0))
-            if idx in empty_idx:
-                frags[idx].append((y0, x0, text))
+            # Center containment handles centered wrapped labels; nearest
+            # left edge can incorrectly assign them to a phantom column.
+            center = (x0 + x1) / 2
+            candidates = [i for i, cell in enumerate(cells)
+                          if cell and cell[0] <= center < cell[2]]
+            if len(candidates) == 1:
+                frags[candidates[0]].append((y0, x0, text))
 
     out = []
-    for i, n in enumerate(names):
-        if i in empty_idx:
-            parts = sorted(frags[i], key=lambda f: (round(f[0]), f[1]))
-            out.append(" ".join(p[2] for p in parts).strip())
+    unresolved = []
+    for i, name in enumerate(names):
+        original = (name or "").replace("\n", " ").strip()
+        parts = sorted(frags[i], key=lambda f: (round(f[0]), f[1]))
+        recovered = " ".join(part[2] for part in parts).strip()
+        # Extend an existing fragment only when all its text is retained.
+        if recovered and (not original or _PLACEHOLDER_HEADER_CELL_RE.match(original)
+                          or _normalize_header_cell(original) in _normalize_header_cell(recovered)):
+            out.append(recovered)
         else:
-            out.append((n or "").replace("\n", " ").strip())
-    if any(not c for c in out):
-        return None
+            out.append(original or f"Col{i + 1}")
+        if _PLACEHOLDER_HEADER_CELL_RE.match(out[-1]):
+            unresolved.append({"column": i + 1, "label": out[-1]})
+    _debug_extraction("UNRESOLVED_HEADER_COLUMNS", page=page.number + 1, columns=unresolved)
     return out
 
 
@@ -1275,7 +1357,8 @@ def _regrid_garbled_markdown(md: str, header_names: List[str]) -> Optional[str]:
         if not _MD_PRICE_CELL_RE.match(cells[-1].replace(" ", "")):
             continue
         data.append(cells)
-    if len(data) < 2:
+    # Single-part quotes still have a usable grid after header repair.
+    if not data:
         return None
     lines = [
         "| " + " | ".join(header_names) + " |",
@@ -1296,6 +1379,7 @@ def _collect_page_data(page):
     for t in page.find_tables().tables:
         try:
             md = t.to_markdown()
+            _debug_extraction("TABLE_BEFORE_REPAIR", stage="collect", page=page.number + 1, markdown=md)
             if not md:
                 continue
             md = _degroup_repeated_markdown_columns(md) or md
@@ -1781,6 +1865,17 @@ def _canonical_field_for_label(label: str) -> Optional[str]:
         for alias in settings.parse_aliases(alias_setting):
             if _normalize_header_cell(alias) in normalized_label:
                 return field
+    if len(normalized_label) >= 4:
+        candidates = sorted({
+            field for field, alias_setting in REQUIRED_COLUMN_ALIASES.items()
+            for alias in settings.parse_aliases(alias_setting)
+            if normalized_label in _normalize_header_cell(alias)
+        })
+        if len(candidates) == 1:
+            _debug_extraction("ALIAS_FALLBACK", label=label, field=candidates[0])
+            return candidates[0]
+        if len(candidates) > 1:
+            _debug_extraction("ALIAS_FALLBACK_AMBIGUOUS", label=label, fields=candidates)
     return None
 
 
@@ -1875,13 +1970,25 @@ def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
     value}, for every label this project recognizes. A label that matches no
     known alias is simply not part-of/tier-of anything this system tracks
     (e.g. a decoy/annual-volume column some templates print) and is dropped,
-    same as the old prompt implicitly did by only ever emitting known keys."""
+    same as the old prompt implicitly did by only ever emitting known keys.
+
+    Preserve that mapping behaviour, but report each distinct raw dropped
+    label once per document. Unknown printed labels can otherwise masquerade
+    as missing required columns. The diagnostic context is document-local,
+    so repeated rows do not flood logs and concurrent PDFs remain isolated.
+    """
     mapped: Dict[str, str] = {}
     if not isinstance(cells, dict):
         return mapped
     for label, value in cells.items():
         field = _canonical_field_for_label(label)
         if field is None:
+            state = _DOCUMENT_DIAGNOSTICS.get()
+            if state is None or label not in state["dropped_labels"]:
+                if state is not None:
+                    state["dropped_labels"].add(label)
+                logger.warning("DROPPED_COLUMN_LABEL file=%s label=%r",
+                               state["file"] if state else "unknown", label)
             continue
         # If the same canonical field is matched by more than one column in
         # this row (rare, but possible with a decoy column whose label
@@ -1895,6 +2002,7 @@ def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
 
 def _resolve_ambiguous_rows_sequentially(
     raw_rows: List[dict], master_header: Optional[str], notes: List[str], stats: Optional[dict] = None,
+    chunk_label: str = "unknown",
 ) -> List[dict]:
     """
     Step 8: walk raw_rows in order and replace every LLM-flagged-ambiguous
@@ -1912,6 +2020,8 @@ def _resolve_ambiguous_rows_sequentially(
     "_is_pricing_tier_of_previous" hint consumed by the grouping pass right
     after this function returns - so downstream code has one uniform row
     shape to work with regardless of whether a row started ambiguous.
+    Carry the parent chunk label into recovery calls so truncation diagnostics
+    identify the specific row and page without changing its recovery rules.
     """
     resolved: List[dict] = []
     relevant_note = notes[0] if notes else None
@@ -1929,7 +2039,8 @@ def _resolve_ambiguous_rows_sequentially(
         )
         try:
             started = time.perf_counter()
-            answer = call_llm(prompt, retries=1, max_tokens=AMBIGUOUS_ROW_MAX_TOKENS)
+            answer = call_llm(prompt, retries=1, max_tokens=AMBIGUOUS_ROW_MAX_TOKENS,
+                              chunk_label=f"{chunk_label} ambiguous row {i + 1}")
             elapsed = time.perf_counter() - started
             if stats is not None:
                 stats["ambiguous_calls"] = stats.get("ambiguous_calls", 0) + 1
@@ -2085,7 +2196,18 @@ def _dedupe_adjacent_parts(parts: list) -> list:
 # Main per-document extraction
 # ---------------------------------------------------------------------------
 
+@_with_document_diagnostics
 def extract_pdf_data(pdf_path):
+    """Extract a document with the existing preprocessing and business rules.
+
+    Track raw rows from successful batch responses separately from grouped
+    parts, because zero final parts can mean either zero model rows or rows
+    lost during mapping/grouping. Invalid response shapes and failed batches
+    have their own diagnostics rather than being mislabeled empty tables.
+    Counts are diagnostic only, including repeated successful responses during
+    chunk recovery; no response schema, validation, or grouping rule changes.
+    The decorator owns dropped-label state and logs it even on early exits.
+    """
     print(f"Processing: {os.path.basename(pdf_path)}")
     doc = fitz.open(pdf_path)
 
@@ -2143,6 +2265,9 @@ def extract_pdf_data(pdf_path):
         "total_llm_calls": 0,
         "ambiguous_calls": 0,
         "llm_time_s": 0.0,
+        "raw_rows": 0,
+        "invalid_row_responses": 0,
+        "failed_batches": 0,
     }
 
     def _chunk_has_no_extractable_content(chunk_pages) -> bool:
@@ -2171,6 +2296,7 @@ def extract_pdf_data(pdf_path):
         Python (_fill_down_and_group_rows). The return shape - {"parts": [...]},
         error-or-None - is unchanged, so the surrounding chunk/retry loop
         below (including its per-page fallback on failure) needs no changes.
+        File/page/batch context is also passed to the request diagnostics.
         """
         annotated_text = "\n".join(c[1] for c in chunk_pages)
         table_markdown = "\n\n".join(md for c in chunk_pages for md in c[2])
@@ -2189,15 +2315,23 @@ def extract_pdf_data(pdf_path):
             """One LLM call for one table-markdown batch (a whole page's
             table, or one row-count-limited slice of it - see
             MAX_TABLE_ROWS_PER_CALL/_split_table_markdown_into_batches).
-            Returns (raw_rows, prompt_chars, response_chars, elapsed_s)."""
+            Returns (raw_rows, prompt_chars, response_chars, elapsed_s).
+            Count raw rows before grouping, and flag a missing/non-list rows
+            field separately from an explicitly empty list. Valid JSON of the
+            wrong shape is not evidence of token truncation.
+            """
             batch_prompt = build_raw_row_prompt(annotated_text, markdown_batch, notes, master_header=master_header)
             call_started = time.perf_counter()
-            raw_response = call_llm(batch_prompt, retries=retries, max_tokens=RAW_ROW_MAX_TOKENS)
+            raw_response = call_llm(
+                batch_prompt, retries=retries, max_tokens=RAW_ROW_MAX_TOKENS,
+                chunk_label=f"pages {page_start + 1}-{page_end + 1} batch {batch_index + 1}",
+            )
             call_elapsed = time.perf_counter() - call_started
             stats["total_llm_calls"] += 1
             stats["llm_time_s"] += call_elapsed
 
             raw_rows_value = raw_response.get("rows") if isinstance(raw_response, dict) else None
+            _debug_extraction("RAW_CELLS_KEYS", pages=[page_start + 1, page_end + 1], rows=[list(r.get("cells", {})) if isinstance(r, dict) and isinstance(r.get("cells"), dict) else None for r in raw_rows_value] if isinstance(raw_rows_value, list) else None)
             batch_rows: List[dict] = []
             if isinstance(raw_rows_value, list):
                 malformed = 0
@@ -2225,9 +2359,16 @@ def extract_pdf_data(pdf_path):
                 if malformed:
                     print(f"    Warning: {malformed} malformed (non-object) row entr{'y' if malformed == 1 else 'ies'} "
                           f"routed to ambiguous-row recovery instead of being dropped.")
-            elif raw_rows_value is not None:
+            else:
+                stats["invalid_row_responses"] += 1
+                logger.warning(
+                    "LLM_ROWS_SHAPE_INVALID file=%s pages=%d-%d batch=%d rows_type=%s response_chars=%d",
+                    os.path.basename(pdf_path), page_start + 1, page_end + 1,
+                    batch_index + 1, type(raw_rows_value).__name__, len(json.dumps(raw_response)),
+                )
                 print(f"    Warning: response 'rows' was type {type(raw_rows_value).__name__}, not a list - treating as 0 rows for this batch.")
 
+            stats["raw_rows"] += len(batch_rows)
             return batch_rows, len(batch_prompt), len(json.dumps(raw_response)), call_elapsed
 
         try:
@@ -2258,13 +2399,17 @@ def extract_pdf_data(pdf_path):
                     total_response_chars += response_chars
                     total_elapsed += elapsed
                 except Exception as batch_error:
+                    stats["failed_batches"] += 1
                     print(f"  Chunk pages {page_start}-{page_end} batch {batch_index + 1}/{len(markdown_batches)} failed: {batch_error}")
                     warnings.append(
                         f"Page {page_start}-{page_end} batch {batch_index + 1}/{len(markdown_batches)} could not be "
                         f"extracted after retries; its rows are missing. Last error: {batch_error}"
                     )
 
-            resolved_rows = _resolve_ambiguous_rows_sequentially(all_raw_rows, master_header, notes, stats=stats)
+            resolved_rows = _resolve_ambiguous_rows_sequentially(
+                all_raw_rows, master_header, notes, stats=stats,
+                chunk_label=f"pages {page_start + 1}-{page_end + 1}",
+            )
             parts = _fill_down_and_group_rows(resolved_rows)
 
             batch_note = f" ({len(markdown_batches)} batches)" if len(markdown_batches) > 1 else ""
@@ -2334,7 +2479,26 @@ def extract_pdf_data(pdf_path):
         all_parts.extend(chunk_result.get("parts") or [])
 
     def _log_extraction_summary(final_parts: list) -> None:
-        """Step 10: end-of-document performance summary."""
+        """Report model rows versus grouped parts before business validation.
+
+        Distinguish mapping/grouping loss from a model that returned empty
+        rows, invalid response shapes, failed calls, or entirely skipped data.
+        This makes the unchanged no-parts validation error diagnosable.
+        """
+        logger.info(
+            "ROW_COUNT_SUMMARY file=%s raw_rows=%d final_parts=%d invalid_row_responses=%d failed_batches=%d",
+            os.path.basename(pdf_path), stats["raw_rows"], len(final_parts),
+            stats["invalid_row_responses"], stats["failed_batches"],
+        )
+        if stats["raw_rows"] > 0 and not final_parts:
+            logger.warning("RAW_ROWS_WITHOUT_PARTS file=%s raw_rows=%d final_parts=0",
+                           os.path.basename(pdf_path), stats["raw_rows"])
+        elif stats["raw_rows"] == 0:
+            reason = ("INVALID_ROW_RESPONSES" if stats["invalid_row_responses"] else
+                      "BATCH_FAILURES" if stats["failed_batches"] else
+                      "MODEL_RETURNED_ZERO_ROWS" if stats["total_llm_calls"] else
+                      "NO_MODEL_CALLS")
+            logger.warning("ZERO_RAW_ROWS file=%s reason=%s", os.path.basename(pdf_path), reason)
         total_tiers = sum(len(p.get("pricing_tiers") or []) for p in final_parts if isinstance(p, dict))
         total_time = time.perf_counter() - extraction_started_at
         print(

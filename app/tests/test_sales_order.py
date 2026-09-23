@@ -85,18 +85,23 @@ def test_get_sales_orders_filters_client_side_since_iqms_filter_is_broken():
     assert results[0].date_taken is not None
 
 
-def test_get_sales_orders_endpoint(monkeypatch):
+@pytest.mark.parametrize("part_key", ["evco_part_number", "item_number"])
+def test_get_sales_orders_endpoint(monkeypatch, part_key):
     fake_service = MagicMock()
     fake_service.get_sales_orders.return_value = SalesOrderService(
         iqms_client=MagicMock(get_sales_orders=MagicMock(return_value=RAW_SALES_ORDERS))
     ).get_sales_orders(item_number="9410145")
     monkeypatch.setattr(sales_order_router, "sales_order_service", fake_service)
 
-    response = client.post("/sales-orders/get-sales-orders", json={"item_number": "9410145"})
+    response = client.post("/sales-orders/get-sales-orders", json={part_key: "9410145"})
     assert response.status_code == 200
     data = response.json()
     assert len(data["data"]) == 1
-    assert data["data"][0]["item_number"] == "9410145"
+    assert data["data"][0]["evco_part_number"] == "9410145"
+    assert data["data"][0]["customer_part_number"] == "47219"
+    assert data["data"][0]["customer_name"] == "PINNACLE PLASTIC PRODUCTS"
+    assert data["data"][0]["price"] == 2.03
+    assert "unit_price" not in data["data"][0]
     fake_service.get_sales_orders.assert_called_once_with(item_number="9410145", line_item_id=None)
 
 

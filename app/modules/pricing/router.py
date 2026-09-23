@@ -3,6 +3,9 @@ from fastapi import APIRouter, Response, status
 from app.modules.inventory.schemas import StandardInventoryResponse
 from app.modules.pricing.schemas import (
     AddPriceBreakRequest,
+    AddPriceBreakResponseData,
+    PriceBreakData,
+    UpdatePriceBreakResponseData,
     GetPriceBreaksRequest,
     UpdatePriceBreakRequest,
 )
@@ -17,7 +20,7 @@ router = APIRouter(prefix="/inventory", tags=["Inventory Price Breaks"])
 
 @router.post(
     "/get-pricebreaks",
-    response_model=StandardInventoryResponse,
+    response_model=StandardInventoryResponse[list[PriceBreakData]],
     summary="Get Price Breaks",
     description="Retrieve all price breaks for the current customer/item context (no IDs are accepted)",
 )
@@ -39,7 +42,7 @@ async def get_pricebreaks(payload: GetPriceBreaksRequest, response: Response):
 
 @router.post(
     "/add-pricebreak",
-    response_model=StandardInventoryResponse,
+    response_model=StandardInventoryResponse[AddPriceBreakResponseData],
     summary="Add Price Break",
     description="Add a new price break tier to the current customer/item context (no IDs are accepted)",
 )
@@ -55,7 +58,7 @@ async def add_pricebreak(payload: AddPriceBreakRequest, response: Response):
 
 @router.post(
     "/update-pricebreak",
-    response_model=StandardInventoryResponse,
+    response_model=StandardInventoryResponse[UpdatePriceBreakResponseData],
     summary="Update Price Break",
     description="Update the price break tier identified by business context (quantity), not a database ID",
 )

@@ -4,6 +4,20 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 
 **"Payload key" below is the exact JSON key to send** — use that one. It's not a choice between two options.
 
+
+Inventory, pricing, and sales-order payloads use extraction terminology. Legacy
+request keys remain accepted, but responses use only the documented names.
+Service attributes, database columns, and stored AKA audit snapshots keep their
+existing names. The response envelope and nesting are unchanged except that
+`Header` / `akaDetails` are now `header` / `aka_details`.
+
+Pricing thresholds use `moq`; actual sales-order and shipment quantities keep
+their distinct names. Extraction returns printed strings; these APIs retain
+numeric quantities/prices and datetime validation. Convert printed values such
+as `"2,000"` and `"$0.769"` before calling them. Inventory `part_description`
+appears separately under the item header and each customer AKA mapping;
+sales orders retain `customer_description` as a separate customer-specific value.
+
 ---
 
 ## `/inventory/get-aka`
@@ -11,19 +25,19 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Request:**
 | Payload key | Type | Required |
 |---|---|---|
-| `Item #` | string | yes |
-| `customer#` | string | yes |
-| `mfg#` | string | yes |
+| `evco_part_number` | string | yes |
+| `customer_number` | string | yes |
+| `manufacturing_bom_number` | string | yes |
 | `line_item_id` | UUID | no |
 
-**Response `200`** — `StandardInventoryResponse[AkaSearchData]`:
+**Response `200`** — `StandardInventoryResponse[AkaSearchResponse]`:
 ```json
 {
-  "Header": { "Item #": "string", "Rev": "string", "Description": "string" },
-  "akaDetails": [
-    { "akaItem#": "string", "akaDescription": "string", "rev": "string", "customer#": "string",
-      "currency": "string", "customername": "string", "mfg#": "string", "shipToAttn": "string",
-      "minimumSellingQty": 0, "sellingMultiplesOf": 0 }
+  "header": { "evco_part_number": "string", "rev": "string", "part_description": "string" },
+  "aka_details": [
+    { "customer_part_number": "string", "part_description": "string", "rev": "string", "customer_number": "string",
+      "currency": "string", "customer_name": "string", "manufacturing_bom_number": "string", "ship_to_attn": "string",
+      "moq": 0, "box_quantity": 0, "mold_number": "string" }
   ]
 }
 ```
@@ -41,13 +55,13 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Request:**
 | Payload key | Type | Required |
 |---|---|---|
-| `Item #` | string | yes |
-| `createAkaDetails` | object | yes |
+| `evco_part_number` | string | yes |
+| `create_aka_details` | object | yes |
 | `line_item_id` | UUID | no |
 
-`createAkaDetails` object keys: `akaItem#` (required), `akaDescription`, `rev`, `customer#` (required), `currency`, `customername`, `mfg#` (required), `shipToAttn`, `minimumSellingQty`, `sellingMultiplesOf`.
+`create_aka_details` object keys: `customer_part_number` (required), `part_description`, `rev`, `customer_number` (required), `currency`, `customer_name`, `manufacturing_bom_number` (required), `ship_to_attn`, `moq`, `box_quantity`, `mold_number`.
 
-**Response `201`** — `StandardInventoryResponse[AkaSearchData]` (same shape as get-aka).
+**Response `201`** — `StandardInventoryResponse[AkaSearchResponse]` (same shape as get-aka).
 
 **Response `409`:**
 ```json
@@ -67,15 +81,15 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Request:**
 | Payload key | Type | Required |
 |---|---|---|
-| `Item #` | string | yes |
-| `customer#` | string | yes |
-| `mfg#` | string | yes |
-| `updateAkaDetails` | object, all keys optional | yes |
+| `evco_part_number` | string | yes |
+| `customer_number` | string | yes |
+| `manufacturing_bom_number` | string | yes |
+| `update_aka_details` | object, all keys optional | yes |
 | `line_item_id` | UUID | no |
 
-`updateAkaDetails` object keys: `akaItem#`, `akaDescription`, `rev`, `currency`, `shipToAttn`, `minimumSellingQty`, `sellingMultiplesOf`.
+`update_aka_details` object keys: `customer_part_number`, `part_description`, `rev`, `currency`, `ship_to_attn`, `moq`, `box_quantity`, `mold_number`.
 
-**Response `200`** — `StandardInventoryResponse[AkaSearchData]`.
+**Response `200`** — `StandardInventoryResponse[AkaSearchResponse]`.
 
 **HTTP errors:** `404 AKA_RECORD_NOT_FOUND`
 
@@ -90,18 +104,18 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Request:**
 | Payload key | Type | Required |
 |---|---|---|
-| `Item #` | string | yes |
-| `customer#` | string | yes |
-| `mfg#` | string | yes |
+| `evco_part_number` | string | yes |
+| `customer_number` | string | yes |
+| `manufacturing_bom_number` | string | yes |
 | `processing_id` | UUID | no |
 | `line_item_id` | UUID | no |
 
 **Example request:**
 ```json
 {
-  "Item #": "EVCO-10023",
-  "customer#": "CUST-4471",
-  "mfg#": "MFG-8890",
+  "evco_part_number": "EVCO-10023",
+  "customer_number": "CUST-4471",
+  "manufacturing_bom_number": "MFG-8890",
   "processing_id": "8b1a9953-c461-4359-9dee-0b8a1b3c1e6f",
   "line_item_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 }
@@ -109,7 +123,7 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 
 **Response `200`** — `StandardInventoryResponse[List[PriceBreakData]]`:
 ```json
-[ { "unit_price": 0.0, "quantity": 0, "comment": "string" } ]
+[ { "price": 0.0, "moq": 0, "comment": "string" } ]
 ```
 
 **HTTP errors:** `404 PRICE_BREAKS_NOT_FOUND`
@@ -125,28 +139,28 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Request:**
 | Payload key | Type | Required |
 |---|---|---|
-| `quantity` | int (>0) | yes |
+| `moq` | int (>0) | yes |
 | `price` | float (>0) | yes |
-| `effective_date` | datetime | yes |
-| `Item #` | string | no |
-| `customer#` | string | no |
-| `mfg#` | string | no |
+| `price_effective_date` | datetime | yes |
+| `evco_part_number` | string | no |
+| `customer_number` | string | no |
+| `manufacturing_bom_number` | string | no |
 | `currency` | string | no |
-| `source_quote_number` | string | no |
+| `quote_number` | string | no |
 | `processing_id` | UUID | no |
 | `line_item_id` | UUID | no |
 
 **Example request:**
 ```json
 {
-  "quantity": 500,
+  "moq": 500,
   "price": 2.35,
-  "effective_date": "2026-10-01T00:00:00Z",
-  "Item #": "EVCO-10023",
-  "customer#": "CUST-4471",
-  "mfg#": "MFG-8890",
+  "price_effective_date": "2026-10-01T00:00:00Z",
+  "evco_part_number": "EVCO-10023",
+  "customer_number": "CUST-4471",
+  "manufacturing_bom_number": "MFG-8890",
   "currency": "USD",
-  "source_quote_number": "Q-2026-00456",
+  "quote_number": "Q-2026-00456",
   "processing_id": "8b1a9953-c461-4359-9dee-0b8a1b3c1e6f",
   "line_item_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 }
@@ -154,7 +168,7 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 
 **Response `201`** — `StandardInventoryResponse[AddPriceBreakResponseData]`:
 ```json
-{ "quantity": 0, "price": 0.0, "price_date": "datetime", "effective_date": "datetime", "inactive_date": null }
+{ "moq": 0, "price": 0.0, "price_date": "datetime", "price_effective_date": "datetime", "inactive_date": null }
 ```
 
 **HTTP errors:** none
@@ -170,30 +184,30 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Request:**
 | Payload key | Type | Required |
 |---|---|---|
-| `quantity` | int (>0) | yes |
+| `moq` | int (>0) | yes |
 | `price` | float (>0) | yes |
-| `effective_date` | datetime | yes |
+| `price_effective_date` | datetime | yes |
 | `inactive_date` | datetime | no |
-| `Item #` | string | no |
-| `customer#` | string | no |
-| `mfg#` | string | no |
+| `evco_part_number` | string | no |
+| `customer_number` | string | no |
+| `manufacturing_bom_number` | string | no |
 | `currency` | string | no |
-| `source_quote_number` | string | no |
+| `quote_number` | string | no |
 | `processing_id` | UUID | no |
 | `line_item_id` | UUID | no |
 
 **Example request:**
 ```json
 {
-  "quantity": 500,
+  "moq": 500,
   "price": 2.15,
-  "effective_date": "2026-10-01T00:00:00Z",
+  "price_effective_date": "2026-10-01T00:00:00Z",
   "inactive_date": "2027-01-01T00:00:00Z",
-  "Item #": "EVCO-10023",
-  "customer#": "CUST-4471",
-  "mfg#": "MFG-8890",
+  "evco_part_number": "EVCO-10023",
+  "customer_number": "CUST-4471",
+  "manufacturing_bom_number": "MFG-8890",
   "currency": "USD",
-  "source_quote_number": "Q-2026-00456",
+  "quote_number": "Q-2026-00456",
   "processing_id": "8b1a9953-c461-4359-9dee-0b8a1b3c1e6f",
   "line_item_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 }
@@ -201,7 +215,7 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 
 **Response `200`** — `StandardInventoryResponse[UpdatePriceBreakResponseData]`:
 ```json
-{ "quantity": 0, "price": 0.0, "effective_date": "datetime", "inactive_date": null }
+{ "moq": 0, "price": 0.0, "price_effective_date": "datetime", "inactive_date": null }
 ```
 
 **HTTP errors:** `404 PRICE_UPDATE_TARGET_MISSING`
@@ -217,15 +231,15 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Request:**
 | Field | Type | Required |
 |---|---|---|
-| item_number | string | yes |
+| evco_part_number | string | yes |
 | line_item_id | UUID | no |
 
 **Response `200`** — `StandardInventoryResponse[List[SalesOrderData]]`:
 ```json
 [ { "sales_order_id": 0, "sales_order_detail_id": 0, "ar_invt_id": 0, "order_number": "string",
-    "po_number": "string", "customer_number": "string", "company": "string", "item_number": "string",
-    "description": "string", "customer_item_number": "string", "customer_description": "string",
-    "status": "string", "rev": "string", "total_qty_ordered": 0.0, "unit_price": 0.0,
+    "po_number": "string", "customer_number": "string", "customer_name": "string", "evco_part_number": "string",
+    "part_description": "string", "customer_part_number": "string", "customer_description": "string",
+    "status": "string", "rev": "string", "total_qty_ordered": 0.0, "price": 0.0,
     "date_taken": "datetime", "delivery_date": "datetime" } ]
 ```
 
@@ -248,7 +262,7 @@ All endpoints are `POST`. Envelope is either `StandardResponse[T]` = `{ statusCo
 **Response `200`** — `StandardInventoryResponse[List[SalesOrderDetailData]]`:
 ```json
 [ { "sales_order_detail_id": 0, "sales_order_id": 0, "ar_invt_id": 0, "blanket_qty": 0.0,
-    "unit_price": 0.0, "list_unit_price": 0.0, "uom": "string", "on_hold": false, "ship_hold": false,
+    "price": 0.0, "list_unit_price": 0.0, "uom": "string", "on_hold": false, "ship_hold": false,
     "discount": 0.0, "containers": 0.0, "drop_ship": false, "po_info": "string", "note": "string" } ]
 ```
 

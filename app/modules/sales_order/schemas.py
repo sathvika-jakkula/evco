@@ -1,35 +1,39 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # --- API 1: Get Sales Orders ---
 # IQMS's own `filters` query param does not filter server-side, so this is
 # filtered against the full sales order list in SalesOrderService.
 class GetSalesOrdersRequest(BaseModel):
-    item_number: str = Field(..., description="EVCO Item Number to filter sales order lines by")
+    model_config = ConfigDict(populate_by_name=True)
+
+    item_number: str = Field(..., alias="evco_part_number", description="EVCO Part Number to filter sales order lines by")
     line_item_id: Optional[UUID] = Field(
         default=None, description="quote_line_items row that triggered this lookup, for traceability"
     )
 
 
 class SalesOrderData(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     sales_order_id: int = Field(..., description="Sales order header id - feeds get-sales-order-details")
     sales_order_detail_id: int = Field(..., description="Sales order detail line id - feeds get-sales-order-releases")
     ar_invt_id: int
     order_number: str
     po_number: Optional[str] = None
     customer_number: str
-    company: str
-    item_number: str
-    description: Optional[str] = None
-    customer_item_number: Optional[str] = None
+    company: str = Field(alias="customer_name")
+    item_number: str = Field(alias="evco_part_number")
+    description: Optional[str] = Field(default=None, alias="part_description")
+    customer_item_number: Optional[str] = Field(default=None, alias="customer_part_number")
     customer_description: Optional[str] = None
     status: Optional[str] = None
     rev: Optional[str] = None
     total_qty_ordered: float
-    unit_price: float
+    unit_price: float = Field(alias="price")
     date_taken: Optional[datetime] = None
     delivery_date: Optional[datetime] = None
 
@@ -41,11 +45,13 @@ class GetSalesOrderDetailsRequest(BaseModel):
 
 
 class SalesOrderDetailData(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     sales_order_detail_id: int = Field(..., description="Feeds get-sales-order-releases")
     sales_order_id: int
     ar_invt_id: int
     blanket_qty: float
-    unit_price: float
+    unit_price: float = Field(alias="price")
     list_unit_price: float
     uom: str
     on_hold: bool

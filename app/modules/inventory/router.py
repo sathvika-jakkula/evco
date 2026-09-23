@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Response, status
 from app.modules.inventory.schemas import (
-    AkaSearchData,
+    AkaSearchResponse,
     CreateAkaRequest,
     GetAkaRequest,
     StandardInventoryResponse,
@@ -13,9 +13,9 @@ router = APIRouter(prefix="/inventory", tags=["Inventory AKA Workflow"])
 
 @router.post(
     "/get-aka",
-    response_model=StandardInventoryResponse[AkaSearchData],
+    response_model=StandardInventoryResponse[AkaSearchResponse],
     summary="T6 Get AKA",
-    description="Get the AKA mapping for an item, identified by Item #, customer#, and mfg#",
+    description="Get the AKA mapping for an item, identified by evco_part_number, customer_number, and manufacturing_bom_number",
 )
 async def get_aka(payload: GetAkaRequest, response: Response):
     result = inventory_store.get_aka(
@@ -34,9 +34,9 @@ async def get_aka(payload: GetAkaRequest, response: Response):
 
 @router.post(
     "/create-aka",
-    response_model=StandardInventoryResponse[AkaSearchData],
+    response_model=StandardInventoryResponse[AkaSearchResponse],
     summary="T7 Create AKA",
-    description="Create a new AKA mapping record under an Item #",
+    description="Create a new AKA mapping record under an evco_part_number",
 )
 async def create_aka(payload: CreateAkaRequest, response: Response):
     result = inventory_store.create_aka(payload)
@@ -58,9 +58,9 @@ async def create_aka(payload: CreateAkaRequest, response: Response):
 
 @router.post(
     "/update-aka",
-    response_model=StandardInventoryResponse[AkaSearchData],
+    response_model=StandardInventoryResponse[AkaSearchResponse],
     summary="T8 Update AKA",
-    description="Update the AKA mapping identified by Item #, customer#, and mfg#",
+    description="Update the AKA mapping identified by evco_part_number, customer_number, and manufacturing_bom_number",
 )
 async def update_aka(payload: UpdateAkaRequest, response: Response):
     result = inventory_store.update_aka(payload)

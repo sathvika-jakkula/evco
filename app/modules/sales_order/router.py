@@ -5,6 +5,9 @@ from app.modules.sales_order.schemas import (
     GetSalesOrderDetailsRequest,
     GetSalesOrderReleasesRequest,
     GetSalesOrdersRequest,
+    SalesOrderData,
+    SalesOrderDetailData,
+    SalesOrderReleaseData,
 )
 from app.modules.sales_order.service import sales_order_service
 
@@ -13,12 +16,12 @@ router = APIRouter(prefix="/sales-orders", tags=["Sales Orders"])
 
 @router.post(
     "/get-sales-orders",
-    response_model=StandardInventoryResponse,
+    response_model=StandardInventoryResponse[list[SalesOrderData]],
     summary="Get Sales Orders",
     description=(
-        "Retrieve sales order line records matching the given item_number. IQMS's own "
+        "Retrieve sales order line records matching the given evco_part_number. IQMS's own "
         "filters query parameter does not filter server-side, so this fetches the "
-        "full sales order list and filters by item_number here."
+        "full sales order list and filters by evco_part_number here."
     ),
 )
 async def get_sales_orders(payload: GetSalesOrdersRequest, response: Response):
@@ -33,7 +36,7 @@ async def get_sales_orders(payload: GetSalesOrdersRequest, response: Response):
 
 @router.post(
     "/get-sales-order-details",
-    response_model=StandardInventoryResponse,
+    response_model=StandardInventoryResponse[list[SalesOrderDetailData]],
     summary="Get Sales Order Details",
     description="Retrieve detail (line item) records for a given sales_order_id and ar_invt_id.",
 )
@@ -52,7 +55,7 @@ async def get_sales_order_details(payload: GetSalesOrderDetailsRequest, response
 
 @router.post(
     "/get-sales-order-releases",
-    response_model=StandardInventoryResponse,
+    response_model=StandardInventoryResponse[list[SalesOrderReleaseData]],
     summary="Get Sales Order Releases",
     description="Retrieve the release/shipment schedule for a given sales_order_detail_id.",
 )
