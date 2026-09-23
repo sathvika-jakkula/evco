@@ -1204,6 +1204,9 @@ def find_master_table_header(doc, max_pages_to_scan=8):
                     continue
                 if not md:
                     continue
+                if re.search(r"see\s+attached\s+spreadsheet", md, re.IGNORECASE):
+                    _debug_extraction("REFERENCE_TABLE_SKIPPED", page=page.number + 1)
+                    continue
                 md = _promote_embedded_table_header(md) or _degroup_repeated_markdown_columns(md) or md
                 header_line = md.split("\n", 1)[0]
                 if _header_has_placeholder_cells(header_line):
@@ -1457,7 +1460,7 @@ def _regrid_garbled_markdown(md: str, header_names: List[str]) -> Optional[str]:
     return "\n".join(lines)
 
 
-def _collect_page_data(page, master_header=None):
+def _collect_page_data(page, master_header=None, grid_evidence_cache=None):
     """Extract plain text, annotated text, table markdown, and notes for one page."""
     plain_text = page.get_text("text")
     annotations = get_page_annotations(page)
@@ -1466,6 +1469,8 @@ def _collect_page_data(page, master_header=None):
     markdowns = []
     had_garbled_table = False
     tables = page.find_tables().tables
+    if grid_evidence_cache is not None:
+        grid_evidence_cache[page.number] = _pricing_grid_evidence(page, tables, annotations)
     _debug_extraction("PAGE_GRID", page=page.number + 1, tables=len(tables), plain_text=plain_text)
     for t in tables:
         try:
@@ -1625,7 +1630,7 @@ REQUIRED_COLUMN_ALIASES = {
     "mold_number": settings.EXTRACTION_ALIAS_MOLD,
     "evco_part_number": settings.EXTRACTION_ALIAS_EVCO_PN,
     "manufacturing_bom_number": settings.EXTRACTION_ALIAS_EVCO_MFG,
-    "customer_part_number": settings.EXTRACTION_ALIAS_CUSTOMER_PN,
+    "customer_part_number": settings.EXTRACTION_ALIAS_CUSTOMER_PN + ", Sleep Number PN, Bekaert PN, John Deere PN",
     "part_description": settings.EXTRACTION_ALIAS_PART_DESC,
     "box_quantity": settings.EXTRACTION_ALIAS_BOX_QTY,
     "moq": settings.EXTRACTION_ALIAS_MOQ,
@@ -1684,7 +1689,7 @@ def _header_has_placeholder_cells(header_line: str) -> bool:
     return any(_PLACEHOLDER_HEADER_CELL_RE.match(c) for c in cells)
 
 
-def validate_before_extraction(header_fields: Dict[str, Any], master_header: Optional[str]):
+def validate_before_extraction(header_fields: Dict[str, Any], master_header: Optional[str], field_evidence=None):
     """
     Fail-fast pass run BEFORE the LLM table-data extraction. Both checks
     here are fully deterministic - no LLM call involved - so a document
@@ -1726,7 +1731,8 @@ def validate_before_extraction(header_fields: Dict[str, Any], master_header: Opt
         )
 
     if master_header:
-        missing_columns = _master_header_missing_columns(master_header)
+        missing_columns = [(field, label) for field, label in _master_header_missing_columns(master_header)
+                           if not (field_evidence or {}).get(field)]
         if missing_columns:
             # MOQ/Price are never trusted from the header check alone, even
             # with a perfectly clean-looking header (no placeholder cells
@@ -1954,10 +1960,16 @@ def _canonical_field_for_label(label: str) -> Optional[str]:
     normalized_label = _normalize_header_cell(label)
     if not normalized_label:
         return None
-    for field, alias_setting in REQUIRED_COLUMN_ALIASES.items():
-        for alias in settings.parse_aliases(alias_setting):
-            if _normalize_header_cell(alias) in normalized_label:
-                return field
+    matches = [(len(_normalize_header_cell(alias)), field)
+               for field, alias_setting in REQUIRED_COLUMN_ALIASES.items()
+               for alias in settings.parse_aliases(alias_setting)
+               if _normalize_header_cell(alias) in normalized_label]
+    if matches:
+        longest = max(length for length, _ in matches)
+        fields = {field for length, field in matches if length == longest}
+        if len(fields) == 1:
+            return fields.pop()
+        return None
     if len(normalized_label) >= 4:
         candidates = sorted({
             field for field, alias_setting in REQUIRED_COLUMN_ALIASES.items()
@@ -1995,8 +2007,8 @@ def _split_stacked_tiers(moq_value: str, price_value: str) -> List[Dict[str, str
     with the wrong quantity - safer to keep the raw, unsplit value as a
     single tier than to fabricate a possibly-wrong pairing.
     """
-    moq_lines = [ln.strip() for ln in (moq_value or "").split("\n")]
-    price_lines = [ln.strip() for ln in (price_value or "").split("\n")]
+    moq_lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\\n|\n", moq_value or "")]
+    price_lines = [ln.strip() for ln in re.split(r"<br\s*/?>|\\n|\n", price_value or "")]
     if len(moq_lines) <= 1 and len(price_lines) <= 1:
         return [{"moq": moq_value, "price": price_value}]
     if len(moq_lines) != len(price_lines):
@@ -2058,6 +2070,44 @@ def _split_table_markdown_into_batches(table_markdown: str, max_rows: int) -> Li
     return batches if any_split else [table_markdown]
 
 
+def _embedded_description_bom(description):
+    """Recognize an explicitly printed mold/part code at a description's start."""
+    match = re.match(r"^(\d{3,}/\d{5,}(?:[-/][A-Za-z0-9.-]+)?(?:\s+LP\d+)?)\s+\S",
+                     str(description).replace("<br>", " ").replace("\\n", " ").strip())
+    return match.group(1) if match else None
+
+
+def _document_field_evidence(per_page):
+    """Supplement header checks with explicit data, never fabricated columns."""
+    evidence = {}
+    box_values = set(re.findall(r"Each\s+box\s+contains\s+([\d,]+)\s+parts\b",
+                               "\n".join(page[0] for page in per_page), re.IGNORECASE))
+    part_numbers = set()
+    for page in per_page:
+        for markdown in page[2]:
+            lines = markdown.splitlines()
+            if len(lines) < 3:
+                continue
+            labels = [cell.strip() for cell in lines[0].strip().strip("|").split("|")]
+            part_indexes = [i for i, label in enumerate(labels)
+                            if _canonical_field_for_label(label) == "evco_part_number"]
+            desc_indexes = [i for i, label in enumerate(labels)
+                            if _canonical_field_for_label(label) == "part_description"]
+            for line in lines[2:]:
+                cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+                if len(cells) != len(labels):
+                    continue
+                part_numbers.update(cells[i] for i in part_indexes
+                                    if re.fullmatch(r"\d{5,}[A-Za-z0-9-]*", cells[i]))
+                if any(_embedded_description_bom(cells[i]) for i in desc_indexes):
+                    evidence["manufacturing_bom_number"] = True
+    # A packaging footnote has an unambiguous target on a single-part quote.
+    # Do not spread a quantity across a multi-part catalog without per-part scope.
+    if len(box_values) == 1 and len(part_numbers) == 1:
+        evidence["box_quantity"] = box_values.pop()
+    return evidence
+
+
 def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
     """Map one raw row's {column_label: value} dict to {canonical_field:
     value}, for every label this project recognizes. A label that matches no
@@ -2074,6 +2124,13 @@ def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
     if not isinstance(cells, dict):
         return mapped
     for label, value in cells.items():
+        normalized = _normalize_header_cell(label)
+        if "customerpn" in normalized and "partdescription" in normalized:
+            values = str(value or "").strip().split(maxsplit=1)
+            if values:
+                mapped["customer_part_number"] = values[0]
+                mapped["part_description"] = values[1] if len(values) > 1 else ""
+            continue
         field = _canonical_field_for_label(label)
         if field is None:
             state = _DOCUMENT_DIAGNOSTICS.get()
@@ -2090,6 +2147,9 @@ def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
         if field in mapped and _has_required_value(mapped[field]):
             continue
         mapped[field] = "" if value is None else str(value)
+    embedded = _embedded_description_bom(mapped.get("part_description", ""))
+    if embedded and not mapped.get("manufacturing_bom_number"):
+        mapped["manufacturing_bom_number"] = embedded
     return mapped
 
 
@@ -2246,6 +2306,78 @@ def _fill_down_and_group_rows(raw_rows: List[dict]) -> List[dict]:
     return parts
 
 
+def _grid_identity(part):
+    """Formatting differences in a wrapped identifier do not change identity."""
+    def normalized(value):
+        return re.sub(r"\s+", "", str(value or "").replace("\\n", "").replace("<br>", "")).upper()
+    return tuple(normalized(part.get(field)) for field in
+                 ("mold_number", "evco_part_number", "manufacturing_bom_number", "box_quantity"))
+
+
+def _pricing_grid_evidence(page, tables=None, annotations=None):
+    """Read physical row geometry and stacked tiers from trustworthy grids.
+
+    Only grids with explicit part/BOM/quantity/price columns qualify. A redline
+    can split a physical row into two detector rows; extend the first row over
+    fragments with no identifiers before testing for a strike through it.
+    """
+    evidence = {}
+    if annotations is None:
+        annotations = get_page_annotations(page)
+    if tables is None:
+        tables = page.find_tables().tables
+    for table in tables:
+        fields = [_canonical_field_for_label(label or "") for label in table.header.names]
+        required = {"mold_number", "evco_part_number", "manufacturing_bom_number", "box_quantity", "moq", "price"}
+        if not required.issubset(fields):
+            continue
+        if any(fields.count(field) != 1 for field in required):
+            continue
+        logical_rows = []
+        for index, cells in enumerate(table.extract()):
+            if len(cells) != len(fields):
+                continue
+            mapped = {field: cells[i] or "" for i, field in enumerate(fields) if field}
+            key = _grid_identity(mapped)
+            if key[1] and key[2] and re.search(r"\d", key[1]) and re.search(r"\d", key[2]):
+                logical_rows.append({"key": key, "values": mapped, "rect": fitz.Rect(table.rows[index].bbox)})
+            elif logical_rows and not key[1] and not key[2]:
+                logical_rows[-1]["rect"] |= fitz.Rect(table.rows[index].bbox)
+        for row in logical_rows:
+            rect = row["rect"]
+            excluded = any(rect.y0 < (strike.y0 + strike.y1) / 2 < rect.y1
+                           and min(rect.x1, strike.x1) - max(rect.x0, strike.x0) > rect.width * 0.5
+                           for strike in annotations["strike_rows"])
+            overridden = any(rect.intersects(box) for box in annotations["override_boxes"])
+            values = row["values"]
+            tiers = _split_stacked_tiers(values.get("moq", ""), values.get("price", ""))
+            # Unequal stacks / annotated replacements are not safe to infer.
+            trusted_tiers = (not overridden and len(tiers) > 1 and all(
+                re.fullmatch(r"[\d,]+", tier["moq"])
+                and re.fullmatch(r"\$?\s*[\d,]+\.\d+", tier["price"])
+                for tier in tiers))
+            entry = {"excluded": excluded, "tiers": tiers if trusted_tiers else None}
+            evidence.setdefault(row["key"], []).append(entry)
+            if excluded:
+                _debug_extraction("GRID_ROW_EXCLUDED", page=page.number + 1, identity=row["key"], bbox=list(rect))
+    return evidence
+
+
+def _reconcile_grid_parts(parts, evidence):
+    """Apply only unambiguous source matches; unrelated parts remain intact."""
+    result = []
+    for part in parts:
+        matches = evidence.get(_grid_identity(part), [])
+        if matches and all(match["excluded"] for match in matches):
+            continue
+        if len(matches) == 1 and matches[0]["tiers"]:
+            _debug_extraction("GRID_TIERS_RECONCILED", identity=_grid_identity(part),
+                              before=part.get("pricing_tiers"), after=matches[0]["tiers"])
+            part = {**part, "pricing_tiers": [dict(tier) for tier in matches[0]["tiers"]]}
+        result.append(part)
+    return result
+
+
 def _dedupe_adjacent_parts(parts: list) -> list:
     """
     Drop a part if it's an exact duplicate of the one immediately before it
@@ -2277,6 +2409,14 @@ def _dedupe_adjacent_parts(parts: list) -> list:
     deduped: list = []
     prev_key = object()
     for part in parts:
+        # Failed recovery can emit an entirely empty placeholder. It is not
+        # a pricing row; retain partially populated rows for normal validation.
+        if isinstance(part, dict) and not any(_has_required_value(part.get(field)) for field in _PART_LEVEL_FIELDS):
+            if not any(_has_required_value(tier.get(field))
+                       for tier in part.get("pricing_tiers", []) if isinstance(tier, dict)
+                       for field in _TIER_LEVEL_FIELDS):
+                _debug_extraction("EMPTY_PART_DISCARDED")
+                continue
         key = _key(part)
         if key is not None and key == prev_key:
             continue
@@ -2315,7 +2455,9 @@ def extract_pdf_data(pdf_path):
 
     pages = [doc[i] for i in range(len(doc))]
     master_header = find_master_table_header(doc)
-    per_page = [_collect_page_data(p, master_header=master_header) for p in pages]
+    grid_evidence_cache = {}
+    per_page = [_collect_page_data(p, master_header=master_header, grid_evidence_cache=grid_evidence_cache)
+                for p in pages]
 
     full_plain_text = "\n".join(p[0] for p in per_page)
     header_fields = extract_header_fields(full_plain_text)
@@ -2325,7 +2467,8 @@ def extract_pdf_data(pdf_path):
     # deterministic (regex header fields + detected table header aliases),
     # so a document that's going to be excluded per EX-001/EX-002 anyway
     # never pays for the full table-data extraction.
-    precheck_failures = validate_before_extraction(header_fields, master_header)
+    field_evidence = _document_field_evidence(per_page)
+    precheck_failures = validate_before_extraction(header_fields, master_header, field_evidence)
     if precheck_failures:
         exception_codes = sorted({c for f in precheck_failures for c in f["codes"]})
         exception_reason = " | ".join(f["message"] for f in precheck_failures)
@@ -2506,6 +2649,13 @@ def extract_pdf_data(pdf_path):
                 chunk_label=f"pages {page_start + 1}-{page_end + 1}",
             )
             parts = _fill_down_and_group_rows(resolved_rows)
+            grid_evidence = {}
+            for page_index in range(page_start, page_end + 1):
+                if page_index not in grid_evidence_cache:
+                    grid_evidence_cache[page_index] = _pricing_grid_evidence(pages[page_index])
+                for key, entries in grid_evidence_cache[page_index].items():
+                    grid_evidence.setdefault(key, []).extend(entries)
+            parts = _reconcile_grid_parts(parts, grid_evidence)
 
             batch_note = f" ({len(markdown_batches)} batches)" if len(markdown_batches) > 1 else ""
             print(
@@ -2627,6 +2777,10 @@ def extract_pdf_data(pdf_path):
 
     result = dict(header_result)
     result["parts"] = _dedupe_adjacent_parts(all_parts)
+    if field_evidence.get("box_quantity"):
+        for part in result["parts"]:
+            if not part.get("box_quantity"):
+                part["box_quantity"] = field_evidence["box_quantity"]
     # Chunk-local numbers restart on each page; number the final merged list.
     for line_number, part in enumerate(result["parts"], start=1):
         part["line_number"] = str(line_number)
