@@ -43,7 +43,7 @@ class PricingTier(BaseModel):
 
 
 class PartInfo(BaseModel):
-    line_number: Optional[str] = Field(default=None, description="Line number for the extracted row, as printed")
+    line_number: Optional[str] = Field(default=None, description="Sequential part number in the final extraction result, starting at 1")
     mold_number: Optional[str] = Field(default=None, description="Mold number/identifier")
     evco_part_number: Optional[str] = Field(default=None, description="EVCO Part Number")
     manufacturing_bom_number: Optional[str] = Field(default=None, description="EVCO Manufacturing/BOM code")
@@ -862,6 +862,70 @@ def _table_header_is_garbled(markdown_table: str) -> bool:
     return garbled
 
 
+def _promote_embedded_table_header(markdown_table: str) -> Optional[str]:
+    """Recover an early, bold header mistakenly emitted below a banner row.
+
+    Require recognizable column labels, not repetition alone. Collapse an
+    adjacent duplicate label only if its values agree on every data row.
+    This removes phantom splits without merging distinct equal-valued columns.
+    """
+    rows = [line.strip()[1:-1].split("|") for line in markdown_table.splitlines()
+            if line.strip().startswith("|") and line.strip().endswith("|")]
+    rows = [[cell.strip() for cell in row] for row in rows
+            if any(cell.strip(" -:") for cell in row)]
+    if not rows or _count_matched_required_columns("|".join(rows[0])) >= 5:
+        return None
+    for index, row in enumerate(rows[1:7], start=1):
+        nonempty = [cell for cell in row if cell]
+        labels = [re.sub(r"<br\s*/?>", " ", cell).replace("**", "").strip()
+                  for cell in row]
+        is_header = (bool(nonempty) and all(cell.startswith("**") for cell in nonempty)
+                     and _count_matched_required_columns("|".join(labels)) >= 5)
+        _debug_extraction("EMBEDDED_HEADER_CANDIDATE", row=index, labels=labels,
+                          all_bold=bool(nonempty) and all(c.startswith("**") for c in nonempty),
+                          accepted=is_header)
+        if not is_header:
+            continue
+        data = rows[index + 1:]
+        if not data or any(len(r) != len(labels) for r in data):
+            return None
+        keep = []
+        for column, label in enumerate(labels):
+            if (keep and label and label == labels[keep[-1]]
+                    and all(r[column] == r[keep[-1]] for r in data)):
+                continue
+            keep.append(column)
+        result = ["|" + "|".join(labels[c] for c in keep) + "|",
+                  "|" + "|".join("---" for _ in keep) + "|"]
+        result.extend("|" + "|".join(r[c] for c in keep) + "|" for r in data)
+        _debug_extraction("EMBEDDED_HEADER_RECOVERED", header=result[0])
+        return "\n".join(result)
+    return None
+
+
+def _label_continuation_table(markdown_table: str, master_header: Optional[str]) -> str:
+    """Give a headerless grid column labels without losing its first data row."""
+    if not master_header:
+        return markdown_table
+    lines = markdown_table.splitlines()
+    if not lines:
+        return markdown_table
+    cells = [cell.strip() for cell in lines[0].strip().strip("|").split("|")]
+    labels = [cell.strip() for cell in master_header.strip().strip("|").split("|")]
+    if (len(cells) != len(labels) or not cells
+            or _count_matched_required_columns(lines[0]) > 0
+            or not _MD_PRICE_CELL_RE.fullmatch(cells[-1].replace(" ", ""))
+            or not any(re.search(r"\d", cell) for cell in cells[:-1])):
+        return markdown_table
+    # ColN in a data-derived header denotes a genuinely empty first-row cell.
+    first_row = "|" + "|".join("" if _PLACEHOLDER_HEADER_CELL_RE.fullmatch(c) else c
+                                for c in cells) + "|"
+    result = [master_header, "|" + "|".join("---" for _ in labels) + "|", first_row]
+    result.extend(lines[2:])
+    _debug_extraction("CONTINUATION_HEADER_APPLIED", header=master_header, first_row=first_row)
+    return "\n".join(result)
+
+
 def _degroup_repeated_markdown_columns(markdown_table: str) -> Optional[str]:
     """
     Repair a different PyMuPDF corruption pattern from the one
@@ -948,6 +1012,7 @@ def _degroup_repeated_markdown_columns(markdown_table: str) -> Optional[str]:
             for row in padded_rows[1:]
             for g in range(col_count)
         )
+        _debug_extraction("DEGROUP_CANDIDATE", group_size=group_size, header_ok=header_ok, data_ok=data_ok, row_count=len(padded_rows))
         if not data_ok:
             continue
 
@@ -1139,7 +1204,7 @@ def find_master_table_header(doc, max_pages_to_scan=8):
                     continue
                 if not md:
                     continue
-                md = _degroup_repeated_markdown_columns(md) or md
+                md = _promote_embedded_table_header(md) or _degroup_repeated_markdown_columns(md) or md
                 header_line = md.split("\n", 1)[0]
                 if _header_has_placeholder_cells(header_line):
                     repaired = _fill_garbled_header_from_layout(page, t)
@@ -1169,6 +1234,29 @@ def find_master_table_header(doc, max_pages_to_scan=8):
         logger.info("HEADER_SCAN_EXTENDED_RESULT file=%s found=%s score=%d pages_scanned=%d",
                     file_name, best_score >= 3, best_score, second_end)
     selected = best_header if best_score >= 3 else None
+    if selected is None:
+        # An incomplete OCR text layer can retain all numeric rows while
+        # omitting white-on-dark labels. Recover only those visible labels;
+        # never replace the original row text or relax required-column rules.
+        from app.modules.extraction.header_ocr import recover_header_candidates
+
+        for page_index in range(min(len(doc), max_pages_to_scan, 8)):
+            page = doc[page_index]
+            try:
+                candidates = recover_header_candidates(page)
+            except Exception as exc:
+                logger.warning("Header OCR unavailable on page %d: %s", page.number + 1, exc)
+                continue
+            for candidate in candidates:
+                header = "|" + "|".join(candidate["labels"]) + "|"
+                accepted = not _master_header_missing_columns(header)
+                _debug_extraction("HEADER_OCR_CANDIDATE", page=page.number + 1,
+                                  accepted=accepted, **candidate)
+                if accepted:
+                    selected = header
+                    break
+            if selected:
+                break
     _debug_extraction("MASTER_HEADER", header=selected, score=_count_matched_required_columns(selected) if selected else 0)
     return selected
 
@@ -1354,7 +1442,8 @@ def _regrid_garbled_markdown(md: str, header_names: List[str]) -> Optional[str]:
             continue  # markdown separator row
         if len(cells) != len(header_names) or not cells:
             continue
-        if not _MD_PRICE_CELL_RE.match(cells[-1].replace(" ", "")):
+        prices = re.split(r"<br\s*/?>", cells[-1])
+        if not all(_MD_PRICE_CELL_RE.fullmatch(price.replace(" ", "")) for price in prices):
             continue
         data.append(cells)
     # Single-part quotes still have a usable grid after header repair.
@@ -1368,7 +1457,7 @@ def _regrid_garbled_markdown(md: str, header_names: List[str]) -> Optional[str]:
     return "\n".join(lines)
 
 
-def _collect_page_data(page):
+def _collect_page_data(page, master_header=None):
     """Extract plain text, annotated text, table markdown, and notes for one page."""
     plain_text = page.get_text("text")
     annotations = get_page_annotations(page)
@@ -1376,13 +1465,16 @@ def _collect_page_data(page):
     notes = notes + get_cell_overrides(page, annotations)
     markdowns = []
     had_garbled_table = False
-    for t in page.find_tables().tables:
+    tables = page.find_tables().tables
+    _debug_extraction("PAGE_GRID", page=page.number + 1, tables=len(tables), plain_text=plain_text)
+    for t in tables:
         try:
             md = t.to_markdown()
             _debug_extraction("TABLE_BEFORE_REPAIR", stage="collect", page=page.number + 1, markdown=md)
             if not md:
                 continue
-            md = _degroup_repeated_markdown_columns(md) or md
+            md = _promote_embedded_table_header(md) or _degroup_repeated_markdown_columns(md) or md
+            md = _label_continuation_table(md, master_header)
             if _table_header_is_garbled(md):
                 # The table grid is intact but some header labels were lost
                 # to ColN placeholders. If the data rows are still cleanly
@@ -1429,6 +1521,7 @@ def _collect_page_data(page):
             "Rendering entry names it here."
         )
 
+    _debug_extraction("PAGE_RENDERING", page=page.number + 1, markdowns=markdowns, reading_order=annotated_text, no_usable_grid=not bool(markdowns))
     if not markdowns and plain_text.strip():
         annotated_text = _reorder_orphaned_tier_lines(annotated_text)
         # No (usable) table grid was detected on this page at all. This is
@@ -2221,8 +2314,8 @@ def extract_pdf_data(pdf_path):
         }
 
     pages = [doc[i] for i in range(len(doc))]
-    per_page = [_collect_page_data(p) for p in pages]
     master_header = find_master_table_header(doc)
+    per_page = [_collect_page_data(p, master_header=master_header) for p in pages]
 
     full_plain_text = "\n".join(p[0] for p in per_page)
     header_fields = extract_header_fields(full_plain_text)
@@ -2320,6 +2413,7 @@ def extract_pdf_data(pdf_path):
             field separately from an explicitly empty list. Valid JSON of the
             wrong shape is not evidence of token truncation.
             """
+            _debug_extraction("CHUNK_HEADER_CONTEXT", pages=[page_start + 1, page_end + 1], master_header=master_header, table_markdown=markdown_batch)
             batch_prompt = build_raw_row_prompt(annotated_text, markdown_batch, notes, master_header=master_header)
             call_started = time.perf_counter()
             raw_response = call_llm(
@@ -2332,6 +2426,7 @@ def extract_pdf_data(pdf_path):
 
             raw_rows_value = raw_response.get("rows") if isinstance(raw_response, dict) else None
             _debug_extraction("RAW_CELLS_KEYS", pages=[page_start + 1, page_end + 1], rows=[list(r.get("cells", {})) if isinstance(r, dict) and isinstance(r.get("cells"), dict) else None for r in raw_rows_value] if isinstance(raw_rows_value, list) else None)
+            _debug_extraction("RAW_CELLS_SAMPLE", pages=[page_start + 1, page_end + 1], rows=raw_rows_value[:5] if isinstance(raw_rows_value, list) else raw_rows_value)
             batch_rows: List[dict] = []
             if isinstance(raw_rows_value, list):
                 malformed = 0
@@ -2532,6 +2627,9 @@ def extract_pdf_data(pdf_path):
 
     result = dict(header_result)
     result["parts"] = _dedupe_adjacent_parts(all_parts)
+    # Chunk-local numbers restart on each page; number the final merged list.
+    for line_number, part in enumerate(result["parts"], start=1):
+        part["line_number"] = str(line_number)
     if warnings:
         result["extraction_warnings"] = warnings
     _log_extraction_summary(result["parts"])
