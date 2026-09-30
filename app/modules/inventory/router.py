@@ -15,7 +15,13 @@ router = APIRouter(prefix="/inventory", tags=["Inventory AKA Workflow"])
     "/get-aka",
     response_model=StandardInventoryResponse[AkaSearchResponse],
     summary="T6 Get AKA",
-    description="Get the AKA mapping for an item, identified by evco_part_number, customer_number, and manufacturing_bom_number",
+    description=(
+        "Get the AKA mapping for an item, identified by evco_part_number, customer_number, "
+        "and manufacturing_bom_number. "
+        "Returns 200 with full data on a full match; "
+        "206 with header only (aka_details=[]) when the item exists but no AKA matches the customer/mfg#; "
+        "404 when the item number itself is not found."
+    ),
 )
 async def get_aka(payload: GetAkaRequest, response: Response):
     result = inventory_store.get_aka(
@@ -24,6 +30,20 @@ async def get_aka(payload: GetAkaRequest, response: Response):
         manufacturing_bom_number=payload.manufacturing_bom_number,
         line_item_id=payload.line_item_id,
     )
+
+    # Case 2: item found but no matching AKA record for this customer/mfg#
+    if not result.aka_details:
+        response.status_code = status.HTTP_206_PARTIAL_CONTENT
+        return StandardInventoryResponse(
+            statusCode=206,
+            message=(
+                f"Item '{payload.item_number}' found but no AKA record matches "
+                f"customer_number '{payload.customer_number}', mfg# '{payload.manufacturing_bom_number}'"
+            ),
+            data=result,
+        )
+
+    # Case 3: full match
     response.status_code = status.HTTP_200_OK
     return StandardInventoryResponse(
         statusCode=200,

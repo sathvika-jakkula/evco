@@ -166,28 +166,44 @@ class InventoryMockStore:
         self, item_number: str, customer_number: str, manufacturing_bom_number: str,
         line_item_id: Optional[UUID] = None,
     ) -> AkaSearchData:
-        """Return the Header + matching AKA detail for (item#, customer#, mfg#), or raise 404 if unseeded."""
+        """Return the Header + matching AKA detail for (item#, customer#, mfg#).
+
+        Two distinct outcomes on non-match:
+        - item_number not found at all  → raises BusinessException (404, ITEM_NOT_FOUND)
+        - item_number known, but (customer#, mfg#) has no AKA record
+                                        → returns AkaSearchData with the header and
+                                          an empty aka_details list (caller should
+                                          proceed to create-aka).
+        """
         with self._lock:
             header = self._headers.get(item_number)
             detail = self._aka_details.get(item_number, {}).get((customer_number, manufacturing_bom_number))
-        if header is None or detail is None:
+
+        # ── Case 1: item number completely unknown ──────────────────────────
+        if header is None:
+            message = f"No item part number found for '{item_number}'"
             self._record_resolution(line_item_id, item_number, customer_number, manufacturing_bom_number,
                                      decision="NOT_FOUND", status="NOT_FOUND")
-            message = (
-                f"No AKA record found for item_number '{item_number}', "
-                f"customer_number '{customer_number}', mfg# '{manufacturing_bom_number}'"
-            )
-            self._record_exception(line_item_id, "AKA_NOT_FOUND", message)
+            self._record_exception(line_item_id, "ITEM_NOT_FOUND", message)
             raise BusinessException(
                 message=message,
-                code="AKA_RECORD_NOT_FOUND",
+                code="ITEM_NOT_FOUND",
                 status_code=404,
-                details={
-                    "item_number": item_number,
-                    "customer_number": customer_number,
-                    "mfg#": manufacturing_bom_number,
-                },
+                details={"item_number": item_number},
             )
+
+        # ── Case 2: item known, but no AKA for this customer/mfg# ──────────
+        if detail is None:
+            message = (
+                f"Item '{item_number}' found but no AKA record matches "
+                f"customer_number '{customer_number}', mfg# '{manufacturing_bom_number}'"
+            )
+            self._record_resolution(line_item_id, item_number, customer_number, manufacturing_bom_number,
+                                     decision="NOT_FOUND", status="AKA_NOT_FOUND")
+            self._record_exception(line_item_id, "AKA_NOT_FOUND", message)
+            return AkaSearchData(header=header, aka_details=[])
+
+        # ── Case 3: full match ───────────────────────────────────────────────
         self._persist_aka(item_number, detail, status="FETCHED", line_item_id=line_item_id)
         # A plain fetch changes nothing - NO_CHANGE is the honest decision, not a 5th
         # "FOUND" value the plan didn't call for.

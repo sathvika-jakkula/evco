@@ -11,8 +11,8 @@ class RecordExceptionRequest(BaseModel):
     line_item_id: Optional[UUID] = Field(
         default=None, description="Line item this exception applies to - omit for a batch/quote-level exception"
     )
-    agent_name: str = Field(..., description="Name of the agent that raised this exception")
-    tool_name: str = Field(..., description="Name of the tool/step that raised this exception")
+    agent_name: Optional[str] = Field(default=None, description="Name of the agent that raised this exception")
+    tool_name: Optional[str] = Field(default=None, description="Name of the tool/step that raised this exception")
     exception_code: str = Field(..., description="Exception or rule code")
     exception_message: str = Field(..., description="Human-readable exception detail")
     retry_attempt: int = Field(default=0, ge=0)
@@ -27,8 +27,8 @@ class ExceptionRecordData(BaseModel):
     exception_id: UUID
     processing_id: UUID
     line_item_id: Optional[UUID] = None
-    agent_name: str
-    tool_name: str
+    agent_name: Optional[str] = None
+    tool_name: Optional[str] = None
     exception_code: str
     exception_message: str
     retry_attempt: int
