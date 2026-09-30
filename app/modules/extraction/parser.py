@@ -2837,9 +2837,13 @@ def _as_str(val) -> Optional[str]:
     """
     if val is None:
         return None
-    # Collapse any whitespace containing a newline into one space,
-    # then strip. Plain mid-value spaces are preserved untouched.
-    return re.sub(r"\s*\n\s*", " ", str(val)).strip()
+    # Pass 1 — after a dash, the newline is a visual wrap with no separator:
+    #   "6601/9480026-\nRAVAGO"  →  "6601/9480026-RAVAGO"
+    cleaned = re.sub(r"-\s*\n\s*", "-", str(val))
+    # Pass 2 — any other newline is a word-break: collapse to one space.
+    #   "ACCESS BOX\nASSY-Ravago"  →  "ACCESS BOX ASSY-Ravago"
+    cleaned = re.sub(r"\s*\n\s*", " ", cleaned)
+    return cleaned.strip()
 
 
 class PDFExtractor:
