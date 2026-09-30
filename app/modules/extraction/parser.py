@@ -2837,7 +2837,9 @@ def _as_str(val) -> Optional[str]:
     """
     if val is None:
         return None
-    return str(val)
+    # Collapse any whitespace containing a newline into one space,
+    # then strip. Plain mid-value spaces are preserved untouched.
+    return re.sub(r"\s*\n\s*", " ", str(val)).strip()
 
 
 class PDFExtractor:
