@@ -162,6 +162,18 @@ class InventoryMockStore:
         logger.info("InventoryMockStore seeded from test data: %d items, %d AKA records.",
                     len(self._headers), sum(len(d) for d in self._aka_details.values()))
 
+    def reset(self) -> dict:
+        """Wipe the in-memory store and re-seed from aka_inventory.json.
+        Intended for E2E test resets only - not for production use."""
+        with self._lock:
+            self._headers.clear()
+            self._aka_details.clear()
+        self._seed_data()
+        return {
+            "items": len(self._headers),
+            "aka_records": sum(len(d) for d in self._aka_details.values()),
+        }
+
     def get_aka(
         self, item_number: str, customer_number: str, manufacturing_bom_number: str,
         line_item_id: Optional[UUID] = None,

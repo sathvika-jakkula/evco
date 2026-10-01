@@ -338,5 +338,19 @@ class PriceBreakService:
         )
 
 
+    def reset(self) -> dict:
+        """Wipe the in-memory price break store and re-seed from aka_inventory.json.
+        Intended for E2E test resets only - not for production use."""
+        with self._lock:
+            self._price_breaks_by_context.clear()
+            self._current_price_breaks.clear()
+        self._seed_data()
+        total_breaks = sum(len(v) for v in self._price_breaks_by_context.values())
+        return {
+            "contexts": len(self._price_breaks_by_context),
+            "price_break_records": total_breaks,
+        }
+
+
 # Singleton instance for in-memory data persistence across HTTP requests
 price_break_service = PriceBreakService()

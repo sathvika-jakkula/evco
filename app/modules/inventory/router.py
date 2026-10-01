@@ -77,6 +77,20 @@ async def create_aka(payload: CreateAkaRequest, response: Response):
 
 
 @router.post(
+    "/reset",
+    summary="Reset AKA store (testing only)",
+    description="Wipes the in-memory AKA store and re-seeds it from aka_inventory.json. Use this between E2E test runs to restore original state.",
+)
+async def reset_aka_store():
+    result = inventory_store.reset()
+    return {
+        "message": "AKA store reset to original seed data",
+        "seeded_items": result["items"],
+        "seeded_aka_records": result["aka_records"],
+    }
+
+
+@router.post(
     "/update-aka",
     response_model=StandardInventoryResponse[AkaSearchResponse],
     summary="T8 Update AKA",
