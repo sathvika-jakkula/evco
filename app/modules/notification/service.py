@@ -1,9 +1,8 @@
 """T21: generic email notification tool.
 
-Per explicit instruction, SMTP account credentials (email + password) are
-supplied in the request payload and used to authenticate for that one send -
-they are never persisted or logged, only the SMTP server address (SMTP_HOST/
-SMTP_PORT) is configured server-side.
+SMTP credentials (SMTP_USER / SMTP_PASSWORD) are configured server-side via
+environment variables. Callers only supply to, subject, and body.
+The SMTP server address is also server-side (SMTP_HOST / SMTP_PORT).
 """
 
 import logging
@@ -30,14 +29,28 @@ class NotificationService:
 
     def send_email(self, req: SendNotificationRequest) -> SendNotificationResponseData:
         results: List[NotificationRecipientResult] = []
-        password = req.password.get_secret_value()
+        sender = settings.SMTP_USER
+        password = settings.SMTP_PASSWORD
+
+        if not sender or not password:
+            logger.error("SMTP_USER or SMTP_PASSWORD not configured in environment")
+            sent_time = datetime.now(timezone.utc)
+            for recipient in req.to:
+                results.append(NotificationRecipientResult(
+                    notification_id=self._log(req, recipient, "FAILED", sent_time),
+                    recipient=recipient,
+                    delivery_status="FAILED",
+                    sent_time=sent_time,
+                    error="SMTP credentials not configured on server (SMTP_USER / SMTP_PASSWORD)",
+                ))
+            return SendNotificationResponseData(subject=req.subject, delivery_status="FAILED", recipients=results)
 
         try:
             with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
                 server.starttls()
-                server.login(req.from_email, password)
+                server.login(sender, password)
                 for recipient in req.to:
-                    results.append(self._send_one(server, req, recipient))
+                    results.append(self._send_one(server, req, sender, recipient))
         except Exception as connect_exc:
             # Could not even connect/authenticate to the SMTP server - log a
             # FAILED row per intended recipient so the failure is still auditable.
@@ -63,9 +76,9 @@ class NotificationService:
 
         return SendNotificationResponseData(subject=req.subject, delivery_status=overall, recipients=results)
 
-    def _send_one(self, server: smtplib.SMTP, req: SendNotificationRequest, recipient: str) -> NotificationRecipientResult:
+    def _send_one(self, server: smtplib.SMTP, req: SendNotificationRequest, sender: str, recipient: str) -> NotificationRecipientResult:
         message = EmailMessage()
-        message["From"] = req.from_email
+        message["From"] = sender
         message["To"] = recipient
         message["Subject"] = req.subject
         message.set_content(req.body)
@@ -104,3 +117,4 @@ class NotificationService:
 
 # Singleton instance, mirroring the other services in this codebase
 notification_service = NotificationService()
+
