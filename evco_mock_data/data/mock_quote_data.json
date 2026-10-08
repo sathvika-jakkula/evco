@@ -8627,5 +8627,480 @@
       }
     ],
     "resin_rows": []
+  },
+  {
+    "file": "65150-003.pdf",
+    "quote_number": "65150 - 003",
+    "opportunity_id": "65150",
+    "type": "Active",
+    "issue_date": "06-17-26",
+    "price_effective_date": "July 6, 2026",
+    "customer": {
+      "name": "The Coca Cola Company",
+      "customer_number": "88241",
+      "address": [
+        "384 Northyards Blvd., Suite 590,",
+        "Atlanta, GA 30313"
+      ],
+      "attention": "Attention: Alison Zhang, zhang3@coca-cola.com"
+    },
+    "template_style": "tiered_resin",
+    "header_repeats_each_page": true,
+    "effective_date_override": null,
+    "garbled_two_line_header": false,
+    "missing_required_column": null,
+    "supersedes_prior_quote": true,
+    "customer_similarity_test": false,
+    "sales": "Dave Midthun",
+    "cs": "Evelyn Sevilla",
+    "engineer": "Chad Skoug/Sam Manley",
+    "plant": "AMP/Oshkosh",
+    "cavities": "1",
+    "mold_numbers": "6682,6683,6686",
+    "credit_terms": "1% 10 Days Net 30",
+    "shipping": "FOB EVCO Dock AMP/Oshkosh",
+    "lead_time_note": null,
+    "quote_comments": [
+      "This quotation supersedes 65150-002A issued 5/21/2026 and 64208-010A issued 4-30-2026.",
+      "Evco MRP system (IQMS) has been updated to eliminate separate Evco part numbers for parts made from Sabic C6600 and Chimei PC-540A.",
+      "EVCO to quote and invoice Sanmina/Coca Cola for any remaining Sabic C6600 resin after orders are completed."
+    ],
+    "rows": [
+      {
+        "row": 1,
+        "mold": "6682",
+        "evco_pn": "9475227",
+        "bom": "6682/9475227-CHIMEI",
+        "customer_pn": "15271",
+        "description": "SKIN, LOWER DR BLACK -Chimei",
+        "material": "PC/ABS PC-540A Black",
+        "box_qty": "20",
+        "lead_time": "20 Weeks",
+        "tiers": [
+          {
+            "moq": "60",
+            "price": "$105.27"
+          },
+          {
+            "moq": "120",
+            "price": "$77.79"
+          },
+          {
+            "moq": "240",
+            "price": "$64.27"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 2,
+        "mold": "6682",
+        "evco_pn": "9475227",
+        "bom": "6682/9475227-SABIC",
+        "customer_pn": "15271",
+        "description": "SKIN, LOWER DR BLACK -Sabic",
+        "material": "PC/ABS C6600 7T1D355 Black",
+        "box_qty": "20",
+        "lead_time": "13 Weeks",
+        "tiers": [
+          {
+            "moq": "60",
+            "price": "$133.24"
+          },
+          {
+            "moq": "120",
+            "price": "$100.65"
+          },
+          {
+            "moq": "240",
+            "price": "$84.66"
+          }
+        ],
+        "scenarios": [
+          "AKA_NOT_FOUND_CREATE_TEST",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "No AKA record exists for this part/customer/mfg combo at all -> exercises create-aka + add-pricebreak.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 3,
+        "mold": "6682",
+        "evco_pn": "9475228",
+        "bom": "6682/9475228-CHIMEI",
+        "customer_pn": "17484",
+        "description": "SKIN, LOWER DR DARK GREY-Chimei",
+        "material": "PC/ABS PC-540A Grey",
+        "box_qty": "20",
+        "lead_time": "20 Weeks",
+        "tiers": [
+          {
+            "moq": "240",
+            "price": "$61.81"
+          }
+        ],
+        "scenarios": [
+          "AKA_STALE_UPDATE_TEST",
+          "SINGLE_TIER_PRICING"
+        ],
+        "notes": "AKA record exists but with a stale minimumSellingQty/soItemNumber -> exercises update-aka.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 4,
+        "mold": "6682",
+        "evco_pn": "9475228",
+        "bom": "6682/9475228-SABIC",
+        "customer_pn": "17484",
+        "description": "SKIN, LOWER DR DARK GREY-Sabic",
+        "material": "PC/ABS C6600 7G7A3228 Grey",
+        "box_qty": "20",
+        "lead_time": "13 Weeks",
+        "tiers": [
+          {
+            "moq": "100",
+            "price": "$101.39"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE",
+          "SINGLE_TIER_PRICING"
+        ],
+        "notes": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 5,
+        "mold": "6682",
+        "evco_pn": "9475242",
+        "bom": "6682/9475242-CHIMEI TAIWAN",
+        "customer_pn": "14135",
+        "description": "SKIN, LOWER DR RED-Chimei Taiwan",
+        "material": "PC/ABS PC-540A B19503L6 Red",
+        "box_qty": "20",
+        "lead_time": "20 Weeks",
+        "tiers": [
+          {
+            "moq": "580",
+            "price": "$49.44"
+          }
+        ],
+        "scenarios": [
+          "PRICE_STALE_UPDATE_TEST",
+          "SINGLE_TIER_PRICING"
+        ],
+        "notes": "AKA record exists and matches, but the price-break at this qty tier is stale -> exercises update-price-break.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 6,
+        "mold": "6682",
+        "evco_pn": "9475242",
+        "bom": "6682/9475242-CHIMEI RAVAGO",
+        "customer_pn": "14135",
+        "description": "SKIN, LOWER DR RED-Chimei Ravago",
+        "material": "PC Wonderloy PC-540A Red",
+        "box_qty": "20",
+        "lead_time": "12 Weeks",
+        "tiers": [
+          {
+            "moq": "280",
+            "price": "$74.86"
+          },
+          {
+            "moq": "580",
+            "price": "$68.04"
+          }
+        ],
+        "scenarios": [
+          "AKA_NOT_FOUND_CREATE_TEST",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "No AKA record exists for this part/customer/mfg combo -> exercises create-aka (part-number-only known).",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 7,
+        "mold": "6683",
+        "evco_pn": "9475238",
+        "bom": "6683/9475238-CHIMEI",
+        "customer_pn": "17163",
+        "description": "SKIRT, LOWER DOOR BLACK-Chimei",
+        "material": "PC/ABS PC-540A Black",
+        "box_qty": "14",
+        "lead_time": "20 Weeks",
+        "tiers": [
+          {
+            "moq": "504",
+            "price": "$10.18"
+          },
+          {
+            "moq": "1008",
+            "price": "$9.67"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 8,
+        "mold": "6683",
+        "evco_pn": "9475238",
+        "bom": "6683/9475238-SABIC",
+        "customer_pn": "17163",
+        "description": "SKIRT, LOWER DOOR BLACK-Sabic",
+        "material": "PC/ABS C6600 7T1D355 Black",
+        "box_qty": "14",
+        "lead_time": "13 Weeks",
+        "tiers": [
+          {
+            "moq": "504",
+            "price": "$12.78"
+          },
+          {
+            "moq": "1008",
+            "price": "$12.24"
+          }
+        ],
+        "scenarios": [
+          "AKA_STALE_UPDATE_TEST",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "AKA record exists but with a stale soItemNumber (mold) -> exercises update-aka.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 9,
+        "mold": "6686",
+        "evco_pn": "9475229",
+        "bom": "6686/9475229-CHIMEI",
+        "customer_pn": "15495",
+        "description": "UPPER DOOR SKIN BLACK-Chimei",
+        "material": "PC/ABS PC-540A Black",
+        "box_qty": "20",
+        "lead_time": "20 Weeks",
+        "tiers": [
+          {
+            "moq": "60",
+            "price": "$43.49"
+          },
+          {
+            "moq": "120",
+            "price": "$36.00"
+          },
+          {
+            "moq": "240",
+            "price": "$32.34"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 10,
+        "mold": "6686",
+        "evco_pn": "9475229",
+        "bom": "6686/9475229-SABIC",
+        "customer_pn": "15495",
+        "description": "UPPER DOOR SKIN BLACK-Sabic",
+        "material": "PC/ABS C6600 7T1D355 Black",
+        "box_qty": "20",
+        "lead_time": "13 Weeks",
+        "tiers": [
+          {
+            "moq": "60",
+            "price": "$54.65"
+          },
+          {
+            "moq": "120",
+            "price": "$45.54"
+          },
+          {
+            "moq": "240",
+            "price": "$40.99"
+          }
+        ],
+        "scenarios": [
+          "AKA_NOT_FOUND_CREATE_TEST",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "No AKA record exists for this part/customer/mfg combo -> exercises create-aka + add-pricebreak.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 11,
+        "mold": "6686",
+        "evco_pn": "9475226",
+        "bom": "6686/9475226-CHIMEI",
+        "customer_pn": "17483",
+        "description": "UPPER DOOR SKIN DARK GREY-Chimei",
+        "material": "PC/ABS PC-540A Grey",
+        "box_qty": "20",
+        "lead_time": "20 Weeks",
+        "tiers": [
+          {
+            "moq": "240",
+            "price": "$31.63"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE",
+          "SINGLE_TIER_PRICING"
+        ],
+        "notes": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 12,
+        "mold": "6686",
+        "evco_pn": "9475226",
+        "bom": "6686/9475226-SABIC",
+        "customer_pn": "17483",
+        "description": "UPPER DOOR SKIN DARK GREY-Sabic",
+        "material": "PC/ABS C6600 7G7A3228 Grey",
+        "box_qty": "20",
+        "lead_time": "13 Weeks",
+        "tiers": [
+          {
+            "moq": "100",
+            "price": "$46.57"
+          }
+        ],
+        "scenarios": [
+          "PRICE_STALE_UPDATE_TEST",
+          "SINGLE_TIER_PRICING"
+        ],
+        "notes": "AKA record exists and matches, but price-break at this qty tier is stale -> exercises update-price-break.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 13,
+        "mold": "6686",
+        "evco_pn": "9475245",
+        "bom": "6686/9475245-CHIMEI TAIWAN",
+        "customer_pn": "14426",
+        "description": "SKIN, UPPER DR RED-Chimei Taiwan",
+        "material": "PC/ABS PC-540A B19503L6 Red",
+        "box_qty": "20",
+        "lead_time": "20 Weeks",
+        "tiers": [
+          {
+            "moq": "580",
+            "price": "$26.88"
+          }
+        ],
+        "scenarios": [
+          "AKA_NOT_FOUND_CREATE_TEST",
+          "SINGLE_TIER_PRICING"
+        ],
+        "notes": "No AKA record exists -> exercises create-aka (part-number-only known).",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      },
+      {
+        "row": 14,
+        "mold": "6686",
+        "evco_pn": "9475245",
+        "bom": "6686/9475245-CHIMEI RAVAGO",
+        "customer_pn": "14426",
+        "description": "SKIN, UPPER DR RED-Chimei Ravago",
+        "material": "PC Wonderloy PC-540A Red",
+        "box_qty": "20",
+        "lead_time": "12 Weeks",
+        "tiers": [
+          {
+            "moq": "280",
+            "price": "$34.76"
+          },
+          {
+            "moq": "580",
+            "price": "$32.91"
+          }
+        ],
+        "scenarios": [
+          "VALID_BASELINE",
+          "BOM_RESIN_VARIANT",
+          "MULTI_TIER_PRICING"
+        ],
+        "notes": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match.",
+        "decoy_qty": null,
+        "family_code": null,
+        "annotation": null
+      }
+    ],
+    "resin_rows": [
+      {
+        "material": "PC/ABS C6600 7G7A3228 Grey",
+        "evco_pn": "1388039",
+        "description": "PC/ABS C6600 7G7A3228 Grey",
+        "moq": "3,000 lbs",
+        "lead_time": "9 weeks",
+        "old_price": null,
+        "new_price": "$4.90/lb."
+      },
+      {
+        "material": "PC/ABS C6600 7T1D355 Black",
+        "evco_pn": "1387986",
+        "description": "PC/ABS C6600 7T1D355 Black",
+        "moq": "3,000 lbs",
+        "lead_time": "9 weeks",
+        "old_price": null,
+        "new_price": "$5.62/lb."
+      },
+      {
+        "material": "PC Wonderloy PC-540A Red",
+        "evco_pn": "1388108",
+        "description": "PC Wonderloy PC-540A Red",
+        "moq": "3,300 lbs",
+        "lead_time": "9 weeks",
+        "old_price": null,
+        "new_price": "$4.45/lb."
+      }
+    ]
   }
 ]

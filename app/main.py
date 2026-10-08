@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
@@ -115,6 +116,17 @@ register_cors(app)
 async def health_check():
     """Public health check endpoint for load balancers and infrastructure monitoring."""
     return success_response(data={"status": "healthy"}, message="Service is healthy")
+
+
+# Public Server Time Endpoint
+@app.get("/server-time", tags=["Health"], include_in_schema=True)
+async def server_time():
+    """Returns the server's current date/time, as-is (UTC)."""
+    now = datetime.now(timezone.utc)
+    return success_response(
+        data={"server_time": now.isoformat(), "timezone": "UTC"},
+        message="Server time retrieved successfully",
+    )
 
 
 # Protect business API routes (includes inventory router with validate_access_token)

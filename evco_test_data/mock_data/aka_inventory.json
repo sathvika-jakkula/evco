@@ -34355,6 +34355,1312 @@
           "_note": "Plain valid baseline row."
         }
       ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9475227",
+          "Rev": "A",
+          "Description": "SKIN, LOWER DR BLACK -Chimei"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "15271",
+            "akaDescription": "SKIN, LOWER DR BLACK -Chimei",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6682/9475227-CHIMEI",
+            "shipToAttn": "",
+            "minimumSellingQty": 60,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "6682",
+            "_scenario": [
+              "VALID_BASELINE",
+              "BOM_RESIN_VARIANT",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-003",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001",
+              "BRM-002",
+              "BRM-004",
+              "VR-009",
+              "VR-010"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Process each manufacturing number separately",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information",
+              "Extract quote line information",
+              "Create one pricing record per quantity tier",
+              "Validate manufacturing number/BOM",
+              "Select the matching BOM when multiple BOMs exist"
+            ],
+            "_hasException": false,
+            "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 105.27,
+          "qty": 60,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6682/9475227-CHIMEI",
+          "inactiveDate": "July 6, 2026",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Prior price version, superseded by this quote - see BR-015/BR-016."
+        },
+        {
+          "price": 77.79,
+          "qty": 120,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6682/9475227-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        },
+        {
+          "price": 64.27,
+          "qty": 240,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6682/9475227-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9475228",
+          "Rev": "A",
+          "Description": "SKIN, LOWER DR DARK GREY-Chimei"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "17484",
+            "akaDescription": "SKIN, LOWER DR DARK GREY-Chimei",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6682/9475228-CHIMEI",
+            "shipToAttn": "",
+            "minimumSellingQty": 241,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "OLD-6682",
+            "_scenario": [
+              "AKA_STALE_UPDATE_TEST",
+              "SINGLE_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-003",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Process each manufacturing number separately",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information"
+            ],
+            "_hasException": false,
+            "_note": "AKA record exists but with a stale minimumSellingQty/soItemNumber -> exercises update-aka."
+          },
+          {
+            "akaItem#": "17484",
+            "akaDescription": "SKIN, LOWER DR DARK GREY-Sabic",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6682/9475228-SABIC",
+            "shipToAttn": "",
+            "minimumSellingQty": 100,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "6682",
+            "_scenario": [
+              "VALID_BASELINE",
+              "SINGLE_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 61.81,
+          "qty": 240,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6682/9475228-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "AKA_STALE_UPDATE_TEST",
+            "SINGLE_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information"
+          ],
+          "_hasException": false,
+          "_note": "AKA record exists but with a stale minimumSellingQty/soItemNumber -> exercises update-aka."
+        },
+        {
+          "price": 101.39,
+          "qty": 100,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6682/9475228-SABIC",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "SINGLE_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9475242",
+          "Rev": "A",
+          "Description": "SKIN, LOWER DR RED-Chimei Taiwan"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "14135",
+            "akaDescription": "SKIN, LOWER DR RED-Chimei Taiwan",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6682/9475242-CHIMEI TAIWAN",
+            "shipToAttn": "",
+            "minimumSellingQty": 580,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "6682",
+            "_scenario": [
+              "PRICE_STALE_UPDATE_TEST",
+              "SINGLE_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information"
+            ],
+            "_hasException": false,
+            "_note": "AKA record exists and matches, but the price-break at this qty tier is stale -> exercises update-price-break."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 42.02,
+          "qty": 580,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6682/9475242-CHIMEI TAIWAN",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "PRICE_STALE_UPDATE_TEST",
+            "SINGLE_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information"
+          ],
+          "_hasException": false,
+          "_note": "AKA record exists and matches, but the price-break at this qty tier is stale -> exercises update-price-break."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9475238",
+          "Rev": "A",
+          "Description": "SKIRT, LOWER DOOR BLACK-Chimei"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "17163",
+            "akaDescription": "SKIRT, LOWER DOOR BLACK-Chimei",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6683/9475238-CHIMEI",
+            "shipToAttn": "",
+            "minimumSellingQty": 504,
+            "sellingMultiplesOf": 14,
+            "soItemNumber": "6683",
+            "_scenario": [
+              "VALID_BASELINE",
+              "BOM_RESIN_VARIANT",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-003",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001",
+              "BRM-002",
+              "BRM-004",
+              "VR-009",
+              "VR-010"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Process each manufacturing number separately",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information",
+              "Extract quote line information",
+              "Create one pricing record per quantity tier",
+              "Validate manufacturing number/BOM",
+              "Select the matching BOM when multiple BOMs exist"
+            ],
+            "_hasException": false,
+            "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+          },
+          {
+            "akaItem#": "17163",
+            "akaDescription": "SKIRT, LOWER DOOR BLACK-Sabic",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6683/9475238-SABIC",
+            "shipToAttn": "",
+            "minimumSellingQty": 505,
+            "sellingMultiplesOf": 14,
+            "soItemNumber": "OLD-6683",
+            "_scenario": [
+              "AKA_STALE_UPDATE_TEST",
+              "BOM_RESIN_VARIANT",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-003",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001",
+              "BRM-004",
+              "VR-009",
+              "VR-010"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Process each manufacturing number separately",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information",
+              "Create one pricing record per quantity tier",
+              "Validate manufacturing number/BOM",
+              "Select the matching BOM when multiple BOMs exist"
+            ],
+            "_hasException": false,
+            "_note": "AKA record exists but with a stale soItemNumber (mold) -> exercises update-aka."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 10.18,
+          "qty": 504,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6683/9475238-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        },
+        {
+          "price": 9.67,
+          "qty": 1008,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6683/9475238-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        },
+        {
+          "price": 12.78,
+          "qty": 504,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6683/9475238-SABIC",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "AKA_STALE_UPDATE_TEST",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "AKA record exists but with a stale soItemNumber (mold) -> exercises update-aka."
+        },
+        {
+          "price": 12.24,
+          "qty": 1008,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6683/9475238-SABIC",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "AKA_STALE_UPDATE_TEST",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "AKA record exists but with a stale soItemNumber (mold) -> exercises update-aka."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9475229",
+          "Rev": "A",
+          "Description": "UPPER DOOR SKIN BLACK-Chimei"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "15495",
+            "akaDescription": "UPPER DOOR SKIN BLACK-Chimei",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6686/9475229-CHIMEI",
+            "shipToAttn": "",
+            "minimumSellingQty": 60,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "6686",
+            "_scenario": [
+              "VALID_BASELINE",
+              "BOM_RESIN_VARIANT",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-003",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001",
+              "BRM-002",
+              "BRM-004",
+              "VR-009",
+              "VR-010"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Process each manufacturing number separately",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information",
+              "Extract quote line information",
+              "Create one pricing record per quantity tier",
+              "Validate manufacturing number/BOM",
+              "Select the matching BOM when multiple BOMs exist"
+            ],
+            "_hasException": false,
+            "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 43.49,
+          "qty": 60,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6686/9475229-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        },
+        {
+          "price": 36.0,
+          "qty": 120,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6686/9475229-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        },
+        {
+          "price": 32.34,
+          "qty": 240,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6686/9475229-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9475226",
+          "Rev": "A",
+          "Description": "UPPER DOOR SKIN DARK GREY-Chimei"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "17483",
+            "akaDescription": "UPPER DOOR SKIN DARK GREY-Chimei",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6686/9475226-CHIMEI",
+            "shipToAttn": "",
+            "minimumSellingQty": 240,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "6686",
+            "_scenario": [
+              "VALID_BASELINE",
+              "SINGLE_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001",
+              "BRM-002"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information",
+              "Extract quote line information"
+            ],
+            "_hasException": false,
+            "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+          },
+          {
+            "akaItem#": "17483",
+            "akaDescription": "UPPER DOOR SKIN DARK GREY-Sabic",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6686/9475226-SABIC",
+            "shipToAttn": "",
+            "minimumSellingQty": 100,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "6686",
+            "_scenario": [
+              "PRICE_STALE_UPDATE_TEST",
+              "SINGLE_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information"
+            ],
+            "_hasException": false,
+            "_note": "AKA record exists and matches, but price-break at this qty tier is stale -> exercises update-price-break."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 31.63,
+          "qty": 240,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6686/9475226-CHIMEI",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "SINGLE_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        },
+        {
+          "price": 39.58,
+          "qty": 100,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6686/9475226-SABIC",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "PRICE_STALE_UPDATE_TEST",
+            "SINGLE_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information"
+          ],
+          "_hasException": false,
+          "_note": "AKA record exists and matches, but price-break at this qty tier is stale -> exercises update-price-break."
+        }
+      ]
+    },
+    {
+      "data": {
+        "Header": {
+          "Item #": "9475245",
+          "Rev": "A",
+          "Description": "SKIN, UPPER DR RED-Chimei Taiwan"
+        },
+        "akaDetails": [
+          {
+            "akaItem#": "14426",
+            "akaDescription": "SKIN, UPPER DR RED-Chimei Ravago",
+            "rev": "A",
+            "customer#": "88241",
+            "currency": "US Dollar",
+            "customername": "The Coca Cola Company",
+            "mfg#": "6686/9475245-CHIMEI RAVAGO",
+            "shipToAttn": "",
+            "minimumSellingQty": 280,
+            "sellingMultiplesOf": 20,
+            "soItemNumber": "6686",
+            "_scenario": [
+              "VALID_BASELINE",
+              "BOM_RESIN_VARIANT",
+              "MULTI_TIER_PRICING"
+            ],
+            "_ruleCodes": [
+              "BR-001",
+              "BR-002",
+              "BR-003",
+              "BR-008",
+              "BR-009",
+              "BR-010",
+              "BR-014",
+              "BR-015",
+              "BR-016",
+              "BRM-001",
+              "BRM-002",
+              "BRM-004",
+              "VR-009",
+              "VR-010"
+            ],
+            "_ruleNames": [
+              "Process only active quotes",
+              "Support single pricing and tier pricing",
+              "Process each manufacturing number separately",
+              "Continue using an active quote until it expires",
+              "Earlier release uses earlier quote",
+              "Later release uses new quote",
+              "Re-evaluate existing Sales Orders after quote changes",
+              "Expire previous pricing one day before the new quote",
+              "Insert new pricing instead of overwriting history",
+              "Extract quote header information",
+              "Extract quote line information",
+              "Create one pricing record per quantity tier",
+              "Validate manufacturing number/BOM",
+              "Select the matching BOM when multiple BOMs exist"
+            ],
+            "_hasException": false,
+            "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+          }
+        ]
+      },
+      "pricingDetails": [
+        {
+          "price": 34.76,
+          "qty": 280,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6686/9475245-CHIMEI RAVAGO",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        },
+        {
+          "price": 32.91,
+          "qty": 580,
+          "effectiveDate": "July 6, 2026",
+          "Comment": "6686/9475245-CHIMEI RAVAGO",
+          "inactiveDate": "",
+          "priceDate": "July 6, 2026",
+          "_scenario": [
+            "VALID_BASELINE",
+            "BOM_RESIN_VARIANT",
+            "MULTI_TIER_PRICING"
+          ],
+          "_ruleCodes": [
+            "BR-001",
+            "BR-002",
+            "BR-003",
+            "BR-008",
+            "BR-009",
+            "BR-010",
+            "BR-014",
+            "BR-015",
+            "BR-016",
+            "BRM-001",
+            "BRM-002",
+            "BRM-004",
+            "VR-009",
+            "VR-010"
+          ],
+          "_ruleNames": [
+            "Process only active quotes",
+            "Support single pricing and tier pricing",
+            "Process each manufacturing number separately",
+            "Continue using an active quote until it expires",
+            "Earlier release uses earlier quote",
+            "Later release uses new quote",
+            "Re-evaluate existing Sales Orders after quote changes",
+            "Expire previous pricing one day before the new quote",
+            "Insert new pricing instead of overwriting history",
+            "Extract quote header information",
+            "Extract quote line information",
+            "Create one pricing record per quantity tier",
+            "Validate manufacturing number/BOM",
+            "Select the matching BOM when multiple BOMs exist"
+          ],
+          "_hasException": false,
+          "_note": "Fully present in AKA master data as-is -> get-aka/get-price-breaks should find a match."
+        }
+      ]
     }
   ]
 }

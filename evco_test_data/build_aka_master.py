@@ -104,6 +104,21 @@ def main():
             row_rule_codes = sorted(set(rules_for_scenarios(scenarios)) | set(q_rule_codes))
             row_has_exception = quote_has_exception or any(c.startswith("EX-") for c in row_rule_codes)
 
+            # AKA_NOT_FOUND_CREATE_TEST rows: only the EVCO Item # is "known" -
+            # no akaDetails/pricingDetails row is emitted for this (evco_pn,
+            # customer#, mfg#) combo at all, so get-aka/get-price-breaks miss
+            # and create-aka/add-pricebreak is the path under test.
+            no_aka_record = "AKA_NOT_FOUND_CREATE_TEST" in scenarios
+            no_price_record = no_aka_record or "PRICE_NOT_FOUND_CREATE_TEST" in scenarios
+            # AKA_STALE_UPDATE_TEST rows: an akaDetails row IS emitted, but with
+            # different moq/box-qty/mold values than the quote, so update-aka has
+            # something real to change.
+            stale_aka = "AKA_STALE_UPDATE_TEST" in scenarios
+            # PRICE_STALE_UPDATE_TEST rows: a pricingDetails row IS emitted at the
+            # same qty tier, but at an old price, so update-price-break has
+            # something real to change.
+            stale_price = "PRICE_STALE_UPDATE_TEST" in scenarios
+
             item = items.setdefault(pn, {
                 "data": {
                     "Header": {
@@ -116,28 +131,40 @@ def main():
                 "pricingDetails": [],
             })
 
-            item["data"]["akaDetails"].append({
-                "akaItem#": aka_item_number,
-                "akaDescription": row.get("description") or "",
-                "rev": "A",
-                "customer#": customer["customer_number"],
-                "currency": "US Dollar",
-                "customername": customer["name"],
-                "mfg#": mfg_number,
-                "shipToAttn": "",
-                "minimumSellingQty": clean_int(row["tiers"][0]["moq"]) if row.get("tiers") else 0,
-                "sellingMultiplesOf": clean_int(row["box_qty"]) if row.get("box_qty") else 0,
-                # The quote PDF's "Mold" column - called soItemNumber in the AKA API
-                # contract, not mold, since that's the name the customer/IQMS side uses.
-                "soItemNumber": row.get("mold") or "",
-                "_scenario": scenarios,
-                "_ruleCodes": row_rule_codes,
-                "_ruleNames": [RULE_CATALOG[c]["title"] for c in row_rule_codes if c in RULE_CATALOG],
-                "_hasException": row_has_exception,
-                "_note": row.get("notes") or "",
-            })
+            if no_aka_record:
+                # Nothing emitted into akaDetails for this combo - EVCO Item #
+                # only, so get-aka returns NOT_FOUND and create-aka is the
+                # path under test.
+                pass
+            else:
+                item["data"]["akaDetails"].append({
+                    "akaItem#": aka_item_number,
+                    "akaDescription": row.get("description") or "",
+                    "rev": "A",
+                    "customer#": customer["customer_number"],
+                    "currency": "US Dollar",
+                    "customername": customer["name"],
+                    "mfg#": mfg_number,
+                    "shipToAttn": "",
+                    "minimumSellingQty": (
+                        clean_int(row["tiers"][0]["moq"]) + 1 if stale_aka and row.get("tiers")
+                        else (clean_int(row["tiers"][0]["moq"]) if row.get("tiers") else 0)
+                    ),
+                    "sellingMultiplesOf": clean_int(row["box_qty"]) if row.get("box_qty") else 0,
+                    # The quote PDF's "Mold" column - called soItemNumber in the AKA API
+                    # contract, not mold, since that's the name the customer/IQMS side uses.
+                    # For AKA_STALE_UPDATE_TEST rows this is deliberately set to a
+                    # placeholder old value, different from the quote's mold, so
+                    # update-aka has something real to change.
+                    "soItemNumber": ("OLD-" + (row.get("mold") or "")) if stale_aka else (row.get("mold") or ""),
+                    "_scenario": scenarios,
+                    "_ruleCodes": row_rule_codes,
+                    "_ruleNames": [RULE_CATALOG[c]["title"] for c in row_rule_codes if c in RULE_CATALOG],
+                    "_hasException": row_has_exception,
+                    "_note": row.get("notes") or "",
+                })
 
-            tiers = row.get("tiers") or []
+            tiers = [] if no_price_record else (row.get("tiers") or [])
             for idx, tier in enumerate(tiers):
                 if not tier.get("moq") or not tier.get("price"):
                     # BLANK_MOQ_SINGLE_ROW / BLANK_PRICE_SINGLE_ROW scenario rows: no
@@ -149,8 +176,12 @@ def main():
                 tier_rule_codes = list(row_rule_codes)
                 if is_prior_version and "BR-016" not in tier_rule_codes:
                     tier_rule_codes = sorted(set(tier_rule_codes) | {"BR-015", "BR-016"})
+                # PRICE_STALE_UPDATE_TEST rows: record a lower, stale price at
+                # the SAME qty tier the quote prints, so update-price-break has
+                # a real target to find and change.
+                stored_price = round(clean_price(tier["price"]) * 0.85, 2) if stale_price else clean_price(tier["price"])
                 item["pricingDetails"].append({
-                    "price": clean_price(tier["price"]),
+                    "price": stored_price,
                     "qty": clean_int(tier["moq"]),
                     "effectiveDate": effective_date,
                     "Comment": row.get("bom") or "",

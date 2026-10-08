@@ -121,6 +121,10 @@ SCENARIO_RULE_MAP = {
     "STRUCK_ROW_RED_ANNOTATION": ["ANN-STRIKE"],
     "STRUCK_ROW_PINK_ANNOTATION": ["ANN-STRIKE"],
     "CELL_OVERRIDE_RED_BOX": ["ANN-OVERRIDE"],
+    "AKA_NOT_FOUND_CREATE_TEST": ["EX-003"],
+    "AKA_STALE_UPDATE_TEST": ["BR-003"],
+    "PRICE_NOT_FOUND_CREATE_TEST": ["EX-003"],
+    "PRICE_STALE_UPDATE_TEST": ["BR-002"],
 }
 
 # Notes on tags with an empty rule list, so the JSON isn't just silently blank:
