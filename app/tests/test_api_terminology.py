@@ -60,7 +60,11 @@ def test_pricing_lookup_add_update_contract(api, legacy):
     response = client.post("/inventory/update-pricebreak", json=payload)
     assert response.status_code == 200
     assert response.json()["data"]["price"] == 2.5
-    record = next(r for r in service._current_price_breaks if r["quantity"] == 123456)
+    # add/update-pricebreak route into the per-(customer, part, BOM) context
+    # dict (same key get-pricebreaks reads from) whenever the request supplies
+    # that business-key context, not the single flat "currently open" list.
+    key = ("10329", "9480026", "9440502 + 9440503")
+    record = next(r for r in service._price_breaks_by_context[key] if r["quantity"] == 123456)
     assert record["unit_price"] == 2.5
 
 

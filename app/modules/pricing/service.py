@@ -273,8 +273,24 @@ class PriceBreakService:
             for record in records
         ]
 
+    def _context_key_for(self, req) -> Optional[PriceBreakContextKey]:
+        """Business-key context (customer_number, evco_part_number,
+        manufacturing_bom_number) from a request, if it supplied all three -
+        same key shape get_price_breaks looks up by. Returns None when any
+        field is missing, so callers can fall back to the single flat
+        "currently open" list (pre-existing behavior for callers that don't
+        supply business-key context)."""
+        evco_part_number = getattr(req, "evco_part_number", None)
+        customer_number = getattr(req, "customer_number", None)
+        manufacturing_bom_number = getattr(req, "manufacturing_bom_number", None)
+        if not evco_part_number or not customer_number or not manufacturing_bom_number:
+            return None
+        return (customer_number, evco_part_number, manufacturing_bom_number)
+
     def add_price_break(self, req: AddPriceBreakRequest) -> AddPriceBreakResponseData:
-        """Add a new price break tier to the current customer/item context."""
+        """Add a new price break tier to the customer/item/BOM context the
+        request identifies (or the single "currently open" list if the
+        request omits business-key context)."""
         with self._lock:
             record: PriceBreakRecord = {
                 "quantity": req.quantity,
@@ -284,7 +300,11 @@ class PriceBreakService:
                 "effective_date": req.effective_date,
                 "inactive_date": None,
             }
-            self._current_price_breaks.append(record)
+            key = self._context_key_for(req)
+            if key is not None:
+                self._price_breaks_by_context.setdefault(key, []).append(record)
+            else:
+                self._current_price_breaks.append(record)
 
         self._persist_price_change(req, record["quantity"], record["unit_price"], record["effective_date"], action="ADD")
         return AddPriceBreakResponseData(
@@ -298,14 +318,21 @@ class PriceBreakService:
     def update_price_break(self, req: UpdatePriceBreakRequest) -> UpdatePriceBreakResponseData:
         """
         Update the price break tier identified by quantity - the business
-        context the RPA uses in place of a database ID. If no existing tier
-        matches, this rejects with PRICE_UPDATE_TARGET_MISSING rather than
-        silently creating one - callers that want create-or-update should use
-        add-pricebreak instead, which already handles "no prior price" as CREATED.
+        context the RPA uses in place of a database ID. When the request
+        supplies evco_part_number/customer_number/manufacturing_bom_number,
+        the tier is looked up in that exact customer/item/BOM context (same
+        key get_price_breaks uses) rather than the single flat "currently
+        open" list, so update-pricebreak can only ever miss a tier that
+        get-pricebreaks also wouldn't find. If no existing tier matches, this
+        rejects with PRICE_UPDATE_TARGET_MISSING rather than silently creating
+        one - callers that want create-or-update should use add-pricebreak
+        instead, which already handles "no prior price" as CREATED.
         """
         with self._lock:
+            key = self._context_key_for(req)
+            search_list = self._price_breaks_by_context.get(key, []) if key is not None else self._current_price_breaks
             record: Optional[PriceBreakRecord] = next(
-                (r for r in self._current_price_breaks if r["quantity"] == req.quantity), None
+                (r for r in search_list if r["quantity"] == req.quantity), None
             )
             if record is None:
                 message = f"No existing price break tier found for quantity '{req.quantity}' to update"
