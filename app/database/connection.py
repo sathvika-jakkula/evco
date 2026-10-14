@@ -10,10 +10,10 @@ class DatabaseConnection:
     def __init__(self, database_url: str | None = None) -> None:
         self.database_url = database_url or settings.DATABASE_URL
 
-    def connect(self, timeout: int = 30):
+    def connect(self, timeout: int = 120):
         """Connect to database with timeout protection.
         Args:
-            timeout: Connection timeout in seconds (default 30)
+            timeout: Connection timeout in seconds (default 120)
         """
         if not self.database_url:
             raise TechnicalException(
