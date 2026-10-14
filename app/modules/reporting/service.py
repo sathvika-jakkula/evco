@@ -19,6 +19,7 @@ from app.database.pricing_resolution_repository import PricingResolutionReposito
 from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
 from app.modules.reporting.schemas import (
     AkaResolution,
+    ExceptionDetail,
     LineItemSummary,
     PricingResolution,
     PricingTier,
@@ -73,19 +74,31 @@ class ReportingService:
 
         line_items = [self._build_line_item(row, header.get("customer_no"), pricing_cache) for row in data["line_items"]]
 
+        # Fetch quote-level exceptions (no line_item_id)
+        quote_exceptions = self.line_item_audit_repository.get_quote_level_exceptions(processing_id)
+
+        # Calculate not_processed_lines as lines with no decision and no exceptions
+        not_processed_count = sum(
+            1 for line in line_items
+            if line.line_status is None and not line.exceptions
+        )
+
         return QuoteSummaryData(
             processing_id=processing_id,
+            scan_id=None,
             quote_number=header.get("quote_id"),
-            status=None,  # not tracked at the quote_audit level today - left unset rather than guessed
-            effective_date=str(header["effective_date"]) if header.get("effective_date") else None,
             customer_name=header.get("customer_name"),
             ar_cust_id=header.get("customer_no"),
+            effective_date=str(header["effective_date"]) if header.get("effective_date") else None,
             report_id=header.get("report_id") or report_id,
+            status=None,
             total_lines=header.get("total_lines") or 0,
             successful_lines=header.get("successful_lines") or 0,
             review_required_lines=header.get("review_required_lines") or 0,
             failed_lines=header.get("failed_lines") or 0,
+            not_processed_lines=not_processed_count,
             exception_count=header.get("exception_count") or 0,
+            quote_exceptions=quote_exceptions,
             line_items=line_items,
         )
 
@@ -105,9 +118,17 @@ class ReportingService:
         if customer_no and row.get("evco_part_id"):
             cache_key = (customer_no, row["evco_part_id"], row.get("bom_id"))
             tier_rows = pricing_cache.get(cache_key, [])
+            # Use pricing_row to get before price if available
+            before_price = float(pricing_row["pricing_before_value"]) if pricing_row and pricing_row.get("pricing_before_value") is not None else None
+
             for tier_row in tier_rows:
+                # For active tiers: current_price is the active price, previous_price is before (if updated)
+                # For inactive tiers: current_price was what it was when active, previous_price is N/A
+                previous = before_price if tier_row["is_active"] and before_price is not None else None
                 tiers.append(PricingTier(
-                    quantity=tier_row["quantity"], price=float(tier_row["price"]),
+                    quantity=tier_row["quantity"],
+                    previous_price=previous,
+                    current_price=float(tier_row["price"]),
                     is_active=tier_row["is_active"],
                     inactive_date=str(tier_row["inactive_date"]) if tier_row.get("inactive_date") else None,
                     created_by_line_item_id=tier_row.get("created_by_line_item_id"),
@@ -115,8 +136,6 @@ class ReportingService:
                 ))
         pricing = PricingResolution(
             decision=pricing_row.get("decision") if pricing_row else None,
-            before_price=float(pricing_row["pricing_before_value"]) if pricing_row and pricing_row.get("pricing_before_value") is not None else None,
-            after_price=float(pricing_row["pricing_after_value"]) if pricing_row and pricing_row.get("pricing_after_value") is not None else None,
             tiers=tiers,
         )
 
@@ -132,16 +151,20 @@ class ReportingService:
             )
         sales_order = SalesOrderResolution(decision=overall_so_decision, orders=so_facts)
 
-        exceptions = self.line_item_audit_repository.get_exceptions_for_line_item(line_item_id)
+        # Get exception codes and details
+        exception_codes = self.line_item_audit_repository.get_exceptions_for_line_item(line_item_id)
+        exception_details = self.line_item_audit_repository.get_exception_details_for_line_item(line_item_id)
 
         return LineItemSummary(
             line_item_id=line_item_id,
+            line_number=row.get("line_number"),
             evco_mfg_number=row.get("bom_id"),
             evco_part_id=row.get("evco_part_id"),
             customer_part_number=row.get("customer_part_number"),
+            line_status=row.get("line_status"),
             aka=aka,
             pricing=pricing,
             sales_order=sales_order,
-            exceptions=exceptions,
-            line_status=row.get("line_status"),
+            exceptions=exception_codes,
+            exception_details=exception_details,
         )

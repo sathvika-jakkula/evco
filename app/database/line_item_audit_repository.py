@@ -125,7 +125,7 @@ class LineItemAuditRepository:
         maps this into its own response schema, no formatting happens here."""
         with self.connection.connect() as db, db.cursor() as cursor:
             cursor.execute(
-                """SELECT qp.processing_id, qp.quote_id, qa.customer_name, qa.customer_no, qa.effective_date,
+                """SELECT qp.processing_id, qp.quote_id, qp.scan_file_id, qa.customer_name, qa.customer_no, qa.effective_date,
                           qa.report_id, qa.total_lines, qa.successful_lines, qa.review_required_lines,
                           qa.failed_lines, qa.exception_count
                    FROM quote_processing qp LEFT JOIN quote_audit qa ON qa.processing_id = qp.processing_id
@@ -140,7 +140,7 @@ class LineItemAuditRepository:
                 header = dict(zip(cols, header_row))
 
             cursor.execute(
-                """SELECT qli.line_item_id, qli.bom_id, qli.evco_part_id, qli.customer_part_number,
+                """SELECT qli.line_item_id, qli.line_number, qli.bom_id, qli.evco_part_id, qli.customer_part_number,
                           lia.aka_id, lia.pricing_action, lia.pricing_before_value, lia.pricing_after_value,
                           lia.inactivated_price_rows, lia.sales_order_id, lia.sales_order_note,
                           lia.rule_codes_applied, lia.line_status
@@ -161,3 +161,55 @@ class LineItemAuditRepository:
                 (line_item_id,),
             )
             return [row[0] for row in cursor.fetchall() if row[0]]
+
+    def get_exception_details_for_line_item(self, line_item_id: UUID) -> list[dict]:
+        """Get structured exception details (including metadata) for a line item."""
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                """SELECT exception_code, agent_name, tool_name, exception_message, is_retryable, created_at
+                   FROM exception_logs
+                   WHERE line_item_id = %s
+                   ORDER BY created_at""",
+                (line_item_id,),
+            )
+            rows = cursor.fetchall()
+            assert cursor.description is not None, "a SELECT always produces a resultset description"
+            cols = [d[0] for d in cursor.description]
+            exceptions = []
+            for row in rows:
+                exc_dict = dict(zip(cols, row))
+                exceptions.append({
+                    "exception_code": exc_dict.get("exception_code"),
+                    "agent_name": exc_dict.get("agent_name"),
+                    "tool_name": exc_dict.get("tool_name"),
+                    "message": exc_dict.get("exception_message"),
+                    "is_retryable": exc_dict.get("is_retryable"),
+                    "created_time": exc_dict.get("created_at").isoformat() if exc_dict.get("created_at") else None,
+                })
+            return exceptions
+
+    def get_quote_level_exceptions(self, processing_id: UUID) -> list[dict]:
+        """Get exceptions with no line_item_id (extraction/customer-level failures)."""
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                """SELECT exception_code, agent_name, tool_name, exception_message, is_retryable, created_at
+                   FROM exception_logs
+                   WHERE processing_id = %s AND line_item_id IS NULL
+                   ORDER BY created_at""",
+                (processing_id,),
+            )
+            rows = cursor.fetchall()
+            assert cursor.description is not None, "a SELECT always produces a resultset description"
+            cols = [d[0] for d in cursor.description]
+            exceptions = []
+            for row in rows:
+                exc_dict = dict(zip(cols, row))
+                exceptions.append({
+                    "exception_code": exc_dict.get("exception_code"),
+                    "agent_name": exc_dict.get("agent_name"),
+                    "tool_name": exc_dict.get("tool_name"),
+                    "message": exc_dict.get("exception_message"),
+                    "is_retryable": exc_dict.get("is_retryable"),
+                    "created_time": exc_dict.get("created_at").isoformat() if exc_dict.get("created_at") else None,
+                })
+            return exceptions
