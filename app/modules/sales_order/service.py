@@ -22,6 +22,7 @@ from app.modules.sales_order.schemas import (
     SalesOrderData,
     SalesOrderDetailData,
     SalesOrderReleaseData,
+    UpdateSalesOrderDetailsResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -219,6 +220,38 @@ class SalesOrderService:
             date_type=record.get("DateType"),
             acknowledged=bool(record.get("Acknowledged") or False),
             expedite=bool(record.get("Expedite") or False),
+        )
+
+    def update_sales_order_details(
+        self,
+        sales_order_detail_id: int,
+        unit_price: Optional[float] = None,
+        on_hold: Optional[bool] = None,
+        ship_hold: Optional[bool] = None,
+        line_item_id: Optional[UUID] = None,
+    ) -> UpdateSalesOrderDetailsResponse:
+        updated_record = self.sync_repository.update_sales_order_detail(
+            sales_order_detail_id=sales_order_detail_id,
+            unit_price=unit_price,
+            on_hold=on_hold,
+            ship_hold=ship_hold,
+        )
+
+        if updated_record is None:
+            from app.core.exceptions import BusinessException
+            raise BusinessException(
+                message=f"Sales order detail with ID {sales_order_detail_id} not found",
+                code="SALES_ORDER_DETAIL_NOT_FOUND",
+                status_code=404,
+                details={"sales_order_detail_id": sales_order_detail_id},
+            )
+
+        return UpdateSalesOrderDetailsResponse(
+            sales_order_detail_id=updated_record["sales_order_detail_id"],
+            unit_price=updated_record["unit_price"],
+            on_hold=updated_record["on_hold"],
+            ship_hold=updated_record["ship_hold"],
+            updated_at=updated_record["updated_at"],
         )
 
 

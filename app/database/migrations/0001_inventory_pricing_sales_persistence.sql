@@ -234,6 +234,8 @@ CREATE TABLE IF NOT EXISTS sales_orders_synced (
     unit_price          NUMERIC,
     date_taken          TIMESTAMPTZ,
     delivery_date       TIMESTAMPTZ,
+    on_hold             BOOLEAN DEFAULT FALSE,
+    ship_hold           BOOLEAN DEFAULT FALSE,
     source              TEXT NOT NULL DEFAULT 'dummy',
     synced_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );

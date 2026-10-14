@@ -8,6 +8,8 @@ from app.modules.sales_order.schemas import (
     SalesOrderData,
     SalesOrderDetailData,
     SalesOrderReleaseData,
+    UpdateSalesOrderDetailsRequest,
+    UpdateSalesOrderDetailsResponse,
 )
 from app.modules.sales_order.service import sales_order_service
 
@@ -68,4 +70,27 @@ async def get_sales_order_releases(payload: GetSalesOrderReleasesRequest, respon
         statusCode=200,
         message="Sales order releases retrieved successfully",
         data=records,
+    )
+
+
+@router.post(
+    "/update-sales-order-details",
+    response_model=StandardInventoryResponse[UpdateSalesOrderDetailsResponse],
+    summary="Update Sales Order Details",
+    description="Update price, on_hold, and ship_hold flags for a sales order detail line.",
+    status_code=status.HTTP_200_OK,
+)
+async def update_sales_order_details(payload: UpdateSalesOrderDetailsRequest, response: Response):
+    result = sales_order_service.update_sales_order_details(
+        sales_order_detail_id=payload.sales_order_detail_id,
+        unit_price=payload.unit_price,
+        on_hold=payload.on_hold,
+        ship_hold=payload.ship_hold,
+        line_item_id=payload.line_item_id,
+    )
+    response.status_code = status.HTTP_200_OK
+    return StandardInventoryResponse(
+        statusCode=200,
+        message="Sales order details updated successfully",
+        data=result,
     )

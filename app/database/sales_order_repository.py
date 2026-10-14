@@ -75,3 +75,79 @@ class SalesOrderSyncRepository:
             assert cursor.description is not None, "a SELECT always produces a resultset description"
             columns = [d[0] for d in cursor.description]
             return [dict(zip(columns, row)) for row in rows]
+
+    def update_sales_order_detail(
+        self,
+        sales_order_detail_id: int,
+        unit_price: float | None = None,
+        on_hold: bool | None = None,
+        ship_hold: bool | None = None,
+    ) -> dict | None:
+        """Update sales order detail with optional price, on_hold, and ship_hold flags.
+        Returns the updated record or None if not found."""
+        with self.connection.connect() as db, db.cursor() as cursor:
+            # First, fetch the current record to validate it exists and get current values
+            cursor.execute(
+                """SELECT sales_order_detail_id, unit_price, on_hold, ship_hold
+                   FROM sales_orders_synced WHERE sales_order_detail_id = %s""",
+                (sales_order_detail_id,),
+            )
+            current_row = cursor.fetchone()
+            if current_row is None:
+                return None
+
+            # Build dynamic UPDATE with only provided fields
+            updates = []
+            values = []
+
+            if unit_price is not None:
+                updates.append("unit_price = %s")
+                values.append(unit_price)
+            if on_hold is not None:
+                updates.append("on_hold = %s")
+                values.append(on_hold)
+            if ship_hold is not None:
+                updates.append("ship_hold = %s")
+                values.append(ship_hold)
+
+            if not updates:
+                # No updates requested, return current state
+                return {
+                    "sales_order_detail_id": current_row[0],
+                    "unit_price": current_row[1],
+                    "on_hold": current_row[2],
+                    "ship_hold": current_row[3],
+                    "updated_at": datetime.now(timezone.utc),
+                }
+
+            values.append(sales_order_detail_id)
+
+            if len(updates) == 1:
+                sql = """UPDATE sales_orders_synced
+                       SET """ + updates[0] + """
+                       WHERE sales_order_detail_id = %s
+                       RETURNING sales_order_detail_id, unit_price, on_hold, ship_hold"""
+            elif len(updates) == 2:
+                sql = """UPDATE sales_orders_synced
+                       SET """ + updates[0] + """, """ + updates[1] + """
+                       WHERE sales_order_detail_id = %s
+                       RETURNING sales_order_detail_id, unit_price, on_hold, ship_hold"""
+            else:
+                sql = """UPDATE sales_orders_synced
+                       SET """ + updates[0] + """, """ + updates[1] + """, """ + updates[2] + """
+                       WHERE sales_order_detail_id = %s
+                       RETURNING sales_order_detail_id, unit_price, on_hold, ship_hold"""
+
+            cursor.execute(sql, values)
+
+            result = cursor.fetchone()
+            if result is None:
+                return None
+
+            return {
+                "sales_order_detail_id": result[0],
+                "unit_price": result[1],
+                "on_hold": result[2],
+                "ship_hold": result[3],
+                "updated_at": datetime.now(timezone.utc),
+            }

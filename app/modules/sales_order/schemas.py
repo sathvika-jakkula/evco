@@ -88,3 +88,26 @@ class SalesOrderReleaseData(BaseModel):
     date_type: Optional[str] = None
     acknowledged: bool = False
     expedite: bool = False
+
+
+# --- API 4: Update Sales Order Details ---
+class UpdateSalesOrderDetailsRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    sales_order_detail_id: int = Field(..., description="sales_order_detail_id from a prior get-sales-order-details call")
+    unit_price: Optional[float] = Field(default=None, description="Updated unit price")
+    on_hold: Optional[bool] = Field(default=None, description="Hold status for order")
+    ship_hold: Optional[bool] = Field(default=None, description="Ship hold status")
+    line_item_id: Optional[UUID] = Field(
+        default=None, description="quote_line_items row that triggered this update, for traceability"
+    )
+
+
+class UpdateSalesOrderDetailsResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    sales_order_detail_id: int
+    unit_price: float
+    on_hold: bool
+    ship_hold: bool
+    updated_at: datetime
