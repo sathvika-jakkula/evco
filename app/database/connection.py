@@ -10,7 +10,11 @@ class DatabaseConnection:
     def __init__(self, database_url: str | None = None) -> None:
         self.database_url = database_url or settings.DATABASE_URL
 
-    def connect(self):
+    def connect(self, timeout: int = 30):
+        """Connect to database with timeout protection.
+        Args:
+            timeout: Connection timeout in seconds (default 30)
+        """
         if not self.database_url:
             raise TechnicalException(
                 message="DATABASE_URL is not configured",
@@ -19,7 +23,14 @@ class DatabaseConnection:
             )
         try:
             import psycopg
-            return psycopg.connect(self.database_url)
+            # Use connect_timeout to protect connection establishment
+            # and options to set statement_timeout (in milliseconds)
+            conn = psycopg.connect(
+                self.database_url,
+                connect_timeout=timeout,
+                options=f"-c statement_timeout={timeout * 1000}",
+            )
+            return conn
         except ImportError as exc:
             raise TechnicalException(
                 message="PostgreSQL driver is not installed",

@@ -57,7 +57,21 @@ class ReportingService:
                 details={"processing_id": str(processing_id)},
             )
 
-        line_items = [self._build_line_item(row, header.get("customer_no")) for row in data["line_items"]]
+        # Pre-fetch all pricing tiers for all line items to avoid N+1 queries
+        pricing_cache = {}
+        customer_no = header.get("customer_no")
+        if customer_no:
+            for row in data["line_items"]:
+                evco_part_id = row.get("evco_part_id")
+                bom_id = row.get("bom_id")
+                if evco_part_id:
+                    cache_key = (customer_no, evco_part_id, bom_id)
+                    if cache_key not in pricing_cache:
+                        pricing_cache[cache_key] = self.pricing_history_repository.get_all_tiers(
+                            customer_no, evco_part_id, bom_id
+                        )
+
+        line_items = [self._build_line_item(row, header.get("customer_no"), pricing_cache) for row in data["line_items"]]
 
         return QuoteSummaryData(
             processing_id=processing_id,
@@ -75,7 +89,7 @@ class ReportingService:
             line_items=line_items,
         )
 
-    def _build_line_item(self, row: dict, customer_no: Optional[str]) -> LineItemSummary:
+    def _build_line_item(self, row: dict, customer_no: Optional[str], pricing_cache: dict) -> LineItemSummary:
         line_item_id = row["line_item_id"]
 
         aka_row = self.aka_resolution_repository.get_latest_for_line_item(line_item_id)
@@ -89,9 +103,9 @@ class ReportingService:
         pricing_row = self.pricing_resolution_repository.get_latest_for_line_item(line_item_id)
         tiers: list[PricingTier] = []
         if customer_no and row.get("evco_part_id"):
-            for tier_row in self.pricing_history_repository.get_all_tiers(
-                customer_no, row["evco_part_id"], row.get("bom_id")
-            ):
+            cache_key = (customer_no, row["evco_part_id"], row.get("bom_id"))
+            tier_rows = pricing_cache.get(cache_key, [])
+            for tier_row in tier_rows:
                 tiers.append(PricingTier(
                     quantity=tier_row["quantity"], price=float(tier_row["price"]),
                     is_active=tier_row["is_active"],
