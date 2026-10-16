@@ -56,3 +56,23 @@ class SalesOrderResolutionRepository:
             assert cursor.description is not None, "a SELECT always produces a resultset description"
             columns = [d[0] for d in cursor.description]
             return [dict(zip(columns, row)) for row in rows]
+
+    def get_all_for_line_items(self, line_item_ids: list[UUID]) -> dict[UUID, list[dict[str, Any]]]:
+        if not line_item_ids:
+            return {}
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                """SELECT line_item_id, sales_order_id, decision, status, sales_order_note
+                   FROM sales_order_results
+                   WHERE line_item_id = ANY(%s)
+                   ORDER BY line_item_id, created_at""",
+                (line_item_ids,),
+            )
+            result = {line_id: [] for line_id in line_item_ids}
+            for row in cursor.fetchall():
+                assert cursor.description is not None
+                columns = [d[0] for d in cursor.description]
+                row_dict = dict(zip(columns, row))
+                line_item_id = row_dict.pop("line_item_id")
+                result[line_item_id].append(row_dict)
+            return result

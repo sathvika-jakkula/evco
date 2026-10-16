@@ -188,6 +188,34 @@ class LineItemAuditRepository:
                 })
             return exceptions
 
+    def get_exception_details_for_line_items(self, line_item_ids: list[UUID]) -> dict[UUID, list[dict]]:
+        """Get structured exception details for multiple line items."""
+        if not line_item_ids:
+            return {}
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                """SELECT line_item_id, exception_code, agent_name, tool_name, exception_message, is_retryable, created_at
+                   FROM exception_logs
+                   WHERE line_item_id = ANY(%s)
+                   ORDER BY line_item_id, created_at""",
+                (line_item_ids,),
+            )
+            result = {line_id: [] for line_id in line_item_ids}
+            for row in cursor.fetchall():
+                assert cursor.description is not None
+                cols = [d[0] for d in cursor.description]
+                exc_dict = dict(zip(cols, row))
+                line_item_id = exc_dict.pop("line_item_id")
+                result[line_item_id].append({
+                    "exception_code": exc_dict.get("exception_code"),
+                    "agent_name": exc_dict.get("agent_name"),
+                    "tool_name": exc_dict.get("tool_name"),
+                    "message": exc_dict.get("exception_message"),
+                    "is_retryable": exc_dict.get("is_retryable"),
+                    "created_time": exc_dict.get("created_at").isoformat() if exc_dict.get("created_at") else None,
+                })
+            return result
+
     def get_quote_level_exceptions(self, processing_id: UUID) -> list[dict]:
         """Get exceptions with no line_item_id (extraction/customer-level failures)."""
         with self.connection.connect() as db, db.cursor() as cursor:

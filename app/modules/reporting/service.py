@@ -19,7 +19,6 @@ from app.database.pricing_resolution_repository import PricingResolutionReposito
 from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
 from app.modules.reporting.schemas import (
     AkaResolution,
-    ExceptionDetail,
     LineItemSummary,
     PricingResolution,
     PricingTier,
@@ -58,7 +57,7 @@ class ReportingService:
                 details={"processing_id": str(processing_id)},
             )
 
-        # Pre-fetch all pricing tiers for all line items to avoid N+1 queries
+        # Pre-fetch all data in batch to avoid N+1 queries
         pricing_cache = {}
         customer_no = header.get("customer_no")
         if customer_no:
@@ -72,7 +71,17 @@ class ReportingService:
                             customer_no, evco_part_id, bom_id
                         )
 
-        line_items = [self._build_line_item(row, header.get("customer_no"), pricing_cache) for row in data["line_items"]]
+        # Batch-fetch all resolution and exception data
+        line_item_ids = [row["line_item_id"] for row in data["line_items"]]
+        aka_cache = self.aka_resolution_repository.get_latest_for_line_items(line_item_ids)
+        pricing_cache_res = self.pricing_resolution_repository.get_latest_for_line_items(line_item_ids)
+        sales_order_cache = self.sales_order_resolution_repository.get_all_for_line_items(line_item_ids)
+        exception_details_cache = self.line_item_audit_repository.get_exception_details_for_line_items(line_item_ids)
+
+        line_items = [
+            self._build_line_item(row, customer_no, pricing_cache, aka_cache, pricing_cache_res, sales_order_cache, exception_details_cache)
+            for row in data["line_items"]
+        ]
 
         # Fetch quote-level exceptions (no line_item_id)
         quote_exceptions = self.line_item_audit_repository.get_quote_level_exceptions(processing_id)
@@ -102,10 +111,13 @@ class ReportingService:
             line_items=line_items,
         )
 
-    def _build_line_item(self, row: dict, customer_no: Optional[str], pricing_cache: dict) -> LineItemSummary:
+    def _build_line_item(
+        self, row: dict, customer_no: Optional[str], pricing_cache: dict,
+        aka_cache: dict, pricing_cache_res: dict, sales_order_cache: dict, exception_details_cache: dict
+    ) -> LineItemSummary:
         line_item_id = row["line_item_id"]
 
-        aka_row = self.aka_resolution_repository.get_latest_for_line_item(line_item_id)
+        aka_row = aka_cache.get(line_item_id)
         aka = AkaResolution(
             decision=aka_row.get("decision") if aka_row else None,
             aka_id=aka_row.get("aka_id") if aka_row else row.get("aka_id"),
@@ -113,7 +125,7 @@ class ReportingService:
             after=aka_row.get("after_value") if aka_row else None,
         )
 
-        pricing_row = self.pricing_resolution_repository.get_latest_for_line_item(line_item_id)
+        pricing_row = pricing_cache_res.get(line_item_id)
         tiers: list[PricingTier] = []
         if customer_no and row.get("evco_part_id"):
             cache_key = (customer_no, row["evco_part_id"], row.get("bom_id"))
@@ -139,7 +151,7 @@ class ReportingService:
             tiers=tiers,
         )
 
-        so_rows = self.sales_order_resolution_repository.get_all_for_line_item(line_item_id)
+        so_rows = sales_order_cache.get(line_item_id, [])
         so_facts = [
             SalesOrderFact(sales_order_id=r.get("sales_order_id"), decision=r.get("decision"), note=r.get("sales_order_note"))
             for r in so_rows
@@ -151,9 +163,9 @@ class ReportingService:
             )
         sales_order = SalesOrderResolution(decision=overall_so_decision, orders=so_facts)
 
-        # Get exception codes and details
-        exception_codes = self.line_item_audit_repository.get_exceptions_for_line_item(line_item_id)
-        exception_details = self.line_item_audit_repository.get_exception_details_for_line_item(line_item_id)
+        # Get exception details from batch cache
+        exception_details = exception_details_cache.get(line_item_id, [])
+        exception_codes = [exc.get("exception_code") for exc in exception_details if exc.get("exception_code")]
 
         return LineItemSummary(
             line_item_id=line_item_id,
