@@ -357,11 +357,10 @@ sales orders retain `customer_description` as a separate customer-specific value
 **Request:**
 | Payload key | Type | Required |
 |---|---|---|
-| `from` | string | yes |
-| `password` | string | yes |
 | `to` | string[] (min 1) | yes |
 | `subject` | string | yes |
 | `body` | string | yes |
+| `content_type` | `text/plain` or `text/html` | no (default: `text/plain`) |
 | `processing_id` | UUID | no |
 
 **Response `200`** — `StandardResponse[SendNotificationResponseData]`:
@@ -371,7 +370,9 @@ sales orders retain `customer_description` as a separate customer-specific value
     "delivery_status": "SENT|FAILED", "sent_time": "datetime|null", "error": "string|null" } ] }
 ```
 
-**HTTP errors:** none
+SMTP credentials are configured server-side. `content_type` controls how the body is rendered in the email.
+
+**HTTP errors:** `400` for invalid payloads, including unsupported content types; authentication is required.
 
 **exception_logs code:** none
 

@@ -1,7 +1,7 @@
 """T21: generic email notification tool.
 
 SMTP credentials (SMTP_USER / SMTP_PASSWORD) are configured server-side via
-environment variables. Callers only supply to, subject, and body.
+environment variables. Callers supply to, subject, body, and optionally content_type.
 The SMTP server address is also server-side (SMTP_HOST / SMTP_PORT).
 """
 
@@ -81,7 +81,7 @@ class NotificationService:
         message["From"] = sender
         message["To"] = recipient
         message["Subject"] = req.subject
-        message.set_content(req.body)
+        message.set_content(req.body, subtype=req.content_type.split("/")[1])
 
         sent_time = datetime.now(timezone.utc)
         try:

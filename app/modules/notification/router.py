@@ -12,7 +12,7 @@ router = APIRouter(prefix="/notifications", tags=["Notifications"])
     response_model=StandardResponse[SendNotificationResponseData],
     status_code=status.HTTP_200_OK,
     summary="T21 Notification",
-    description="Notify configured recipients via email with the provided content.",
+    description="Send email with a text/plain body (default) or text/html via content_type.",
 )
 async def send_email(payload: SendNotificationRequest):
     result = notification_service.send_email(payload)

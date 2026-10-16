@@ -22,7 +22,8 @@ Usage:
       -d '{
         "to": ["recipient@example.com"],
         "subject": "Test from EVCO Notification Service",
-        "body": "Hello from the standalone notification service."
+        "body": "<h1>Hello</h1><p>From the standalone notification service.</p>",
+        "content_type": "text/html"
       }'
 """
 
@@ -32,7 +33,7 @@ import smtplib
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID, uuid4
 
 from dotenv import load_dotenv
@@ -63,6 +64,9 @@ class SendEmailRequest(BaseModel):
     to: List[str] = Field(..., min_length=1, description="Recipient email address(es)")
     subject: str = Field(..., description="Email subject")
     body: str = Field(..., description="Email body content")
+    content_type: Literal["text/plain", "text/html"] = Field(
+        default="text/plain", description="MIME type of the email body"
+    )
     from_email: Optional[str] = Field(
         default=None,
         alias="from",
@@ -101,6 +105,7 @@ def send_email_smtp(
     recipients: List[str],
     subject: str,
     body: str,
+    content_type: Literal["text/plain", "text/html"] = "text/plain",
 ) -> List[RecipientResult]:
     """
     Connect to SMTP, authenticate once, send to each recipient.
@@ -118,7 +123,7 @@ def send_email_smtp(
                 msg["From"] = sender
                 msg["To"] = recipient
                 msg["Subject"] = subject
-                msg.set_content(body)
+                msg.set_content(body, subtype=content_type.split("/")[1])
 
                 sent_time = datetime.now(timezone.utc)
                 try:
@@ -180,6 +185,7 @@ async def send_email(payload: SendEmailRequest):
 
     Uses server-side SMTP credentials (SMTP_USER / SMTP_PASSWORD env vars).
     The caller only needs to provide `to`, `subject`, and `body`.
+    Set `content_type` to `text/html` for HTML, or omit it for `text/plain`.
     Optionally override the sender with the `from` / `from_email` field.
     """
     sender = payload.from_email or SMTP_USER
@@ -212,6 +218,7 @@ async def send_email(payload: SendEmailRequest):
         recipients=payload.to,
         subject=payload.subject,
         body=payload.body,
+        content_type=payload.content_type,
     )
 
     statuses = {r.delivery_status for r in results}
