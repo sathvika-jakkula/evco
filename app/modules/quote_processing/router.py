@@ -22,7 +22,7 @@ router = APIRouter(prefix="/quote-processing", tags=["Quote Processing Results"]
         "quote-line, agent, and rule context."
     ),
 )
-async def record_exception(payload: RecordExceptionRequest):
+def record_exception(payload: RecordExceptionRequest):
     result = quote_processing_result_service.record_exception(payload)
     return success_response(
         data=result,
@@ -38,7 +38,7 @@ async def record_exception(payload: RecordExceptionRequest):
     summary="T22 Move to Exceptions/Processed folder",
     description="Final step - moves a quote file from from_folder into to_folder.",
 )
-async def move_quote_file(payload: MoveQuoteFileRequest):
+def move_quote_file(payload: MoveQuoteFileRequest):
     result = quote_processing_result_service.move_quote_file(payload)
     return success_response(
         data=result,

@@ -24,7 +24,7 @@ router = APIRouter(prefix="/inventory", tags=["Inventory Price Breaks"])
     summary="Get Price Breaks",
     description="Retrieve all price breaks for the current customer/item context (no IDs are accepted)",
 )
-async def get_pricebreaks(payload: GetPriceBreaksRequest, response: Response):
+def get_pricebreaks(payload: GetPriceBreaksRequest, response: Response):
     price_breaks = price_break_service.get_price_breaks(
         customer_number=payload.customer_number,
         evco_part_number=payload.evco_part_number,
@@ -46,7 +46,7 @@ async def get_pricebreaks(payload: GetPriceBreaksRequest, response: Response):
     summary="Add Price Break",
     description="Add a new price break tier to the current customer/item context (no IDs are accepted)",
 )
-async def add_pricebreak(payload: AddPriceBreakRequest, response: Response):
+def add_pricebreak(payload: AddPriceBreakRequest, response: Response):
     result = price_break_service.add_price_break(payload)
     response.status_code = status.HTTP_201_CREATED
     return StandardInventoryResponse(
@@ -62,7 +62,7 @@ async def add_pricebreak(payload: AddPriceBreakRequest, response: Response):
     summary="Update Price Break",
     description="Update the price break tier identified by business context (quantity), not a database ID",
 )
-async def update_pricebreak(payload: UpdatePriceBreakRequest, response: Response):
+def update_pricebreak(payload: UpdatePriceBreakRequest, response: Response):
     result = price_break_service.update_price_break(payload)
     response.status_code = status.HTTP_200_OK
     return StandardInventoryResponse(

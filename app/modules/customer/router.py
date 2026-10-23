@@ -13,5 +13,5 @@ service = CustomerService()
     summary="Resolve Customer",
     description="Resolves extracted customer name/number against DELMIAWorks customer records.",
 )
-async def resolve_customer(payload: CustomerResolveRequest) -> CustomerResolveResponse:
+def resolve_customer(payload: CustomerResolveRequest) -> CustomerResolveResponse:
     return service.resolve_customer(payload)

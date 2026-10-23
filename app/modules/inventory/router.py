@@ -23,7 +23,7 @@ router = APIRouter(prefix="/inventory", tags=["Inventory AKA Workflow"])
         "404 when the item number itself is not found."
     ),
 )
-async def get_aka(payload: GetAkaRequest, response: Response):
+def get_aka(payload: GetAkaRequest, response: Response):
     result = inventory_store.get_aka(
         item_number=payload.item_number,
         customer_number=payload.customer_number,
@@ -58,7 +58,7 @@ async def get_aka(payload: GetAkaRequest, response: Response):
     summary="T7 Create AKA",
     description="Create a new AKA mapping record under an evco_part_number",
 )
-async def create_aka(payload: CreateAkaRequest, response: Response):
+def create_aka(payload: CreateAkaRequest, response: Response):
     result = inventory_store.create_aka(payload)
     if not result:
         response.status_code = status.HTTP_409_CONFLICT
@@ -81,7 +81,7 @@ async def create_aka(payload: CreateAkaRequest, response: Response):
     summary="Reset AKA store (testing only)",
     description="Wipes the in-memory AKA store and re-seeds it from aka_inventory.json. Use this between E2E test runs to restore original state.",
 )
-async def reset_aka_store():
+def reset_aka_store():
     result = inventory_store.reset()
     return {
         "message": "AKA store reset to original seed data",
@@ -96,7 +96,7 @@ async def reset_aka_store():
     summary="T8 Update AKA",
     description="Update the AKA mapping identified by evco_part_number, customer_number, and manufacturing_bom_number",
 )
-async def update_aka(payload: UpdateAkaRequest, response: Response):
+def update_aka(payload: UpdateAkaRequest, response: Response):
     result = inventory_store.update_aka(payload)
     response.status_code = status.HTTP_200_OK
     return StandardInventoryResponse(

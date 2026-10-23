@@ -26,7 +26,7 @@ router = APIRouter(prefix="/sales-orders", tags=["Sales Orders"])
         "full sales order list and filters by evco_part_number here."
     ),
 )
-async def get_sales_orders(payload: GetSalesOrdersRequest, response: Response):
+def get_sales_orders(payload: GetSalesOrdersRequest, response: Response):
     records = sales_order_service.get_sales_orders(item_number=payload.item_number, line_item_id=payload.line_item_id)
     response.status_code = status.HTTP_200_OK
     return StandardInventoryResponse(
@@ -42,7 +42,7 @@ async def get_sales_orders(payload: GetSalesOrdersRequest, response: Response):
     summary="Get Sales Order Details",
     description="Retrieve detail (line item) records for a given sales_order_id and ar_invt_id.",
 )
-async def get_sales_order_details(payload: GetSalesOrderDetailsRequest, response: Response):
+def get_sales_order_details(payload: GetSalesOrderDetailsRequest, response: Response):
     records = sales_order_service.get_sales_order_details(
         sales_order_id=payload.sales_order_id,
         ar_invt_id=payload.ar_invt_id,
@@ -61,7 +61,7 @@ async def get_sales_order_details(payload: GetSalesOrderDetailsRequest, response
     summary="Get Sales Order Releases",
     description="Retrieve the release/shipment schedule for a given sales_order_detail_id.",
 )
-async def get_sales_order_releases(payload: GetSalesOrderReleasesRequest, response: Response):
+def get_sales_order_releases(payload: GetSalesOrderReleasesRequest, response: Response):
     records = sales_order_service.get_sales_order_releases(
         sales_order_detail_id=payload.sales_order_detail_id, line_item_id=payload.line_item_id
     )
@@ -80,7 +80,7 @@ async def get_sales_order_releases(payload: GetSalesOrderReleasesRequest, respon
     description="Update price, on_hold, and ship_hold flags for a sales order detail line.",
     status_code=status.HTTP_200_OK,
 )
-async def update_sales_order_details(payload: UpdateSalesOrderDetailsRequest, response: Response):
+def update_sales_order_details(payload: UpdateSalesOrderDetailsRequest, response: Response):
     result = sales_order_service.update_sales_order_details(
         sales_order_detail_id=payload.sales_order_detail_id,
         unit_price=payload.unit_price,

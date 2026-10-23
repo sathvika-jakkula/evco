@@ -19,7 +19,7 @@ service = ReportingService()
         "email text is generated; the caller formats and sends its own report."
     ),
 )
-async def get_quote_summary(payload: QuoteSummaryRequest, response: Response):
+def get_quote_summary(payload: QuoteSummaryRequest, response: Response):
     data = service.get_quote_summary(payload.processing_id)
     response.status_code = status.HTTP_200_OK
     return success_response(

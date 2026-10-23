@@ -16,7 +16,7 @@ service = MonitoringService()
     summary="T1 Scan and Claim Quote Files",
     description="Scans an incoming folder and returns the PDF quotes it contains.",
 )
-async def scan_quote_files(payload: ScanRequest):
+def scan_quote_files(payload: ScanRequest):
     scan_id, scan_timestamp, files_detected = service.scan_and_claim(
         folder_path=payload.folder_path,
         recursive=payload.recursive,

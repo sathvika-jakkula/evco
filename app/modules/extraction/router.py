@@ -98,7 +98,7 @@ async def extract_quote_pdf(
         "payload delivered to the extraction callback URL."
     ),
 )
-async def get_processing_result(payload: ProcessingResultRequest):
+def get_processing_result(payload: ProcessingResultRequest):
     quote_data = service.get_processing_result(payload.processing_id)
     return success_response(
         data=quote_data,

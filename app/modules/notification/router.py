@@ -14,7 +14,7 @@ router = APIRouter(prefix="/notifications", tags=["Notifications"])
     summary="T21 Notification",
     description="Send email with a text/plain body (default) or text/html via content_type.",
 )
-async def send_email(payload: SendNotificationRequest):
+def send_email(payload: SendNotificationRequest):
     result = notification_service.send_email(payload)
     return success_response(
         data=result,
