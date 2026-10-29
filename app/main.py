@@ -6,6 +6,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api.router import api_router
+from app.core import api_status
 from app.core.config import settings
 from app.core.constants import APP_DESCRIPTION, APP_TITLE, APP_VERSION
 from app.core.exceptions import APIException
@@ -102,11 +103,46 @@ def custom_openapi():
         "description": "IBM App ID OAuth 2.0 Access Token (RS256)",
     }
     openapi_schema["security"] = [{"BearerAuth": []}]
+    _mark_operations_with_data_source(openapi_schema)
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
 
+def _mark_operations_with_data_source(openapi_schema: dict) -> None:
+    """Prefix each operation summary with [LIVE] or [DUMMY] and attach its data-source details."""
+    for path, operations in openapi_schema.get("paths", {}).items():
+        for method, operation in operations.items():
+            if method not in ("get", "post", "put", "patch", "delete"):
+                continue
+            entry = api_status.lookup(method, path)
+            if entry is None:
+                operation["summary"] = f"[UNCLASSIFIED] {operation.get('summary', path)}"
+                continue
+            operation["summary"] = f"{api_status.marker(entry)} {operation.get('summary', path)}"
+            operation["x-data-source"] = {
+                "status": entry.status,
+                "integration": entry.integration,
+                "source": entry.source,
+                "note": entry.note or None,
+            }
+            if entry.note:
+                description = operation.get("description", "")
+                operation["description"] = f"{description}\n\n**Data source:** {entry.source}. {entry.note}".strip()
+
+
 app.openapi = custom_openapi
+
+
+@app.middleware("http")
+async def mark_response_data_source(request, call_next):
+    """Stamp every business response with its data source so clients can tell dummy from live."""
+    response = await call_next(request)
+    entry = api_status.lookup(request.method, request.url.path)
+    if entry is not None:
+        response.headers["X-Data-Source"] = entry.status
+        response.headers["X-Data-Source-Integration"] = entry.integration
+    return response
+
 
 register_cors(app)
 

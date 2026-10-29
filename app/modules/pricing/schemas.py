@@ -16,12 +16,16 @@ class GetPriceBreaksRequest(BaseModel):
 
     evco_part_number: str = Field(..., alias="evco_part_number", validation_alias=AliasChoices("evco_part_number", "Item #"), description="EVCO Part Number to retrieve price breaks for")
     customer_number: str = Field(..., alias="customer_number", validation_alias=AliasChoices("customer_number", "customer#"), description="Customer Number to retrieve price breaks for")
-    manufacturing_bom_number: str = Field(..., alias="manufacturing_bom_number", validation_alias=AliasChoices("manufacturing_bom_number", "mfg#"), description="Manufacturing/BOM Number to retrieve price breaks for")
     # Optional linkage for pricing_results/exception_logs persistence only - see
     # AddPriceBreakRequest for the same pattern. Not required so existing callers
     # that omit them keep working unchanged.
     processing_id: Optional[UUID] = Field(default=None, description="quote_processing run this lookup came from, for result/exception persistence")
     line_item_id: Optional[UUID] = Field(default=None, description="quote_line_items row this lookup came from, for result/exception persistence")
+
+
+class GetPriceBreaksDummyRequest(GetPriceBreaksRequest):
+    """Dummy price-break lookup (in-memory store), which is still keyed by the BOM number."""
+    manufacturing_bom_number: str = Field(..., alias="manufacturing_bom_number", validation_alias=AliasChoices("manufacturing_bom_number", "mfg#"))
 
 
 class PriceBreakData(BaseModel):

@@ -33,7 +33,7 @@ def test_pricing_lookup_add_update_contract(api, legacy):
                "manufacturing_bom_number": "9440502 + 9440503"}
     if legacy:
         context = {"Item #": "9480026", "customer#": "10329", "mfg#": "9440502 + 9440503"}
-    response = client.post("/inventory/get-pricebreaks", json=context)
+    response = client.post("/inventory/get-pricebreaks/dummy", json=context)
     assert response.status_code == 200
     assert set(response.json()["data"][0]) == {"moq", "price", "comment"}
 
@@ -44,7 +44,7 @@ def test_pricing_lookup_add_update_contract(api, legacy):
                    "effective_date": "2026-10-01T00:00:00Z", "source_quote_number": "Q-123"}
     payload.update(context)
     service._pricing_history_repository.get_active_price.return_value = None
-    response = client.post("/inventory/add-pricebreak", json=payload)
+    response = client.post("/inventory/add-pricebreak/dummy", json=payload)
     assert response.status_code == 201
     data = response.json()["data"]
     assert data["moq"] == 123456
@@ -57,7 +57,7 @@ def test_pricing_lookup_add_update_contract(api, legacy):
     assert persisted["evco_part_number"] == "9480026"
 
     payload["price"] = 2.5
-    response = client.post("/inventory/update-pricebreak", json=payload)
+    response = client.post("/inventory/update-pricebreak/dummy", json=payload)
     assert response.status_code == 200
     assert response.json()["data"]["price"] == 2.5
     # add/update-pricebreak route into the per-(customer, part, BOM) context
@@ -71,7 +71,7 @@ def test_pricing_lookup_add_update_contract(api, legacy):
 def test_numeric_validation_remains_in_place(api):
     client, service = api
     before = list(service._current_price_breaks)
-    response = client.post("/inventory/add-pricebreak", json={
+    response = client.post("/inventory/add-pricebreak/dummy", json={
         "moq": 0, "price": -1, "price_effective_date": "2026-10-01T00:00:00Z",
     })
     assert response.status_code == 422

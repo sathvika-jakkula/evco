@@ -6,6 +6,8 @@ from app.modules.quote_processing.schemas import (
     MoveQuoteFileRequest,
     MoveQuoteFileResponseData,
     RecordExceptionRequest,
+    RecordReviewRowsData,
+    RecordReviewRowsRequest,
 )
 from app.modules.quote_processing.service import quote_processing_result_service
 
@@ -44,4 +46,24 @@ def move_quote_file(payload: MoveQuoteFileRequest):
         data=result,
         message="Quote file moved successfully",
         status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post(
+    "/record-review-rows",
+    response_model=StandardResponse[RecordReviewRowsData],
+    status_code=status.HTTP_201_CREATED,
+    summary="Record review rows for one line and review area",
+    description=(
+        "Stores the rows a review agent returned for one quote line (AKA, PRICING or SALES_ORDER). "
+        "Each call replaces the rows previously stored for that line and area, so retries never "
+        "duplicate rows. An empty rows[] is valid and clears that area for the line."
+    ),
+)
+def record_review_rows(payload: RecordReviewRowsRequest):
+    result = quote_processing_result_service.record_review_rows(payload)
+    return success_response(
+        data=result,
+        message="Review rows recorded successfully",
+        status_code=status.HTTP_201_CREATED,
     )

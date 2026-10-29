@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Response, status
 
 from app.modules.inventory.schemas import StandardInventoryResponse
+from app.modules.inventory.service import inventory_service
 from app.modules.pricing.schemas import (
     AddPriceBreakRequest,
     AddPriceBreakResponseData,
     PriceBreakData,
     UpdatePriceBreakResponseData,
+    GetPriceBreaksDummyRequest,
     GetPriceBreaksRequest,
     UpdatePriceBreakRequest,
 )
@@ -22,9 +24,34 @@ router = APIRouter(prefix="/inventory", tags=["Inventory Price Breaks"])
     "/get-pricebreaks",
     response_model=StandardInventoryResponse[list[PriceBreakData]],
     summary="Get Price Breaks",
-    description="Retrieve all price breaks for the current customer/item context (no IDs are accepted)",
+    description=(
+        "Price breaks for the customer/item from the IQMS WebAPI "
+        "(Manufacturing/Inventory/AKAInventoryItemPriceBreaks). Returns 404 PRICE_BREAKS_NOT_FOUND "
+        "when the customer has no AKA record for the item or IQMS returns no price breaks."
+    ),
 )
-def get_pricebreaks(payload: GetPriceBreaksRequest, response: Response):
+def get_pricebreaks_live(payload: GetPriceBreaksRequest, response: Response):
+    price_breaks = inventory_service.get_price_breaks(
+        customer_number=payload.customer_number,
+        item_number=payload.evco_part_number,
+        processing_id=payload.processing_id,
+        line_item_id=payload.line_item_id,
+    )
+    response.status_code = status.HTTP_200_OK
+    return StandardInventoryResponse(
+        statusCode=200,
+        message="Price breaks retrieved successfully",
+        data=price_breaks,
+    )
+
+
+@router.post(
+    "/get-pricebreaks/dummy",
+    response_model=StandardInventoryResponse[list[PriceBreakData]],
+    summary="Get Price Breaks (dummy)",
+    description="Dummy price breaks from the in-memory store. No IDs are accepted.",
+)
+def get_pricebreaks(payload: GetPriceBreaksDummyRequest, response: Response):
     price_breaks = price_break_service.get_price_breaks(
         customer_number=payload.customer_number,
         evco_part_number=payload.evco_part_number,
@@ -41,7 +68,7 @@ def get_pricebreaks(payload: GetPriceBreaksRequest, response: Response):
 
 
 @router.post(
-    "/add-pricebreak",
+    "/add-pricebreak/dummy",
     response_model=StandardInventoryResponse[AddPriceBreakResponseData],
     summary="Add Price Break",
     description="Add a new price break tier to the current customer/item context (no IDs are accepted)",
@@ -57,7 +84,7 @@ def add_pricebreak(payload: AddPriceBreakRequest, response: Response):
 
 
 @router.post(
-    "/update-pricebreak",
+    "/update-pricebreak/dummy",
     response_model=StandardInventoryResponse[UpdatePriceBreakResponseData],
     summary="Update Price Break",
     description="Update the price break tier identified by business context (quantity), not a database ID",

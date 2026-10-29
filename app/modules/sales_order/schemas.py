@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -111,3 +111,26 @@ class UpdateSalesOrderDetailsResponse(BaseModel):
     on_hold: bool
     ship_hold: bool
     updated_at: datetime
+
+
+# --- Get Sales Order Lines: every customer, every status, detail and releases nested ---
+class GetSalesOrderLinesRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    item_number: str = Field(..., alias="evco_part_number", description="EVCO Part Number to return all sales order lines for")
+
+
+class SalesOrderLineData(BaseModel):
+    sales_order_id: int
+    sales_order_detail_id: int
+    ar_invt_id: int
+    order_number: str
+    customer_number: str
+    customer_name: str
+    status: Optional[str] = None
+    detail: SalesOrderDetailData
+    releases: List[SalesOrderReleaseData] = Field(default_factory=list)
+
+
+class SalesOrderLinesData(BaseModel):
+    lines: List[SalesOrderLineData] = Field(default_factory=list)

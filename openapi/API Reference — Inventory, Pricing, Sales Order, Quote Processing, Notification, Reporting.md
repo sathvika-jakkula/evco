@@ -50,7 +50,7 @@ sales orders retain `customer_description` as a separate customer-specific value
 
 ---
 
-## `/inventory/create-aka`
+## `/inventory/create-aka/dummy`
 
 **Request:**
 | Payload key | Type | Required |
@@ -76,7 +76,7 @@ sales orders retain `customer_description` as a separate customer-specific value
 
 ---
 
-## `/inventory/update-aka`
+## `/inventory/update-aka/dummy`
 
 **Request:**
 | Payload key | Type | Required |
@@ -99,7 +99,7 @@ sales orders retain `customer_description` as a separate customer-specific value
 
 ---
 
-## `/inventory/get-pricebreaks`
+## `/inventory/get-pricebreaks/dummy`
 
 **Request:**
 | Payload key | Type | Required |
@@ -134,7 +134,7 @@ sales orders retain `customer_description` as a separate customer-specific value
 
 ---
 
-## `/inventory/add-pricebreak`
+## `/inventory/add-pricebreak/dummy`
 
 **Request:**
 | Payload key | Type | Required |
@@ -179,7 +179,7 @@ sales orders retain `customer_description` as a separate customer-specific value
 
 ---
 
-## `/inventory/update-pricebreak`
+## `/inventory/update-pricebreak/dummy`
 
 **Request:**
 | Payload key | Type | Required |
@@ -442,8 +442,8 @@ SMTP credentials are configured server-side. `content_type` controls how the bod
 | Code | Endpoint |
 |---|---|
 | `AKA_NOT_FOUND` | `/inventory/get-aka` |
-| `AKA_UPDATE_TARGET_MISSING` | `/inventory/update-aka` |
-| `PRICE_NOT_FOUND` | `/inventory/get-pricebreaks` |
-| `PRICE_UPDATE_TARGET_MISSING` | `/inventory/update-pricebreak` |
+| `AKA_UPDATE_TARGET_MISSING` | `/inventory/update-aka/dummy` |
+| `PRICE_NOT_FOUND` | `/inventory/get-pricebreaks/dummy` |
+| `PRICE_UPDATE_TARGET_MISSING` | `/inventory/update-pricebreak/dummy` |
 | `QUOTE_FILE_MOVE_FAILED` | `/quote-processing/move-quote-file` |
 | *(caller-defined)* | `/quote-processing/record-exception` |

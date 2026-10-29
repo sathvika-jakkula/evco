@@ -265,6 +265,18 @@ class IQMSClient:
         url = f"{self.base_url}/Manufacturing/Inventory/AKAInventoryForCustomer/{ar_custo_id}"
         return self._fetch_json_list(url, "AKAInventoryForCustomer")
 
+    def get_aka_item_price_breaks(self, ar_invt_id: int, ar_custo_id: int) -> List[Dict[str, Any]]:
+        """
+        Fetches the price breaks for one item and customer from IQMS
+        /Manufacturing/Inventory/AKAInventoryItemPriceBreaks. Each record carries
+        UnitPrice, Quantity (the price-break quantity) and Comment (the quote).
+        """
+        url = (
+            f"{self.base_url}/Manufacturing/Inventory/AKAInventoryItemPriceBreaks"
+            f"?arinvtId={ar_invt_id}&arCustoId={ar_custo_id}"
+        )
+        return self._fetch_json_list(url, "AKAInventoryItemPriceBreaks")
+
     def get_sales_orders(self) -> List[Dict[str, Any]]:
         """
         Fetches all sales order line records from IQMS

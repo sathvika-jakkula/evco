@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends
 
+from app.core import api_status
+from app.core.schemas import success_response
 from app.core.security import validate_access_token
 from app.modules.audit.router import router as audit_router
 from app.modules.customer.router import router as customer_router
@@ -38,7 +40,7 @@ testing_router = APIRouter(prefix="/testing", tags=["Testing Utilities"])
 
 
 @testing_router.post(
-    "/reset-all",
+    "/reset-all/dummy",
     summary="Reset all mock stores (testing only)",
     description=(
         "Resets ALL in-memory mock stores (AKA inventory + pricing) back to their "
@@ -62,3 +64,27 @@ async def reset_all_stores():
 
 
 api_router.include_router(testing_router)
+
+
+# ---------------------------------------------------------------------------
+# API data-source register: every operation and whether it is LIVE or DUMMY.
+# ---------------------------------------------------------------------------
+@api_router.get(
+    "/api-status",
+    tags=["API Status"],
+    summary="API data-source status",
+    description="Lists every API operation with its data source: LIVE (real system) or DUMMY (placeholder data).",
+)
+def list_api_status():
+    rows = [
+        {
+            "method": method,
+            "path": path,
+            "status": entry.status,
+            "integration": entry.integration,
+            "source": entry.source,
+            "note": entry.note or None,
+        }
+        for (method, path), entry in sorted(api_status.API_STATUS.items(), key=lambda item: (item[0][1], item[0][0]))
+    ]
+    return success_response(data=rows, message="API data-source status retrieved successfully")

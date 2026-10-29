@@ -11,9 +11,10 @@ so those are passed straight through.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from uuid import UUID
 
+from app.core.config import settings
 from app.database.pricing_history_repository import PricingHistoryRepository
 from app.database.sales_order_repository import SalesOrderSyncRepository
 from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
@@ -21,6 +22,7 @@ from app.integrations.iqms import IQMSClient
 from app.modules.sales_order.schemas import (
     SalesOrderData,
     SalesOrderDetailData,
+    SalesOrderLineData,
     SalesOrderReleaseData,
     UpdateSalesOrderDetailsResponse,
 )
@@ -40,19 +42,17 @@ def _parse_date(value: Any) -> Optional[datetime]:
 
 
 def _build_default_iqms_client():
-    """The existing Sales Order GET API request/response contract below is
-    unchanged - only the data source is swapped here, to the dummy fixture
-    data built for testing (evco_test_data/mock_data/sales_orders/), since a
-    live IQMS connection isn't available for this. To go back to the real
-    IQMS connection, uncomment the live line and comment out the dummy one.
+    """Live IQMS WebAPI by default. Set IQMS_DATA_SOURCE=fixture to serve the
+    dummy fixture data (evco_test_data/mock_data/sales_orders/) instead.
 
     Return type is intentionally left unannotated: FixtureIQMSClient is a
     duck-typed stand-in (same get_sales_orders/get_sales_order_details/
     get_sales_order_releases method signatures), not a subclass of IQMSClient.
     """
-    # return IQMSClient()  # <- LIVE IQMS (original)
-    from evco_test_data.mock_api.fixture_iqms_client import FixtureIQMSClient
-    return FixtureIQMSClient()  # <- DUMMY DATA (current)
+    if settings.IQMS_USE_FIXTURES:
+        from evco_test_data.mock_api.fixture_iqms_client import FixtureIQMSClient
+        return FixtureIQMSClient()  # <- DUMMY DATA
+    return IQMSClient()  # <- LIVE IQMS WebAPI
 
 
 class SalesOrderService:
@@ -66,6 +66,7 @@ class SalesOrderService:
         resolution_repository: Optional[SalesOrderResolutionRepository] = None,
     ) -> None:
         self.iqms_client = iqms_client or _build_default_iqms_client()
+        self._data_source = "dummy" if settings.IQMS_USE_FIXTURES else "iqms"
         self.sync_repository = sync_repository or SalesOrderSyncRepository()
         self.pricing_history_repository = pricing_history_repository or PricingHistoryRepository()
         self.resolution_repository = resolution_repository or SalesOrderResolutionRepository()
@@ -150,7 +151,7 @@ class SalesOrderService:
 
     def _persist_order(self, order: SalesOrderData, line_item_id: Optional[UUID] = None) -> None:
         try:
-            self.sync_repository.upsert_sales_order(order, source="dummy", line_item_id=line_item_id)
+            self.sync_repository.upsert_sales_order(order, source=self._data_source, line_item_id=line_item_id)
         except Exception:
             logger.exception("Failed to persist sales order %s to sales_orders_synced", order.sales_order_id)
 
@@ -221,6 +222,46 @@ class SalesOrderService:
             acknowledged=bool(record.get("Acknowledged") or False),
             expedite=bool(record.get("Expedite") or False),
         )
+
+    def get_sales_order_lines(self, item_number: str) -> List[SalesOrderLineData]:
+        """Every sales order line for one EVCO part number, all customers and statuses, with
+        its detail and releases nested. One list call, then one details call per order and
+        one releases call per detail line (IQMS filters details and releases server-side)."""
+        orders = [
+            self._to_sales_order(record)
+            for record in self.iqms_client.get_sales_orders()
+            if isinstance(record, dict) and str(record.get("ItemNumber") or "") == item_number
+        ]
+        lines: List[SalesOrderLineData] = []
+        seen_details: Set[int] = set()
+        details_by_order: Dict[int, List[Dict[str, Any]]] = {}
+        for order in orders:
+            if order.sales_order_id not in details_by_order:
+                details_by_order[order.sales_order_id] = self.iqms_client.get_sales_order_details(order.sales_order_id)
+            for record in details_by_order[order.sales_order_id]:
+                if not isinstance(record, dict) or record.get("ArInvtId") != order.ar_invt_id:
+                    continue
+                detail = self._to_sales_order_detail(record)
+                if detail.sales_order_detail_id in seen_details:
+                    continue
+                seen_details.add(detail.sales_order_detail_id)
+                releases = [
+                    self._to_sales_order_release(r)
+                    for r in self.iqms_client.get_sales_order_releases(detail.sales_order_detail_id)
+                    if isinstance(r, dict)
+                ]
+                lines.append(SalesOrderLineData(
+                    sales_order_id=order.sales_order_id,
+                    sales_order_detail_id=detail.sales_order_detail_id,
+                    ar_invt_id=order.ar_invt_id,
+                    order_number=order.order_number,
+                    customer_number=order.customer_number,
+                    customer_name=order.company,
+                    status=order.status,
+                    detail=detail,
+                    releases=releases,
+                ))
+        return lines
 
     def update_sales_order_details(
         self,

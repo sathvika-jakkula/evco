@@ -10,11 +10,14 @@ from app.core.exceptions import BusinessException
 from app.database.api_audit_log_repository import ApiAuditLogRepository
 from app.database.quote_processing_repository import QuoteProcessingRepository
 from app.database.quote_scan_repository import QuoteScanRepository
+from app.database.review_row_repository import ReviewRowRepository
 from app.modules.quote_processing.schemas import (
     ExceptionRecordData,
     MoveQuoteFileRequest,
     MoveQuoteFileResponseData,
     RecordExceptionRequest,
+    RecordReviewRowsData,
+    RecordReviewRowsRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,10 +28,12 @@ class QuoteProcessingResultService:
         self, processing_repository: QuoteProcessingRepository | None = None,
         scan_repository: QuoteScanRepository | None = None,
         audit_log_repository: ApiAuditLogRepository | None = None,
+        review_row_repository: ReviewRowRepository | None = None,
     ) -> None:
         self.processing_repository = processing_repository or QuoteProcessingRepository()
         self.scan_repository = scan_repository or QuoteScanRepository()
         self.audit_log_repository = audit_log_repository or ApiAuditLogRepository()
+        self.review_row_repository = review_row_repository or ReviewRowRepository()
 
     def record_exception(self, req: RecordExceptionRequest) -> ExceptionRecordData:
         created_at = datetime.now(timezone.utc)
@@ -129,4 +134,30 @@ class QuoteProcessingResultService:
 
 
 # Singleton instance, mirroring the other services in this codebase
+
+    def record_review_rows(self, req: RecordReviewRowsRequest) -> RecordReviewRowsData:
+        """Store the rows one review agent returned for one line. Replaces that area's previous rows."""
+        line_context = {
+            "line_number": req.line_number,
+            "evco_part_number": req.evco_part_number,
+            "mold_number": req.mold_number,
+            "manufacturing_bom_number": req.manufacturing_bom_number,
+            "customer_number": req.customer_number,
+        }
+        rows = [row.model_dump(mode="json") for row in req.rows]
+        review_row_ids, replaced = self.review_row_repository.replace_rows(
+            processing_id=req.processing_id,
+            line_item_id=req.line_item_id,
+            review_area=req.review_area.value,
+            quote_number=req.quote_number,
+            line_context=line_context,
+            rows=rows,
+        )
+        return RecordReviewRowsData(
+            rows_stored=len(review_row_ids),
+            rows_replaced=replaced,
+            review_row_ids=review_row_ids,
+        )
+
+
 quote_processing_result_service = QuoteProcessingResultService()

@@ -7,6 +7,7 @@ the report itself.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
@@ -16,8 +17,14 @@ from app.database.aka_resolution_repository import AkaResolutionRepository
 from app.database.line_item_audit_repository import LineItemAuditRepository
 from app.database.pricing_history_repository import PricingHistoryRepository
 from app.database.pricing_resolution_repository import PricingResolutionRepository
+from app.database.quote_scan_repository import QuoteScanRepository
+from app.database.review_row_repository import ReviewRowRepository
 from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
+from app.modules.reporting.client_report import build_quote_report
+from app.modules.reporting.client_workbook import build_client_workbook_with_sheets
 from app.modules.reporting.schemas import (
+    ClientReportSource,
+    ReviewRowEntry,
     AkaResolution,
     LineItemSummary,
     PricingResolution,
@@ -28,6 +35,18 @@ from app.modules.reporting.schemas import (
 )
 
 
+DEFAULT_REPORT_FILE_NAME = "EVCO_Review_Per_Quote.xlsx"
+CLIENT_REPORT_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@dataclass
+class ClientReportFile:
+    file_name: str
+    content: bytes
+    sheet_names: list[str]
+    processing_ids: list[UUID]
+
+
 class ReportingService:
     def __init__(
         self,
@@ -36,12 +55,33 @@ class ReportingService:
         pricing_resolution_repository: Optional[PricingResolutionRepository] = None,
         sales_order_resolution_repository: Optional[SalesOrderResolutionRepository] = None,
         pricing_history_repository: Optional[PricingHistoryRepository] = None,
+        review_row_repository: Optional[ReviewRowRepository] = None,
+        scan_repository: Optional[QuoteScanRepository] = None,
     ) -> None:
         self.line_item_audit_repository = line_item_audit_repository or LineItemAuditRepository()
         self.aka_resolution_repository = aka_resolution_repository or AkaResolutionRepository()
         self.pricing_resolution_repository = pricing_resolution_repository or PricingResolutionRepository()
         self.sales_order_resolution_repository = sales_order_resolution_repository or SalesOrderResolutionRepository()
         self.pricing_history_repository = pricing_history_repository or PricingHistoryRepository()
+        self.review_row_repository = review_row_repository or ReviewRowRepository()
+        self.scan_repository = scan_repository or QuoteScanRepository()
+
+    def resolve_processing_ids(self, source: ClientReportSource) -> list[UUID]:
+        """scan_ids expanded to their quotes' processing_ids, then processing_ids appended. No duplicates."""
+        from_scans = self.scan_repository.get_processing_ids_for_scans(source.scan_ids) if source.scan_ids else []
+        return list(dict.fromkeys([*from_scans, *source.processing_ids]))
+
+    def build_client_report(self, source: ClientReportSource, file_name: str = DEFAULT_REPORT_FILE_NAME) -> "ClientReportFile":
+        """Client review workbook for the scans and/or quotes in source."""
+        processing_ids = self.resolve_processing_ids(source)
+        reports = [build_quote_report(self.get_quote_summary(pid)) for pid in processing_ids]
+        content, sheet_names = build_client_workbook_with_sheets(reports)
+        return ClientReportFile(
+            file_name=file_name,
+            content=content,
+            sheet_names=sheet_names,
+            processing_ids=processing_ids,
+        )
 
     def get_quote_summary(self, processing_id: UUID) -> QuoteSummaryData:
         report_id = f"RPT-{processing_id}-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
@@ -109,7 +149,41 @@ class ReportingService:
             exception_count=header.get("exception_count") or 0,
             quote_exceptions=quote_exceptions,
             line_items=line_items,
+            review_rows=self._build_review_rows(processing_id),
         )
+
+    _AREA_ORDER = {"AKA": 0, "PRICING": 1, "SALES_ORDER": 2}
+
+    def _build_review_rows(self, processing_id: UUID) -> list[ReviewRowEntry]:
+        entries = [
+            ReviewRowEntry(
+                review_row_id=row["review_row_id"],
+                line_item_id=row["line_item_id"],
+                line_number=row.get("line_number"),
+                review_area=row["review_area"],
+                evco_part_number=row.get("evco_part_number"),
+                mold_number=row.get("mold_number"),
+                manufacturing_bom_number=row.get("manufacturing_bom_number"),
+                customer_number=row.get("customer_number"),
+                created_at=row["created_at"],
+                rule_code=row["rule_code"],
+                check=row["check_name"],
+                status=row["status"],
+                message=row["message"],
+                field=row.get("field"),
+                record_ref=row.get("record_ref"),
+                sales_order_id=row.get("sales_order_id"),
+                sales_order_detail_id=row.get("sales_order_detail_id"),
+                release_id=row.get("release_id"),
+                quote_value=row.get("quote_value"),
+                system_value=row.get("system_value"),
+                proposed_value=row.get("proposed_value"),
+                exception_id=row.get("exception_id"),
+            )
+            for row in self.review_row_repository.get_rows_for_processing(processing_id)
+        ]
+        entries.sort(key=lambda e: (e.line_number is None, e.line_number or 0, self._AREA_ORDER.get(e.review_area, 9)))
+        return entries
 
     def _build_line_item(
         self, row: dict, customer_no: Optional[str], pricing_cache: dict,

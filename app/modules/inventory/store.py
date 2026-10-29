@@ -175,7 +175,7 @@ class InventoryMockStore:
         }
 
     def get_aka(
-        self, item_number: str, customer_number: str, manufacturing_bom_number: str,
+        self, item_number: str, customer_number: str, manufacturing_bom_number: Optional[str],
         line_item_id: Optional[UUID] = None,
     ) -> AkaSearchData:
         """Return the Header + matching AKA detail for (item#, customer#, mfg#).
@@ -189,7 +189,12 @@ class InventoryMockStore:
         """
         with self._lock:
             header = self._headers.get(item_number)
-            detail = self._aka_details.get(item_number, {}).get((customer_number, manufacturing_bom_number))
+            details_for_item = self._aka_details.get(item_number, {})
+            if manufacturing_bom_number is None:
+                # No BOM number in the request: use the customer's first AKA record for the item.
+                detail = next((d for (cust, _), d in details_for_item.items() if cust == customer_number), None)
+            else:
+                detail = details_for_item.get((customer_number, manufacturing_bom_number))
 
         # ── Case 1: item number completely unknown ──────────────────────────
         if header is None:

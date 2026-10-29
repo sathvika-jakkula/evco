@@ -297,7 +297,7 @@ SUCCESS / REVIEW_REQUIRED
 
 system
 
-## POST /inventory/create-aka
+## POST /inventory/create-aka/dummy
 
 Request: Item #, createAkaDetails{...}, line_item_id Response: 201, Header + akaDetails[]
 
@@ -372,7 +372,7 @@ aka_resolution_results (upsert, key = line_item_id) — decision='CREATED', afte
 
 exception_logs (new row, only on unique-constraint race) — exception_code='AKA_CREATE_RACE'
 
-## POST /inventory/update-aka
+## POST /inventory/update-aka/dummy
 
 Request: Item #, customer#, mfg#, updateAkaDetails{...}, line_item_id Response: 200, updated Header + akaDetails[] aka_records (update in place, same row, matched by business key)
 
@@ -408,7 +408,7 @@ system
 
 —
 
-## POST /inventory/get-pricebreaks
+## POST /inventory/get-pricebreaks/dummy
 
 Request: `Item #`, `customer#`, `mfg#`, line_item_id (payload keys; map to evco_part_number/customer_number/manufacturing_bom_number below) Response: [{ unit_price, quantity, comment }] pricing_results (upsert, key = line_item_id)
 
@@ -457,7 +457,7 @@ exception_logs (new row, only if nothing found at requested quantity) —
 
 exception_code='PRICE_NOT_FOUND'
 
-## POST /inventory/add-pricebreak
+## POST /inventory/add-pricebreak/dummy
 
 Request: quantity, price, effective_date, `Item #`, `customer#`, `mfg#`, currency, source_quote_number, processing_id, line_item_id (payload keys; map to evco_part_number/customer_number/manufacturing_bom_number below)
 
@@ -504,7 +504,7 @@ system
 
 exception_logs (new row, only on unique-constraint race) — exception_code='PRICE_CREATE_RACE'
 
-## POST /inventory/update-pricebreak
+## POST /inventory/update-pricebreak/dummy
 
 Request: quantity, price, effective_date, inactive_date, `Item #`, `customer#`, `mfg#`, currency, source_quote_number, processing_id, line_item_id (payload keys; map to evco_part_number/customer_number/manufacturing_bom_number below) pricing_history — two rows written in one transaction:
 

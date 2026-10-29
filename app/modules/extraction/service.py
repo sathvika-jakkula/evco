@@ -188,7 +188,7 @@ class ExtractionService:
                     category=ErrorCategory.TECHNICAL,
                     status_code=500,
                     retryable=True,
-                    details={"file_name": file_path.name},
+                    details={"file_name": file_path.name, "processing_id": str(processing_id)},
                 ).model_dump(mode="json")
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     await client.post(callback_url, json=err_payload)

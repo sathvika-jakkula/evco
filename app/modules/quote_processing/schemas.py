@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 from enum import Enum
 from typing import Optional
 from uuid import UUID
@@ -60,3 +61,51 @@ class MoveQuoteFileResponseData(BaseModel):
     source_path: str
     destination_path: str
     moved: bool
+
+
+# --- Record review rows (one call per line and review area) ---
+class ReviewArea(str, Enum):
+    AKA = "AKA"
+    PRICING = "PRICING"
+    SALES_ORDER = "SALES_ORDER"
+
+
+class ReviewRowStatus(str, Enum):
+    UPDATE_REQUIRED = "UPDATE_REQUIRED"
+    NO_ACTION = "NO_ACTION"
+    NOT_VERIFIABLE = "NOT_VERIFIABLE"
+
+
+class ReviewRowInput(BaseModel):
+    rule_code: str = Field(..., min_length=1)
+    check: str = Field(..., min_length=1)
+    status: ReviewRowStatus
+    message: str = Field(..., min_length=1)
+    field: Optional[str] = None
+    record_ref: Optional[str] = None
+    sales_order_id: Optional[str] = None
+    sales_order_detail_id: Optional[str] = None
+    release_id: Optional[str] = None
+    quote_value: Optional[str] = None
+    system_value: Optional[str] = None
+    proposed_value: Optional[str] = None
+    exception_id: Optional[UUID] = None
+
+
+class RecordReviewRowsRequest(BaseModel):
+    processing_id: UUID
+    line_item_id: UUID
+    review_area: ReviewArea
+    quote_number: str = Field(..., min_length=1)
+    line_number: Optional[str] = None
+    evco_part_number: Optional[str] = None
+    mold_number: Optional[str] = None
+    manufacturing_bom_number: Optional[str] = None
+    customer_number: Optional[str] = None
+    rows: List[ReviewRowInput] = Field(default_factory=list, max_length=200)
+
+
+class RecordReviewRowsData(BaseModel):
+    rows_stored: int
+    rows_replaced: int
+    review_row_ids: List[UUID]

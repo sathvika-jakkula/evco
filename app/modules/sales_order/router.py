@@ -2,6 +2,8 @@ from fastapi import APIRouter, Response, status
 
 from app.modules.inventory.schemas import StandardInventoryResponse
 from app.modules.sales_order.schemas import (
+    GetSalesOrderLinesRequest,
+    SalesOrderLinesData,
     GetSalesOrderDetailsRequest,
     GetSalesOrderReleasesRequest,
     GetSalesOrdersRequest,
@@ -74,7 +76,7 @@ def get_sales_order_releases(payload: GetSalesOrderReleasesRequest, response: Re
 
 
 @router.post(
-    "/update-sales-order-details",
+    "/update-sales-order-details/dummy",
     response_model=StandardInventoryResponse[UpdateSalesOrderDetailsResponse],
     summary="Update Sales Order Details",
     description="Update price, on_hold, and ship_hold flags for a sales order detail line.",
@@ -93,4 +95,24 @@ def update_sales_order_details(payload: UpdateSalesOrderDetailsRequest, response
         statusCode=200,
         message="Sales order details updated successfully",
         data=result,
+    )
+
+
+@router.post(
+    "/get-sales-order-lines",
+    response_model=StandardInventoryResponse[SalesOrderLinesData],
+    summary="Get Sales Order Lines",
+    description=(
+        "All sales order lines for an evco_part_number, across all customers and statuses, each with "
+        "its detail and releases nested. Retrieval only. Returns 200 with lines: [] when there are none."
+    ),
+    status_code=status.HTTP_200_OK,
+)
+def get_sales_order_lines(payload: GetSalesOrderLinesRequest, response: Response):
+    lines = sales_order_service.get_sales_order_lines(item_number=payload.item_number)
+    response.status_code = status.HTTP_200_OK
+    return StandardInventoryResponse(
+        statusCode=200,
+        message="Sales order lines retrieved successfully",
+        data=SalesOrderLinesData(lines=lines),
     )

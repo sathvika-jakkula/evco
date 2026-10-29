@@ -1,9 +1,16 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.core.config import settings
 from app.core.security import validate_access_token
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def use_dummy_aka_data(monkeypatch):
+    """These tests pin the dummy AKA seed contract, so they run against the fixture data source, not the live WebAPI."""
+    monkeypatch.setattr(settings, "IQMS_DATA_SOURCE", "fixture")
 
 
 @pytest.fixture(autouse=True)
@@ -43,14 +50,15 @@ def test_get_aka_known_and_unseeded(legacy):
     assert data["data"]["header"]["evco_part_number"] == "9480026"
     detail = data["data"]["aka_details"][0]
     assert detail["customer_number"] == "10329"
-    assert detail["manufacturing_bom_number"] == "6601/9480026-CHIMEI"
+    assert "manufacturing_bom_number" not in detail  # not in the WebAPI, omitted from the response
     assert detail["customer_part_number"] == "38795"
 
     # 2. Unseeded combination returns 404 (no dynamic-fallback placeholder).
     unseeded = {"evco_part_number": "9480026", "customer_number": "99999", "manufacturing_bom_number": "DOES-NOT-EXIST"}
     response2 = client.post("/inventory/get-aka", json=unseeded)
-    assert response2.status_code == 404
-    assert response2.json()["error"]["code"] == "AKA_RECORD_NOT_FOUND"
+    assert response2.status_code == 200  # business outcome, not an error
+    assert response2.json()["data"]["header"] is None
+    assert response2.json()["data"]["aka_details"] == []
 
 
 def test_create_aka_success_and_duplicate():
@@ -72,7 +80,7 @@ def test_create_aka_success_and_duplicate():
     }
 
     # 1. Create AKA record
-    response = client.post("/inventory/create-aka", json=create_payload)
+    response = client.post("/inventory/create-aka/dummy", json=create_payload)
     assert response.status_code == 201
     data = response.json()
     assert data["statusCode"] == 201
@@ -87,7 +95,7 @@ def test_create_aka_success_and_duplicate():
     assert detail["manufacturing_bom_number"] == "MFG-NEW-100"
 
     # 2. Duplicate creation attempt (same Item #/customer#/mfg#) returns 409
-    dup_res = client.post("/inventory/create-aka", json=create_payload)
+    dup_res = client.post("/inventory/create-aka/dummy", json=create_payload)
     assert dup_res.status_code == 409
     assert dup_res.json()["statusCode"] == 409
 
@@ -103,7 +111,7 @@ def test_update_aka_known_and_unseeded():
             "moq": 999,
         },
     }
-    response = client.post("/inventory/update-aka", json=update_payload)
+    response = client.post("/inventory/update-aka/dummy", json=update_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["statusCode"] == 200
@@ -120,6 +128,6 @@ def test_update_aka_known_and_unseeded():
         "manufacturing_bom_number": "MFG-ARB-555",
         "update_aka_details": {"moq": 99},
     }
-    response2 = client.post("/inventory/update-aka", json=unseeded_update)
+    response2 = client.post("/inventory/update-aka/dummy", json=unseeded_update)
     assert response2.status_code == 404
     assert response2.json()["error"]["code"] == "AKA_RECORD_NOT_FOUND"

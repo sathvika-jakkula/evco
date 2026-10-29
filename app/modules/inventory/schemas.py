@@ -55,7 +55,6 @@ class GetAkaRequest(BaseModel):
 
     item_number: str = Field(..., alias="evco_part_number", validation_alias=AliasChoices("evco_part_number", "Item #"))
     customer_number: str = Field(..., alias="customer_number", validation_alias=AliasChoices("customer_number", "customer#"))
-    manufacturing_bom_number: str = Field(..., alias="manufacturing_bom_number", validation_alias=AliasChoices("manufacturing_bom_number", "mfg#"))
     line_item_id: Optional[UUID] = Field(
         default=None, description="quote_line_items row that triggered this lookup, for traceability"
     )
@@ -147,3 +146,28 @@ class AkaSearchResponse(BaseModel):
 
     header: AkaHeaderResponse
     aka_details: List[AkaDetailResponse]
+
+
+# --- Get AKA response from the IQMS WebAPI --------------------------------
+# Only the fields the WebAPI returns. Fields it does not return (currency, BOM
+# number, MOQ, selling multiple, mold number) are not part of this shape, and
+# any field with no value is left out of the JSON (response_model_exclude_none).
+
+class AkaLiveHeader(BaseModel):
+    evco_part_number: str
+    rev: Optional[str] = None
+    part_description: Optional[str] = None
+
+
+class AkaLiveDetail(BaseModel):
+    customer_part_number: str
+    part_description: Optional[str] = None
+    rev: Optional[str] = None
+    customer_number: str
+    customer_name: Optional[str] = None
+    ship_to_attn: Optional[str] = None
+
+
+class AkaLiveSearchData(BaseModel):
+    header: Optional[AkaLiveHeader] = None
+    aka_details: List[AkaLiveDetail]

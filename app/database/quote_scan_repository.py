@@ -38,6 +38,18 @@ class QuoteScanRepository:
             row = cursor.fetchone()
             return row[0] if row else None
 
+    def get_processing_ids_for_scans(self, scan_ids: list[UUID]) -> list[UUID]:
+        """Every processing_id whose quote came from one of the given scans, in scan-file order."""
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                """SELECT qp.processing_id FROM quote_processing qp
+                   JOIN quote_scan_files qsf ON qsf.scan_file_id = qp.scan_file_id
+                   WHERE qsf.scan_id = ANY(%s)
+                   ORDER BY qsf.created_at, qp.created_at""",
+                (list(scan_ids),),
+            )
+            return [row[0] for row in cursor.fetchall()]
+
     def mark_file_moved(self, filename: str) -> None:
         """Advances file_status to MOVED for a scanned file once move-quote-file has relocated
         it - no scan_id is available at that call site, so this targets whichever row(s) for

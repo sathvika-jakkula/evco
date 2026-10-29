@@ -45,6 +45,15 @@ class Settings:
     IQMS_PASSWORD: str = os.getenv("IQMS_PASSWORD", "Airwaves8#")
     IQMS_AUTH_TOKEN: str = os.getenv("IQMS_AUTH_TOKEN", "")
 
+    # "live" (default) = read endpoints call the IQMS WebAPI.
+    # "fixture" = read endpoints serve the local dummy data in evco_test_data/mock_data.
+    # Create/update endpoints have no WebAPI counterpart and always stay dummy.
+    IQMS_DATA_SOURCE: str = os.getenv("IQMS_DATA_SOURCE", "live").strip().lower()
+
+    @property
+    def IQMS_USE_FIXTURES(self) -> bool:
+        return self.IQMS_DATA_SOURCE == "fixture"
+
     # IBM App ID Configuration
     APPID_REGION: str = os.getenv("APPID_REGION", "us-south").strip()
     APPID_REQUIRED_SCOPE: str = os.getenv("APPID_REQUIRED_SCOPE", os.getenv("scopes", "appid_default")).strip()

@@ -10,11 +10,33 @@ check exists for either in this codebase, so the API never claims one.
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+from pydantic_core import PydanticCustomError
 
 
 class QuoteSummaryRequest(BaseModel):
     processing_id: UUID = Field(..., description="processing_id from a prior /api/extract-quote call")
+
+
+class ClientReportSource(BaseModel):
+    scan_ids: List[UUID] = Field(
+        default_factory=list,
+        description="Scan run(s). Every quote processed from these scans is included.",
+    )
+    processing_ids: List[UUID] = Field(
+        default_factory=list,
+        description="processing_id(s) to include, in addition to any from scan_ids. One sheet per quote.",
+    )
+
+    @model_validator(mode="after")
+    def _needs_a_source(self):
+        if not self.scan_ids and not self.processing_ids:
+            raise PydanticCustomError("missing_report_source", "Provide scan_ids, processing_ids, or both")
+        return self
+
+
+class ClientReportRequest(ClientReportSource):
+    pass
 
 
 class AkaResolution(BaseModel):
@@ -73,6 +95,31 @@ class LineItemSummary(BaseModel):
     exception_details: List[ExceptionDetail] = Field(default_factory=list)
 
 
+class ReviewRowEntry(BaseModel):
+    review_row_id: UUID
+    line_item_id: UUID
+    line_number: Optional[int] = None
+    review_area: str
+    evco_part_number: Optional[str] = None
+    mold_number: Optional[str] = None
+    manufacturing_bom_number: Optional[str] = None
+    customer_number: Optional[str] = None
+    created_at: datetime
+    rule_code: str
+    check: str
+    status: str
+    message: str
+    field: Optional[str] = None
+    record_ref: Optional[str] = None
+    sales_order_id: Optional[str] = None
+    sales_order_detail_id: Optional[str] = None
+    release_id: Optional[str] = None
+    quote_value: Optional[str] = None
+    system_value: Optional[str] = None
+    proposed_value: Optional[str] = None
+    exception_id: Optional[UUID] = None
+
+
 class QuoteSummaryData(BaseModel):
     processing_id: UUID
     scan_id: Optional[int] = Field(None, description="The scan that picked up this file")
@@ -90,3 +137,4 @@ class QuoteSummaryData(BaseModel):
     exception_count: int = 0
     quote_exceptions: List[ExceptionDetail] = Field(default_factory=list)
     line_items: List[LineItemSummary] = Field(default_factory=list)
+    review_rows: List[ReviewRowEntry] = Field(default_factory=list, description="Rows stored by the review agents, sorted by line then area (AKA, PRICING, SALES_ORDER)")
