@@ -346,9 +346,10 @@ def test_workbook_has_summary_and_one_sheet_per_quote():
     assert workbook.sheetnames == ["Summary", "SAMPLE-Q-001"]
 
     summary = workbook["Summary"]
-    assert summary["A1"].value == "EVCO quote review: summary"
-    assert [summary.cell(row=4, column=c).value for c in range(1, 6)] == [
-        "Quote no.", "Sheet", "Total rows", "Update required", "No action",
+    assert summary["A1"].value == "EVCO Quote Review: Summary"
+    assert [summary.cell(row=4, column=c).value for c in range(1, 8)] == [
+        "Quote No.", "Link to Worksheet", "Total Lines", "Business Rule Violations",
+        "Support Action Required", "Processing Start Date", "Duration (In Minutes)",
     ]
     assert summary["A5"].value == "SAMPLE-Q-001"
     assert summary["B5"].hyperlink.location == "'SAMPLE-Q-001'!A1"
@@ -357,12 +358,12 @@ def test_workbook_has_summary_and_one_sheet_per_quote():
     quote = workbook["SAMPLE-Q-001"]
     assert quote["A1"].value == "Quote"
     assert [quote.cell(row=4, column=c).value for c in range(1, 11)] == [
-        "Line #", "EVCO part no.", "Customer P/N", "Category", "Rule", "Field",
-        "Current value", "Proposed value", "Status", "Comments",
+        "Line #", "EVCO part no.", "Customer P/N", "Category", "Business Rule", "Field",
+        "Value in IQMS", "Value to be/was applied to IQMS", "Status", "Comments",
     ]
     assert quote.freeze_panes == "A5"
-    assert quote["I5"].value == UPDATE
-    assert quote["J5"].value == "AKA_NOT_FOUND; AKA_WRITE_GAP"
+    assert quote["I5"].value == "Updated"
+    assert quote["J5"].value == "Blocked by IQMS"
 
 
 def test_sheet_names_are_legal_unique_and_short():

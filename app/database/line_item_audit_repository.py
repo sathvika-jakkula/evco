@@ -241,3 +241,16 @@ class LineItemAuditRepository:
                     "created_time": exc_dict.get("created_at").isoformat() if exc_dict.get("created_at") else None,
                 })
             return exceptions
+
+    def get_processing_timing(self, processing_id: UUID) -> tuple[datetime | None, float | None]:
+        """Processing start time and duration in minutes, from the quote_processing row."""
+        with self.connection.connect() as db, db.cursor() as cursor:
+            cursor.execute(
+                "SELECT created_at, processing_duration_ms FROM quote_processing WHERE processing_id = %s",
+                (processing_id,),
+            )
+            row = cursor.fetchone()
+        if row is None:
+            return None, None
+        started, duration_ms = row
+        return started, (round(duration_ms / 60000, 2) if duration_ms is not None else None)

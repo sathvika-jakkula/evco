@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, Set
 from app.modules.reporting.schemas import LineItemSummary, QuoteSummaryData
 
 UPDATE = "Update"
+NOT_VERIFIABLE = "NOT_VERIFIABLE"
 NO_ACTION = "No action"
 NOT_READABLE = "Not readable"
 BLANK = "(blank)"
@@ -88,6 +89,8 @@ class QuoteReport:
     customer_number: str
     rows: List[ReportRow] = field(default_factory=list)
     quote_level_notes: List[str] = field(default_factory=list)
+    processing_start: Optional[datetime] = None
+    duration_minutes: Optional[float] = None
 
     @property
     def total_rows(self) -> int:
@@ -245,3 +248,90 @@ def _price(value: float) -> str:
     text = f"{value:.4f}".rstrip("0")
     decimals = text.split(".")[1] if "." in text else ""
     return text + "0" * (2 - len(decimals)) if len(decimals) < 2 else text
+
+
+BLOCKED_BY_IQMS = "Blocked by IQMS"
+BLOCKED_CODE_MARKER = "WRITE_GAP"
+
+
+def display_status(row: "ReportRow") -> str:
+    """Status shown in the workbook: Updated, Exception or No action."""
+    if row.status == NOT_VERIFIABLE or row.rule.startswith("EX-") or row.category == "Other":
+        # "Other" rows come from exception log entries, not from a rule that changes IQMS.
+        return "Exception"
+    return "Updated" if row.status == UPDATE else NO_ACTION
+
+
+def is_blocked_by_iqms(row: "ReportRow") -> bool:
+    """True when the change needs an IQMS write the WebAPI cannot make."""
+    return BLOCKED_CODE_MARKER in row.comments
+
+
+API_NAME_RE = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")
+
+
+def _readable_comment(text: str) -> str:
+    """Comment text with API / system codes (for example PRICE_BREAK_WRITE_GAP) removed."""
+    parts = []
+    for piece in re.split(r"\s*[;/]\s*", text or ""):
+        cleaned = API_NAME_RE.sub("", piece).strip(" -:,")
+        if cleaned:
+            parts.append(cleaned)
+    return "; ".join(parts)
+
+
+def display_comment(row: "ReportRow") -> str:
+    """The usual comment, with 'Blocked by IQMS' appended where it applies. No API codes."""
+    readable = _readable_comment(row.comments)
+    if not is_blocked_by_iqms(row):
+        return readable
+    return f"{readable}; {BLOCKED_BY_IQMS}" if readable else BLOCKED_BY_IQMS
+
+
+def count_business_rule_violations(report: "QuoteReport") -> int:
+    """Rows that need a change in IQMS, including exceptions."""
+    return sum(1 for row in report.rows if display_status(row) in ("Updated", "Exception"))
+
+
+def count_support_action_required(report: "QuoteReport") -> int:
+    """Exception rows that a person must handle, because IQMS cannot be updated by the API."""
+    return sum(1 for row in report.rows if display_status(row) == "Exception" and not is_blocked_by_iqms(row))
+
+
+# Review areas written by the review agents -> workbook category, and the comment code
+# that marks an IQMS write the WebAPI cannot make (so the row is "Blocked by IQMS").
+REVIEW_AREA_CATEGORY = {"AKA": "Inventory", "PRICING": "Pricing", "SALES_ORDER": "Sales Order"}
+REVIEW_AREA_WRITE_GAP = {"AKA": "AKA_WRITE_GAP", "PRICING": "PRICE_BREAK_WRITE_GAP", "SALES_ORDER": "SO_PRICE_WRITE_GAP"}
+
+
+def rows_from_review_rows(entries, line_items) -> List["ReportRow"]:
+    """Workbook rows built from the rows the review agents stored for this quote."""
+    customer_part = {str(li.line_item_id): li.customer_part_number or "" for li in line_items}
+    rows: List[ReportRow] = []
+    for entry in entries:
+        area = entry.review_area
+        if entry.status == "UPDATE_REQUIRED":
+            status = UPDATE
+            # Exception rules (EX-) need a person, so they are not marked as an IQMS write gap.
+            comment = "" if (entry.rule_code or "").startswith("EX-") else REVIEW_AREA_WRITE_GAP.get(area, "")
+        elif entry.status == "NO_ACTION":
+            status = NO_ACTION
+            comment = ""
+        else:  # NOT_VERIFIABLE: the agent could not verify it, a person must check
+            status = NOT_VERIFIABLE
+            comment = ""
+        message = entry.message or ""
+        comments = "; ".join(part for part in (message, comment) if part)
+        rows.append(ReportRow(
+            line_number=entry.line_number,
+            evco_part_number=entry.evco_part_number or "",
+            customer_part_number=customer_part.get(str(entry.line_item_id), ""),
+            category=REVIEW_AREA_CATEGORY.get(area, "Other"),
+            rule=entry.rule_code or "",
+            field=entry.field or entry.check,
+            current_value=entry.system_value or "",
+            proposed_value=entry.proposed_value or "",
+            status=status,
+            comments=comments,
+        ))
+    return rows

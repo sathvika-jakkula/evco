@@ -35,6 +35,13 @@ class Settings:
     SMTP_USER: str = os.getenv("SMTP_USER", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
 
+    # Client review workbooks: when CLIENT_REPORT_SAVE_ENABLED=true, every workbook that is
+    # generated is also saved into CLIENT_REPORT_SAVE_DIR (created if missing).
+    CLIENT_REPORT_SAVE_ENABLED: bool = os.getenv("CLIENT_REPORT_SAVE_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+    CLIENT_REPORT_SAVE_DIR: str = os.getenv(
+        "CLIENT_REPORT_SAVE_DIR", str(Path.home() / "Documents" / "EVCO_Client_Reports")
+    )
+
     # PostgreSQL quote-processing database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
 

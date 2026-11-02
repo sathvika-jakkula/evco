@@ -7,11 +7,14 @@ the report itself.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
+from app.core.config import settings
 from app.core.exceptions import BusinessException
 from app.database.aka_resolution_repository import AkaResolutionRepository
 from app.database.line_item_audit_repository import LineItemAuditRepository
@@ -20,7 +23,7 @@ from app.database.pricing_resolution_repository import PricingResolutionReposito
 from app.database.quote_scan_repository import QuoteScanRepository
 from app.database.review_row_repository import ReviewRowRepository
 from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
-from app.modules.reporting.client_report import build_quote_report
+from app.modules.reporting.client_report import build_quote_report, rows_from_review_rows
 from app.modules.reporting.client_workbook import build_client_workbook_with_sheets
 from app.modules.reporting.schemas import (
     ClientReportSource,
@@ -33,6 +36,25 @@ from app.modules.reporting.schemas import (
     SalesOrderFact,
     SalesOrderResolution,
 )
+
+
+logger = logging.getLogger(__name__)
+
+
+def save_client_report_copy(content: bytes, file_name: str) -> Optional[Path]:
+    """Save a copy of a generated workbook into CLIENT_REPORT_SAVE_DIR, named with a timestamp.
+    A failure to save is logged and never fails the report."""
+    try:
+        folder = Path(settings.CLIENT_REPORT_SAVE_DIR)
+        folder.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+        path = folder / f"{stamp}_{file_name}"
+        path.write_bytes(content)
+        logger.info("Saved client review workbook to %s", path)
+        return path
+    except Exception as exc:
+        logger.warning("Could not save client review workbook to %s: %s", settings.CLIENT_REPORT_SAVE_DIR, exc)
+        return None
 
 
 DEFAULT_REPORT_FILE_NAME = "EVCO_Review_Per_Quote.xlsx"
@@ -74,8 +96,19 @@ class ReportingService:
     def build_client_report(self, source: ClientReportSource, file_name: str = DEFAULT_REPORT_FILE_NAME) -> "ClientReportFile":
         """Client review workbook for the scans and/or quotes in source."""
         processing_ids = self.resolve_processing_ids(source)
-        reports = [build_quote_report(self.get_quote_summary(pid)) for pid in processing_ids]
+        reports = []
+        for pid in processing_ids:
+            summary = self.get_quote_summary(pid)
+            report = build_quote_report(summary)
+            if summary.review_rows:
+                report.rows = rows_from_review_rows(summary.review_rows, summary.line_items)
+            report.processing_start, report.duration_minutes = (
+                self.line_item_audit_repository.get_processing_timing(pid)
+            )
+            reports.append(report)
         content, sheet_names = build_client_workbook_with_sheets(reports)
+        if settings.CLIENT_REPORT_SAVE_ENABLED:
+            save_client_report_copy(content, file_name)
         return ClientReportFile(
             file_name=file_name,
             content=content,
