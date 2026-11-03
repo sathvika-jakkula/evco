@@ -17,12 +17,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
 
 from app.modules.reporting.schemas import LineItemSummary, QuoteSummaryData
 
 UPDATE = "Update"
 NOT_VERIFIABLE = "NOT_VERIFIABLE"
+NOT_VERIFIABLE_LABEL = "Not verifiable"
 NO_ACTION = "No action"
 NOT_READABLE = "Not readable"
 BLANK = "(blank)"
@@ -255,8 +257,10 @@ BLOCKED_CODE_MARKER = "WRITE_GAP"
 
 
 def display_status(row: "ReportRow") -> str:
-    """Status shown in the workbook: Updated, Exception or No action."""
-    if row.status == NOT_VERIFIABLE or row.rule.startswith("EX-") or row.category == "Other":
+    """Status shown in the workbook: Updated, Exception, Not verifiable or No action."""
+    if row.status == NOT_VERIFIABLE:
+        return NOT_VERIFIABLE_LABEL
+    if row.rule.startswith("EX-") or row.category == "Other":
         # "Other" rows come from exception log entries, not from a rule that changes IQMS.
         return "Exception"
     return "Updated" if row.status == UPDATE else NO_ACTION
@@ -290,12 +294,15 @@ def display_comment(row: "ReportRow") -> str:
 
 def count_business_rule_violations(report: "QuoteReport") -> int:
     """Rows that need a change in IQMS, including exceptions."""
-    return sum(1 for row in report.rows if display_status(row) in ("Updated", "Exception"))
+    return sum(1 for row in report.rows if display_status(row) in ("Updated", "Exception", NOT_VERIFIABLE_LABEL))
 
 
 def count_support_action_required(report: "QuoteReport") -> int:
     """Exception rows that a person must handle, because IQMS cannot be updated by the API."""
-    return sum(1 for row in report.rows if display_status(row) == "Exception" and not is_blocked_by_iqms(row))
+    return sum(
+        1 for row in report.rows
+        if display_status(row) in ("Exception", NOT_VERIFIABLE_LABEL) and not is_blocked_by_iqms(row)
+    )
 
 
 # Review areas written by the review agents -> workbook category, and the comment code
@@ -304,13 +311,25 @@ REVIEW_AREA_CATEGORY = {"AKA": "Inventory", "PRICING": "Pricing", "SALES_ORDER":
 REVIEW_AREA_WRITE_GAP = {"AKA": "AKA_WRITE_GAP", "PRICING": "PRICE_BREAK_WRITE_GAP", "SALES_ORDER": "SO_PRICE_WRITE_GAP"}
 
 
-def rows_from_review_rows(entries, line_items) -> List["ReportRow"]:
+def rows_from_review_rows(entries, line_items, customer_name: str = "", customer_number: str = "") -> List["ReportRow"]:
     """Workbook rows built from the rows the review agents stored for this quote."""
     customer_part = {str(li.line_item_id): li.customer_part_number or "" for li in line_items}
+    customer_info = " ".join(part for part in (customer_name, f"({customer_number})" if customer_number else "") if part)
     rows: List[ReportRow] = []
     for entry in entries:
         area = entry.review_area
-        if entry.status == "UPDATE_REQUIRED":
+        message = entry.message or ""
+        if (entry.rule_code or "") == "EX-004":
+            # Part is not set up for this customer: a person must check or create it, so it is
+            # not verifiable, and the comment says which customer and customer part number.
+            status = NOT_VERIFIABLE
+            customer_part_number = customer_part.get(str(entry.line_item_id), "")
+            scope = f"customer {customer_info}" if customer_info else "customer"
+            if customer_part_number:
+                scope += f", customer part {customer_part_number}"
+            message = "; ".join(part for part in (message, f"part not set up for {scope}") if part)
+            comment = ""
+        elif entry.status == "UPDATE_REQUIRED":
             status = UPDATE
             # Exception rules (EX-) need a person, so they are not marked as an IQMS write gap.
             comment = "" if (entry.rule_code or "").startswith("EX-") else REVIEW_AREA_WRITE_GAP.get(area, "")
@@ -320,7 +339,6 @@ def rows_from_review_rows(entries, line_items) -> List["ReportRow"]:
         else:  # NOT_VERIFIABLE: the agent could not verify it, a person must check
             status = NOT_VERIFIABLE
             comment = ""
-        message = entry.message or ""
         comments = "; ".join(part for part in (message, comment) if part)
         rows.append(ReportRow(
             line_number=entry.line_number,

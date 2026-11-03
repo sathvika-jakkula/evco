@@ -101,7 +101,10 @@ class ReportingService:
             summary = self.get_quote_summary(pid)
             report = build_quote_report(summary)
             if summary.review_rows:
-                report.rows = rows_from_review_rows(summary.review_rows, summary.line_items)
+                report.rows = rows_from_review_rows(
+                    summary.review_rows, summary.line_items,
+                    customer_name=summary.customer_name or "", customer_number=summary.ar_cust_id or "",
+                )
             report.processing_start, report.duration_minutes = (
                 self.line_item_audit_repository.get_processing_timing(pid)
             )

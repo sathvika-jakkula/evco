@@ -102,7 +102,11 @@ def _write_summary(sheet, reports: List[QuoteReport], sheet_names: List[str]) ->
         sheet.cell(row=row, column=3, value=report.total_rows)
         sheet.cell(row=row, column=4, value=count_business_rule_violations(report))
         sheet.cell(row=row, column=5, value=count_support_action_required(report))
-        start = sheet.cell(row=row, column=6, value=report.processing_start)
+        started = report.processing_start
+        if started is not None and started.tzinfo is not None:
+            # Excel cannot store timezone-aware datetimes; created_at is TIMESTAMPTZ.
+            started = started.astimezone().replace(tzinfo=None)
+        start = sheet.cell(row=row, column=6, value=started)
         start.number_format = "yyyy-mm-dd hh:mm"
         duration = sheet.cell(row=row, column=7, value=report.duration_minutes)
         duration.number_format = "0.00"
