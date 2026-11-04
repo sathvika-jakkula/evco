@@ -39,6 +39,8 @@ class NotificationService:
         results: List[NotificationRecipientResult] = []
         sender = settings.SMTP_USER
         password = settings.SMTP_PASSWORD
+        # CC addresses that are not already a 'to' recipient, without duplicates.
+        cc = [address for address in dict.fromkeys(req.cc) if address not in req.to]
 
         # Build the workbook before connecting to SMTP. If it fails, nothing is sent.
         attachment: Optional[ClientReportFile] = None
@@ -56,14 +58,8 @@ class NotificationService:
         if not sender or not password:
             logger.error("SMTP_USER or SMTP_PASSWORD not configured in environment")
             sent_time = datetime.now(timezone.utc)
-            for recipient in req.to:
-                results.append(NotificationRecipientResult(
-                    notification_id=self._log(req, recipient, "FAILED", sent_time),
-                    recipient=recipient,
-                    delivery_status="FAILED",
-                    sent_time=sent_time,
-                    error="SMTP credentials not configured on server (SMTP_USER / SMTP_PASSWORD)",
-                ))
+            results.extend(self._fail_all(req, cc, sent_time,
+                                          "SMTP credentials not configured on server (SMTP_USER / SMTP_PASSWORD)"))
             return SendNotificationResponseData(subject=req.subject, delivery_status="FAILED", recipients=results,
                                                 attachments=attachments)
 
@@ -71,22 +67,18 @@ class NotificationService:
             with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
                 server.starttls()
                 server.login(sender, password)
-                for recipient in req.to:
-                    results.append(self._send_one(server, req, sender, recipient, attachment))
+                if cc:
+                    results.extend(self._send_group(server, req, sender, cc, attachment))
+                else:
+                    for recipient in req.to:
+                        results.append(self._send_one(server, req, sender, recipient, attachment))
         except Exception as connect_exc:
             # Could not even connect/authenticate to the SMTP server - log a
             # FAILED row per intended recipient so the failure is still auditable.
             logger.error("Failed to connect/authenticate to SMTP server %s:%s: %s",
                          settings.SMTP_HOST, settings.SMTP_PORT, connect_exc)
             sent_time = datetime.now(timezone.utc)
-            for recipient in req.to:
-                results.append(NotificationRecipientResult(
-                    notification_id=self._log(req, recipient, "FAILED", sent_time),
-                    recipient=recipient,
-                    delivery_status="FAILED",
-                    sent_time=sent_time,
-                    error=str(connect_exc),
-                ))
+            results.extend(self._fail_all(req, cc, sent_time, str(connect_exc)))
 
         statuses = {result.delivery_status for result in results}
         if statuses == {"SENT"}:
@@ -99,13 +91,16 @@ class NotificationService:
         return SendNotificationResponseData(subject=req.subject, delivery_status=overall, recipients=results,
                                             attachments=attachments)
 
-    def _send_one(
-        self, server: smtplib.SMTP, req: SendNotificationRequest, sender: str, recipient: str,
-        attachment: Optional[ClientReportFile] = None,
-    ) -> NotificationRecipientResult:
+    @staticmethod
+    def _build_message(
+        req: SendNotificationRequest, sender: str, to_header: str, cc_header: Optional[str],
+        attachment: Optional[ClientReportFile],
+    ) -> EmailMessage:
         message = EmailMessage()
         message["From"] = sender
-        message["To"] = recipient
+        message["To"] = to_header
+        if cc_header:
+            message["Cc"] = cc_header
         message["Subject"] = req.subject
         message.set_content(req.body, subtype=req.content_type.split("/")[1])
         if attachment is not None:
@@ -115,6 +110,57 @@ class NotificationService:
                 subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 filename=attachment.file_name,
             )
+        return message
+
+    def _fail_all(
+        self, req: SendNotificationRequest, cc: List[str], sent_time: datetime, error: str,
+    ) -> List[NotificationRecipientResult]:
+        """A FAILED row for every 'to' and 'cc' recipient, so nothing is silently dropped."""
+        failed = [(recipient, "TO") for recipient in req.to] + [(recipient, "CC") for recipient in cc]
+        return [
+            NotificationRecipientResult(
+                notification_id=self._log(req, recipient, "FAILED", sent_time),
+                recipient=recipient,
+                role=role,
+                delivery_status="FAILED",
+                sent_time=sent_time,
+                error=error,
+            )
+            for recipient, role in failed
+        ]
+
+    def _send_group(
+        self, server: smtplib.SMTP, req: SendNotificationRequest, sender: str, cc: List[str],
+        attachment: Optional[ClientReportFile] = None,
+    ) -> List[NotificationRecipientResult]:
+        """One email to all 'to' addresses with 'cc' in the Cc header. Each address gets one copy."""
+        message = self._build_message(req, sender, ", ".join(req.to), ", ".join(cc), attachment)
+        sent_time = datetime.now(timezone.utc)
+        try:
+            server.send_message(message)
+            delivery_status, error = "SENT", None
+        except Exception as send_exc:
+            logger.error("Failed to send notification to %s (cc %s): %s", req.to, cc, send_exc)
+            delivery_status, error = "FAILED", str(send_exc)
+
+        sent = [(recipient, "TO") for recipient in req.to] + [(recipient, "CC") for recipient in cc]
+        return [
+            NotificationRecipientResult(
+                notification_id=self._log(req, recipient, delivery_status, sent_time),
+                recipient=recipient,
+                role=role,
+                delivery_status=delivery_status,
+                sent_time=sent_time,
+                error=error,
+            )
+            for recipient, role in sent
+        ]
+
+    def _send_one(
+        self, server: smtplib.SMTP, req: SendNotificationRequest, sender: str, recipient: str,
+        attachment: Optional[ClientReportFile] = None,
+    ) -> NotificationRecipientResult:
+        message = self._build_message(req, sender, recipient, None, attachment)
 
         sent_time = datetime.now(timezone.utc)
         try:

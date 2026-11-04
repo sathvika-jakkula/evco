@@ -177,3 +177,72 @@ def test_unsupported_email_content_type_rejected(standalone):
         })
         assert response.status_code == expected_status
         smtp.assert_not_called()
+
+
+def _cc_request(**overrides):
+    payload = {
+        "to": ["a@example.com", "b@example.com"],
+        "cc": ["c@example.com"],
+        "subject": "Quote processed",
+        "body": "Your quote has been processed successfully.",
+    }
+    payload.update(overrides)
+    return SendNotificationRequest(**payload)
+
+
+def test_cc_sends_one_message_with_cc_header_and_logs_cc_rows():
+    fake_repo = MagicMock()
+    fake_repo.log_notification.return_value = uuid4()
+    service = NotificationService(notification_repository=fake_repo)
+
+    with patch("smtplib.SMTP") as mock_smtp_cls:
+        mock_server = MagicMock()
+        mock_smtp_cls.return_value.__enter__.return_value = mock_server
+        result = service.send_email(_cc_request())
+
+    assert result.delivery_status == "SENT"
+    # One email to all 'to' addresses, so each recipient gets a single copy.
+    assert mock_server.send_message.call_count == 1
+    sent = mock_server.send_message.call_args.args[0]
+    assert sent["To"] == "a@example.com, b@example.com"
+    assert sent["Cc"] == "c@example.com"
+    assert [(r.recipient, r.role) for r in result.recipients] == [
+        ("a@example.com", "TO"), ("b@example.com", "TO"), ("c@example.com", "CC"),
+    ]
+    assert fake_repo.log_notification.call_count == 3
+
+
+def test_cc_drops_duplicates_and_addresses_already_in_to():
+    fake_repo = MagicMock()
+    fake_repo.log_notification.return_value = uuid4()
+    service = NotificationService(notification_repository=fake_repo)
+
+    req = _cc_request(cc=["a@example.com", "c@example.com", "c@example.com"])
+    with patch("smtplib.SMTP") as mock_smtp_cls:
+        mock_server = MagicMock()
+        mock_smtp_cls.return_value.__enter__.return_value = mock_server
+        result = service.send_email(req)
+
+    sent = mock_server.send_message.call_args.args[0]
+    assert sent["Cc"] == "c@example.com"
+    assert [(r.recipient, r.role) for r in result.recipients] == [
+        ("a@example.com", "TO"), ("b@example.com", "TO"), ("c@example.com", "CC"),
+    ]
+
+
+def test_cc_send_failure_logs_failed_for_to_and_cc():
+    fake_repo = MagicMock()
+    fake_repo.log_notification.return_value = uuid4()
+    service = NotificationService(notification_repository=fake_repo)
+
+    with patch("smtplib.SMTP") as mock_smtp_cls:
+        mock_server = MagicMock()
+        mock_server.send_message.side_effect = RuntimeError("relay refused")
+        mock_smtp_cls.return_value.__enter__.return_value = mock_server
+        result = service.send_email(_cc_request())
+
+    assert result.delivery_status == "FAILED"
+    assert [(r.recipient, r.role, r.delivery_status) for r in result.recipients] == [
+        ("a@example.com", "TO", "FAILED"), ("b@example.com", "TO", "FAILED"), ("c@example.com", "CC", "FAILED"),
+    ]
+    assert all("relay refused" in r.error for r in result.recipients)

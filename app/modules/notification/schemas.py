@@ -7,6 +7,13 @@ from pydantic import BaseModel, Field
 # --- T21: Notification ---
 class SendNotificationRequest(BaseModel):
     to: List[str] = Field(..., min_length=1, description="Recipient email address(es)")
+    cc: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Optional CC email address(es). When set, one email is sent to all 'to' addresses with these "
+            "in the Cc header, so each recipient gets a single copy. Omit for one email per 'to' address."
+        ),
+    )
     subject: str = Field(..., description="Email subject")
     body: str = Field(..., description="Email body content")
     content_type: Literal["text/plain", "text/html"] = Field(
@@ -38,6 +45,7 @@ class ClientReportAttachment(BaseModel):
 class NotificationRecipientResult(BaseModel):
     notification_id: UUID
     recipient: str
+    role: str = Field(default="TO", description="'TO' or 'CC', as the address was sent")
     delivery_status: str
     sent_time: Optional[datetime] = None
     error: Optional[str] = None
