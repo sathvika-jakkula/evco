@@ -93,6 +93,8 @@ class QuoteReport:
     quote_level_notes: List[str] = field(default_factory=list)
     processing_start: Optional[datetime] = None
     duration_minutes: Optional[float] = None
+    # Lines on the quote PDF (distinct line numbers), not workbook rows.
+    total_lines: int = 0
 
     @property
     def total_rows(self) -> int:
@@ -120,6 +122,7 @@ def build_quote_report(summary: QuoteSummaryData) -> QuoteReport:
         processing_id=str(summary.processing_id),
         customer_name=summary.customer_name or "",
         customer_number=summary.ar_cust_id or "",
+        total_lines=len({li.line_number for li in summary.line_items if li.line_number is not None}),
         rows=rows,
         quote_level_notes=notes,
     )
@@ -260,6 +263,9 @@ def display_status(row: "ReportRow") -> str:
     """Status shown in the workbook: Updated, Exception, Not verifiable or No action."""
     if row.status == NOT_VERIFIABLE:
         return NOT_VERIFIABLE_LABEL
+    if row.rule == "EX-004" and row.status == UPDATE:
+        # Part missing for the customer: the agent marks it UPDATE_REQUIRED, shown as Updated.
+        return "Updated"
     if row.rule.startswith("EX-") or row.category == "Other":
         # "Other" rows come from exception log entries, not from a rule that changes IQMS.
         return "Exception"
@@ -320,16 +326,14 @@ def rows_from_review_rows(entries, line_items, customer_name: str = "", customer
         area = entry.review_area
         message = entry.message or ""
         if (entry.rule_code or "") == "EX-004":
-            # Part is not set up for this customer: a person must check or create it, so it is
-            # not verifiable, and the comment says which customer and customer part number.
-            status = NOT_VERIFIABLE
+            # Part is not set up for this customer: the comment says which customer and customer part number.
             customer_part_number = customer_part.get(str(entry.line_item_id), "")
             scope = f"customer {customer_info}" if customer_info else "customer"
             if customer_part_number:
                 scope += f", customer part {customer_part_number}"
             message = "; ".join(part for part in (message, f"part not set up for {scope}") if part)
-            comment = ""
-        elif entry.status == "UPDATE_REQUIRED":
+        comment = ""
+        if entry.status == "UPDATE_REQUIRED":
             status = UPDATE
             # Exception rules (EX-) need a person, so they are not marked as an IQMS write gap.
             comment = "" if (entry.rule_code or "").startswith("EX-") else REVIEW_AREA_WRITE_GAP.get(area, "")

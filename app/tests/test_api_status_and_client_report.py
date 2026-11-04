@@ -62,7 +62,9 @@ def test_every_served_operation_is_classified():
 
 def test_operation_summaries_carry_the_data_source_marker():
     for method, path, operation in _openapi_operations():
-        assert operation["summary"].startswith(f"[{api_status.lookup(method, path).status}] ")
+        entry = api_status.lookup(method, path)
+        assert entry is not None, f"{method} {path} is not in the API status register"
+        assert operation["summary"].startswith(f"[{entry.status}] ")
         assert "[UNCLASSIFIED]" not in operation["summary"]
 
 
@@ -80,8 +82,10 @@ def test_webapi_backed_endpoints_are_live():
     for path in ("/inventory/get-aka", "/inventory/get-pricebreaks", "/sales-orders/get-sales-orders",
                  "/sales-orders/get-sales-order-details", "/sales-orders/get-sales-order-releases",
                  "/customers/resolve"):
-        assert api_status.lookup("POST", path).status == api_status.LIVE
-        assert api_status.lookup("POST", path).integration == api_status.WEBAPI_READ
+        entry = api_status.lookup("POST", path)
+        assert entry is not None, f"POST {path} is not in the API status register"
+        assert entry.status == api_status.LIVE
+        assert entry.integration == api_status.WEBAPI_READ
 
 
 def test_response_header_names_the_data_source():
@@ -347,9 +351,9 @@ def test_workbook_has_summary_and_one_sheet_per_quote():
 
     summary = workbook["Summary"]
     assert summary["A1"].value == "EVCO Quote Review: Summary"
-    assert [summary.cell(row=4, column=c).value for c in range(1, 8)] == [
+    assert [summary.cell(row=4, column=c).value for c in range(1, 6)] == [
         "Quote No.", "Link to Worksheet", "Total Lines", "Business Rule Violations",
-        "Support Action Required", "Processing Start Date", "Duration (In Minutes)",
+        "Support Action Required",
     ]
     assert summary["A5"].value == "SAMPLE-Q-001"
     assert summary["B5"].hyperlink.location == "'SAMPLE-Q-001'!A1"

@@ -32,9 +32,9 @@ WRAP = Alignment(wrap_text=True, vertical="top")
 
 SUMMARY_HEADERS = [
     "Quote No.", "Link to Worksheet", "Total Lines", "Business Rule Violations",
-    "Support Action Required", "Processing Start Date", "Duration (In Minutes)",
+    "Support Action Required",
 ]
-SUMMARY_WIDTHS = [22, 24, 13, 24, 24, 22, 22]
+SUMMARY_WIDTHS = [22, 24, 13, 24, 24]
 QUOTE_HEADERS = [
     "Line #", "EVCO part no.", "Customer P/N", "Category", "Business Rule", "Field",
     "Value in IQMS", "Value to be/was applied to IQMS", "Status", "Comments",
@@ -99,22 +99,14 @@ def _write_summary(sheet, reports: List[QuoteReport], sheet_names: List[str]) ->
         link = sheet.cell(row=row, column=2, value=name)
         link.hyperlink = Hyperlink(ref=link.coordinate, location=f"'{name}'!A1")
         link.font = Font(color="0563C1", underline="single")
-        sheet.cell(row=row, column=3, value=report.total_rows)
+        sheet.cell(row=row, column=3, value=report.total_lines)
         sheet.cell(row=row, column=4, value=count_business_rule_violations(report))
         sheet.cell(row=row, column=5, value=count_support_action_required(report))
-        started = report.processing_start
-        if started is not None and started.tzinfo is not None:
-            # Excel cannot store timezone-aware datetimes; created_at is TIMESTAMPTZ.
-            started = started.astimezone().replace(tzinfo=None)
-        start = sheet.cell(row=row, column=6, value=started)
-        start.number_format = "yyyy-mm-dd hh:mm"
-        duration = sheet.cell(row=row, column=7, value=report.duration_minutes)
-        duration.number_format = "0.00"
         row += 1
 
     sheet.cell(row=row, column=1, value="Total").font = Font(bold=True)
     totals = (
-        sum(r.total_rows for r in reports),
+        sum(r.total_lines for r in reports),
         sum(count_business_rule_violations(r) for r in reports),
         sum(count_support_action_required(r) for r in reports),
     )
@@ -122,7 +114,7 @@ def _write_summary(sheet, reports: List[QuoteReport], sheet_names: List[str]) ->
     for column, total in zip((3, 4, 5), totals):
         sheet.cell(row=row, column=column, value=total).font = Font(bold=True)
 
-    for column, width in zip("ABCDEFG", SUMMARY_WIDTHS):
+    for column, width in zip("ABCDE", SUMMARY_WIDTHS):
         sheet.column_dimensions[column].width = width
 
 
