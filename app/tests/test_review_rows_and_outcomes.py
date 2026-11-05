@@ -93,7 +93,8 @@ def test_get_aka_returns_200_with_null_header_for_unknown_customer(monkeypatch):
 
     monkeypatch.setattr(inventory_router.inventory_service, "get_aka_search", not_found)
 
-    response = client.post("/inventory/get-aka", json={"evco_part_number": "9480026", "customer_number": "99999"})
+    response = client.post("/inventory/get-aka", json={"evco_part_number": "9480026", "customer_number": "99999",
+                                                       "manufacturing_bom_number": "6601/9480026-CHIMEI"})
 
     assert response.status_code == 200
     assert response.json()["data"] == {"header": None, "aka_details": []}
@@ -104,7 +105,8 @@ def test_get_pricebreaks_returns_200_with_empty_list(monkeypatch):
 
     monkeypatch.setattr(pricing_router.inventory_service, "get_price_breaks", lambda **kwargs: [])
 
-    response = client.post("/inventory/get-pricebreaks", json={"evco_part_number": "9475226", "customer_number": "11762"})
+    response = client.post("/inventory/get-pricebreaks", json={"evco_part_number": "9475226", "customer_number": "11762",
+                                                               "manufacturing_bom_number": "6682/9475226-CHIMEI"})
 
     assert response.status_code == 200
     assert response.json()["data"] == []

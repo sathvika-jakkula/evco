@@ -37,6 +37,11 @@ def _to_live_aka(result: AkaSearchData) -> AkaLiveSearchData:
                 customer_number=detail.customer_number,
                 customer_name=detail.customer_name or None,
                 ship_to_attn=detail.ship_to_attn or None,
+                currency=detail.currency or None,
+                manufacturing_bom_number=detail.manufacturing_bom_number or None,
+                minimum_selling_qty=detail.minimum_selling_qty or None,
+                selling_multiples_of=detail.selling_multiples_of or None,
+                so_item_number=detail.so_item_number or None,
             )
             for detail in result.aka_details
         ],
@@ -59,13 +64,14 @@ def get_aka(payload: GetAkaRequest):
             result = inventory_store.get_aka(
                 item_number=payload.item_number,
                 customer_number=payload.customer_number,
-                manufacturing_bom_number=None,
+                manufacturing_bom_number=payload.manufacturing_bom_number,
                 line_item_id=payload.line_item_id,
             )
         else:
             result = inventory_service.get_aka_search(
                 item_number=payload.item_number,
                 customer_number=payload.customer_number,
+                manufacturing_bom_number=payload.manufacturing_bom_number,
                 line_item_id=payload.line_item_id,
             )
     except BusinessException as exc:

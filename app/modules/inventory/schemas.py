@@ -55,6 +55,7 @@ class GetAkaRequest(BaseModel):
 
     item_number: str = Field(..., alias="evco_part_number", validation_alias=AliasChoices("evco_part_number", "Item #"))
     customer_number: str = Field(..., alias="customer_number", validation_alias=AliasChoices("customer_number", "customer#"))
+    manufacturing_bom_number: str = Field(..., alias="manufacturing_bom_number", validation_alias=AliasChoices("manufacturing_bom_number", "mfg#"), description="Manufacturing/BOM number (used by the Oracle lookup)")
     line_item_id: Optional[UUID] = Field(
         default=None, description="quote_line_items row that triggered this lookup, for traceability"
     )
@@ -166,6 +167,11 @@ class AkaLiveDetail(BaseModel):
     customer_number: str
     customer_name: Optional[str] = None
     ship_to_attn: Optional[str] = None
+    currency: Optional[str] = None
+    manufacturing_bom_number: Optional[str] = None
+    minimum_selling_qty: Optional[int] = None
+    selling_multiples_of: Optional[int] = None
+    so_item_number: Optional[str] = None
 
 
 class AkaLiveSearchData(BaseModel):
