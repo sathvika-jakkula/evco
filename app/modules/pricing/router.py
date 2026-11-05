@@ -25,15 +25,15 @@ router = APIRouter(prefix="/inventory", tags=["Inventory Price Breaks"])
     response_model=StandardInventoryResponse[list[PriceBreakData]],
     summary="Get Price Breaks",
     description=(
-        "Price breaks for the customer/item from the IQMS WebAPI "
-        "(Manufacturing/Inventory/AKAInventoryItemPriceBreaks). Returns 404 PRICE_BREAKS_NOT_FOUND "
-        "when the customer has no AKA record for the item or IQMS returns no price breaks."
+        "Price breaks for the customer, part and BOM from the IQMS Oracle database (read-only). "
+        "Returns 200 with data: [] when there are none."
     ),
 )
 def get_pricebreaks_live(payload: GetPriceBreaksRequest, response: Response):
     price_breaks = inventory_service.get_price_breaks(
         customer_number=payload.customer_number,
         item_number=payload.evco_part_number,
+        manufacturing_bom_number=payload.manufacturing_bom_number,
         processing_id=payload.processing_id,
         line_item_id=payload.line_item_id,
     )

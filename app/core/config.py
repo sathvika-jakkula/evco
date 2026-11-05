@@ -42,6 +42,11 @@ class Settings:
         "CLIENT_REPORT_SAVE_DIR", str(Path.home() / "Documents" / "EVCO_Client_Reports")
     )
 
+    # IQMS Oracle database (read-only AKA and price-break lookups). Set in .env.
+    ORACLE_DSN: str = os.getenv("ORACLE_DSN", "")
+    ORACLE_USER: str = os.getenv("ORACLE_USER", "")
+    ORACLE_PASSWORD: str = os.getenv("ORACLE_PASSWORD", "")
+
     # PostgreSQL quote-processing database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
 

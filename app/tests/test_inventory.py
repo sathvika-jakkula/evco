@@ -50,7 +50,7 @@ def test_get_aka_known_and_unseeded(legacy):
     assert data["data"]["header"]["evco_part_number"] == "9480026"
     detail = data["data"]["aka_details"][0]
     assert detail["customer_number"] == "10329"
-    assert "manufacturing_bom_number" not in detail  # not in the WebAPI, omitted from the response
+    assert detail["manufacturing_bom_number"] == "6601/9480026-CHIMEI"
     assert detail["customer_part_number"] == "38795"
 
     # 2. Unseeded combination returns 404 (no dynamic-fallback placeholder).

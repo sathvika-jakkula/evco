@@ -12,6 +12,7 @@ from uuid import UUID
 from app.core.exceptions import BusinessException
 from app.database.aka_resolution_repository import AkaResolutionRepository
 from app.database.quote_processing_repository import QuoteProcessingRepository
+from app.integrations import oracle_iqms
 from app.integrations.iqms import IQMSClient
 from app.modules.customer.repository import CustomerRepository
 from app.modules.inventory.schemas import AkaDetail, AkaHeader, AkaSearchData
@@ -45,40 +46,15 @@ class InventoryService:
         self,
         item_number: str,
         customer_number: str,
-        manufacturing_bom_number: Optional[str] = None,
+        manufacturing_bom_number: str,
         line_item_id: Optional[UUID] = None,
     ) -> AkaSearchData:
-        """Return the header and the customer's AKA rows for item_number from IQMS.
-
-        Same contract as InventoryMockStore.get_aka, except IQMS cannot tell
-        whether the item number itself exists: a customer with no AKA row for
-        the item returns the header with empty aka_details (the 206 case).
-        manufacturing_bom_number is not checked against IQMS - it is not in the
-        WebAPI response, so the returned detail carries it as empty.
-        """
-        candidates = self.customer_repository.find_candidates(
-            customer_name="", customer_number=customer_number
-        )
-        if not candidates:
-            raise BusinessException(
-                message="No IQMS customer found for the given customer_number",
-                code="CUSTOMER_NOT_FOUND",
-                status_code=404,
-                details={"customer_number": customer_number},
-            )
-        customer = candidates[0]
-
-        raw_records = self.iqms_client.get_aka_inventory_for_customer(customer.ar_custo_id)
-        matching = [
-            record
-            for record in raw_records
-            if isinstance(record, dict) and str(record.get("ItemNumber") or "") == item_number
-        ]
-
-        if not matching:
+        """AKA records for (part, customer, BOM) from the IQMS Oracle database (read-only)."""
+        rows = oracle_iqms.get_aka_rows(item_number, customer_number, manufacturing_bom_number)
+        if not rows:
             message = (
-                f"Item '{item_number}' found but no AKA record matches "
-                f"customer_number '{customer_number}' in IQMS"
+                f"No AKA record found for part '{item_number}', customer '{customer_number}', "
+                f"BOM '{manufacturing_bom_number}'"
             )
             self._record_resolution(line_item_id, item_number, customer_number, manufacturing_bom_number,
                                     decision="NOT_FOUND", status="AKA_NOT_FOUND")
@@ -88,15 +64,13 @@ class InventoryService:
                 aka_details=[],
             )
 
+        first = rows[0]
         header = AkaHeader(
             item_number=item_number,
-            rev=str(matching[0].get("Rev") or ""),
-            description=str(matching[0].get("ItemDescription") or ""),
+            rev=str(first.get("item_rev") or ""),
+            description=str(first.get("item_descrip") or ""),
         )
-        details = [
-            self._to_aka_detail(record, customer_number, manufacturing_bom_number, customer.customer_name)
-            for record in matching
-        ]
+        details = [self._oracle_aka_detail(row, customer_number) for row in rows]
         for detail in details:
             self._record_resolution(line_item_id, item_number, customer_number, manufacturing_bom_number,
                                     decision="NO_CHANGE", status="FETCHED", before=detail, after=detail)
@@ -106,39 +80,44 @@ class InventoryService:
         self,
         customer_number: str,
         item_number: str,
+        manufacturing_bom_number: str,
         processing_id: Optional[UUID] = None,
         line_item_id: Optional[UUID] = None,
     ) -> List[PriceBreakData]:
-        """Price breaks for (customer, item) from IQMS AKAInventoryItemPriceBreaks.
-
-        ArInvtId and ArCustoId are not in the request, so they are taken from the
-        customer's AKA record for the item. A customer or item with no price breaks
-        returns an empty list (a business outcome, not an error).
-        """
-        candidates = self.customer_repository.find_candidates(customer_name="", customer_number=customer_number)
-        if not candidates:
-            return []
-        ar_custo_id = candidates[0].ar_custo_id
-
-        aka_records = self.iqms_client.get_aka_inventory_for_customer(ar_custo_id)
-        item_record = next(
-            (r for r in aka_records if isinstance(r, dict) and str(r.get("ItemNumber") or "") == item_number
-             and r.get("ArInvtId")),
-            None,
-        )
-        raw_breaks = (
-            self.iqms_client.get_aka_item_price_breaks(int(item_record["ArInvtId"]), ar_custo_id)
-            if item_record else []
-        )
+        """Price breaks for (part, customer, BOM) from the IQMS Oracle database (read-only).
+        No price breaks is a business outcome: an empty list, not an error."""
+        rows = oracle_iqms.get_price_break_rows(item_number, customer_number, manufacturing_bom_number)
         breaks = [
-            PriceBreakData(price=float(r.get("UnitPrice") or 0), moq=int(r.get("Quantity") or 0),
-                           comment=str(r.get("Comment") or ""))
-            for r in raw_breaks if isinstance(r, dict)
+            PriceBreakData(
+                price=float(row.get("price") or 0),
+                moq=int(row.get("qty") or 0),
+                comment=str(row.get("comments") or ""),
+                effective_date=row.get("effective_date"),
+                inactive_date=row.get("inactive_date"),
+                price_date=row.get("price_date"),
+            )
+            for row in rows
         ]
         if not breaks:
             message = f"No price breaks found for customer_number '{customer_number}', evco_part_number '{item_number}'"
             self._record_exception_for_processing(processing_id, line_item_id, "PRICE_NOT_FOUND", message)
         return breaks
+
+    @staticmethod
+    def _oracle_aka_detail(row: Dict[str, Any], customer_number: str) -> AkaDetail:
+        return AkaDetail(
+            aka_item_number=str(row.get("aka_item_no") or ""),
+            aka_description=str(row.get("aka_descrip") or ""),
+            rev=str(row.get("aka_rev") or ""),
+            customer_number=str(row.get("cust_no") or customer_number),
+            currency=str(row.get("currency") or ""),
+            customer_name=str(row.get("cust_name") or ""),
+            manufacturing_bom_number=str(row.get("mfg_no") or ""),
+            ship_to_attn="",
+            minimum_selling_qty=int(row.get("min_sell_qty") or 0),
+            selling_multiples_of=int(row.get("multiple") or 0),
+            so_item_number=str(row.get("so_item_info") or ""),
+        )
 
     @staticmethod
     def _to_aka_detail(

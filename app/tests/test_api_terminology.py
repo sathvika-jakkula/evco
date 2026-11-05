@@ -35,7 +35,7 @@ def test_pricing_lookup_add_update_contract(api, legacy):
         context = {"Item #": "9480026", "customer#": "10329", "mfg#": "9440502 + 9440503"}
     response = client.post("/inventory/get-pricebreaks/dummy", json=context)
     assert response.status_code == 200
-    assert set(response.json()["data"][0]) == {"moq", "price", "comment"}
+    assert set(response.json()["data"][0]) == {"moq", "price", "comment", "effective_date", "inactive_date", "price_date"}
 
     payload = {"moq": 123456, "price": 1.5,
                "price_effective_date": "2026-10-01T00:00:00Z", "quote_number": "Q-123"}
@@ -103,7 +103,7 @@ def test_openapi_advertises_canonical_requests_and_typed_responses(api):
         assert {"customer_part_number", "part_description", "moq", "box_quantity", "mold_number"} <= schemas[name]["properties"].keys()
     for name in ("AddPriceBreakRequest", "UpdatePriceBreakRequest"):
         assert {"moq", "price", "price_effective_date", "quote_number"} <= schemas[name]["properties"].keys()
-    assert set(schemas["PriceBreakData"]["properties"]) == {"moq", "price", "comment"}
+    assert set(schemas["PriceBreakData"]["properties"]) == {"moq", "price", "comment", "effective_date", "inactive_date", "price_date"}
     for path, item in spec["paths"].items():
         response = item["post"]["responses"]["200"]["content"]["application/json"]["schema"]
         envelope = schemas[response["$ref"].split("/")[-1]]

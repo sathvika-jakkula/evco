@@ -16,6 +16,7 @@ class GetPriceBreaksRequest(BaseModel):
 
     evco_part_number: str = Field(..., alias="evco_part_number", validation_alias=AliasChoices("evco_part_number", "Item #"), description="EVCO Part Number to retrieve price breaks for")
     customer_number: str = Field(..., alias="customer_number", validation_alias=AliasChoices("customer_number", "customer#"), description="Customer Number to retrieve price breaks for")
+    manufacturing_bom_number: str = Field(..., alias="manufacturing_bom_number", validation_alias=AliasChoices("manufacturing_bom_number", "mfg#"), description="Manufacturing/BOM number (used by the Oracle lookup)")
     # Optional linkage for pricing_results/exception_logs persistence only - see
     # AddPriceBreakRequest for the same pattern. Not required so existing callers
     # that omit them keep working unchanged.
@@ -34,6 +35,9 @@ class PriceBreakData(BaseModel):
     unit_price: float = Field(alias="price")
     quantity: int = Field(alias="moq")
     comment: str
+    effective_date: Optional[str] = None
+    inactive_date: Optional[str] = None
+    price_date: Optional[str] = None
 
 
 # --- API 2: Add Price Break ---
