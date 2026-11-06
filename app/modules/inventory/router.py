@@ -20,6 +20,14 @@ from app.modules.inventory.store import inventory_store
 router = APIRouter(prefix="/inventory", tags=["Inventory AKA Workflow"])
 
 
+def _aka_detail_out(detail: AkaLiveDetail) -> dict:
+    """Empty fields are left out, except the two quantities, which are sent as null."""
+    item = detail.model_dump(exclude_none=True)
+    item["minimum_selling_qty"] = detail.minimum_selling_qty
+    item["selling_multiples_of"] = detail.selling_multiples_of
+    return item
+
+
 def _to_live_aka(result: AkaSearchData) -> AkaLiveSearchData:
     """Only the fields the IQMS WebAPI returns. Empty values are left out of the JSON
     (response_model_exclude_none), so no placeholder is sent for a field IQMS does not have."""
@@ -39,8 +47,8 @@ def _to_live_aka(result: AkaSearchData) -> AkaLiveSearchData:
                 ship_to_attn=detail.ship_to_attn or None,
                 currency=detail.currency or None,
                 manufacturing_bom_number=detail.manufacturing_bom_number or None,
-                minimum_selling_qty=detail.minimum_selling_qty or None,
-                selling_multiples_of=detail.selling_multiples_of or None,
+                minimum_selling_qty=detail.minimum_selling_qty,
+                selling_multiples_of=detail.selling_multiples_of,
                 so_item_number=detail.so_item_number or None,
             )
             for detail in result.aka_details
@@ -84,7 +92,7 @@ def get_aka(payload: GetAkaRequest):
     found = bool(live.aka_details)
     data = {
         "header": live.header.model_dump(exclude_none=True) if found and live.header else None,
-        "aka_details": [detail.model_dump(exclude_none=True) for detail in live.aka_details],
+        "aka_details": [_aka_detail_out(detail) for detail in live.aka_details],
     }
     return JSONResponse(
         status_code=status.HTTP_200_OK,
