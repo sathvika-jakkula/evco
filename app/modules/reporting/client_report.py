@@ -117,6 +117,12 @@ def build_quote_report(summary: QuoteSummaryData) -> QuoteReport:
         f"{exc.exception_code}: {exc.message}" if exc.message else exc.exception_code
         for exc in summary.quote_exceptions
     ]
+    if not rows and summary.quote_exceptions:
+        # Rejected before any parts were extracted: one row carries the reason.
+        # The same rejection can be logged twice (pipeline EX-xxx and agent copy); keep one row.
+        reason = sorted(summary.quote_exceptions, key=lambda e: not (e.exception_code or "").startswith("EX-"))[0]
+        rows = [_rejection_row(reason)]
+        notes = []
     return QuoteReport(
         quote_number=summary.quote_number or "",
         processing_id=str(summary.processing_id),
@@ -260,13 +266,10 @@ BLOCKED_CODE_MARKER = "WRITE_GAP"
 
 
 def display_status(row: "ReportRow") -> str:
-    """Status shown in the workbook: Updated, Exception, Not verifiable or No action."""
+    """Status shown in the workbook: Updated, Exception, Warning or No Action."""
     if row.status == NOT_VERIFIABLE:
-        return NOT_VERIFIABLE_LABEL
-    if row.rule == "EX-004" and row.status == UPDATE:
-        # Part missing for the customer: the agent marks it UPDATE_REQUIRED, shown as Updated.
-        return "Updated"
-    if row.rule.startswith("EX-") or row.category == "Other":
+        return "Warning"
+    if row.rule.startswith("EX-") or row.category in ("Other", "Extraction"):
         # "Other" rows come from exception log entries, not from a rule that changes IQMS.
         return "Exception"
     return "Updated" if row.status == UPDATE else NO_ACTION
@@ -357,3 +360,19 @@ def rows_from_review_rows(entries, line_items, customer_name: str = "", customer
             comments=comments,
         ))
     return rows
+
+
+def _rejection_row(exc) -> "ReportRow":
+    """One row for a quote that was rejected at extraction, with the reason in Comments."""
+    return ReportRow(
+        line_number=None,
+        evco_part_number="",
+        customer_part_number="",
+        category="Extraction",
+        rule=exc.exception_code or "",
+        field="Extraction",
+        current_value="",
+        proposed_value="",
+        status=UPDATE,
+        comments=exc.message or exc.exception_code or "",
+    )

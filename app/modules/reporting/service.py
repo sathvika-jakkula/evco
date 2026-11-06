@@ -69,6 +69,23 @@ class ClientReportFile:
     processing_ids: list[UUID]
 
 
+def _latest_run_per_quote(reports: list) -> list:
+    """One report per quote number. When a quote was processed more than once, keep the latest run."""
+    latest = {}
+    order = []
+    for report in reports:
+        key = report.quote_number
+        if key not in latest:
+            order.append(key)
+            latest[key] = report
+            continue
+        current = latest[key]
+        if (report.processing_start.timestamp() if report.processing_start else 0) > \
+                (current.processing_start.timestamp() if current.processing_start else 0):
+            latest[key] = report
+    return [latest[key] for key in order]
+
+
 class ReportingService:
     def __init__(
         self,
@@ -109,6 +126,7 @@ class ReportingService:
                 self.line_item_audit_repository.get_processing_timing(pid)
             )
             reports.append(report)
+        reports = _latest_run_per_quote(reports)
         content, sheet_names = build_client_workbook_with_sheets(reports)
         if settings.CLIENT_REPORT_SAVE_ENABLED:
             save_client_report_copy(content, file_name)

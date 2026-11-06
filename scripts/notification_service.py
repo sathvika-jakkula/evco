@@ -185,6 +185,12 @@ def count_support_actions(quote: StubQuote) -> int:
 NAVY = "1F3864"
 UPDATE_FILL = PatternFill("solid", fgColor="FFF2CC")
 NO_ACTION_FILL = PatternFill("solid", fgColor="E2EFDA")
+STATUS_FILL = {
+    "Updated": UPDATE_FILL,
+    "Exception": PatternFill("solid", fgColor="F4CCCC"),
+    "Warning": PatternFill("solid", fgColor="FCE4D6"),
+    "No action": NO_ACTION_FILL,
+}
 HEADER_FILL = PatternFill("solid", fgColor=NAVY)
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 TITLE_FONT = Font(bold=True, size=14, color=NAVY)
@@ -216,6 +222,8 @@ def _unique_sheet_name(raw: str, used: set) -> str:
 
 def build_workbook(quotes: List[Tuple[UUID, StubQuote]]) -> Tuple[bytes, List[str]]:
     """Summary sheet plus one sheet per quote. Returns (xlsx bytes, sheet names in order)."""
+    seen = set()
+    quotes = [(pid, q) for pid, q in quotes if not (q.quote_number in seen or seen.add(q.quote_number))]
     workbook = Workbook()
     summary = workbook.worksheets[0]
     summary.title = "Summary"
@@ -293,7 +301,7 @@ def _write_quote_sheet(sheet, processing_id: UUID, quote: StubQuote) -> None:
             item.rule, item.field, item.current_value, item.proposed_value, item.status,
             display_comment(item),
         ]
-        fill = NO_ACTION_FILL if item.status == "No action" else UPDATE_FILL
+        fill = STATUS_FILL.get(item.status, UPDATE_FILL)
         for column, value in enumerate(values, start=1):
             cell = sheet.cell(row=row, column=column, value=value)
             cell.alignment = WRAP

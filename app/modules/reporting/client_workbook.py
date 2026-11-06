@@ -25,6 +25,12 @@ from app.modules.reporting.client_report import (
 NAVY = "1F3864"
 UPDATE_FILL = PatternFill("solid", fgColor="FFF2CC")
 NO_ACTION_FILL = PatternFill("solid", fgColor="E2EFDA")
+STATUS_FILL = {
+    "Updated": UPDATE_FILL,
+    "Exception": PatternFill("solid", fgColor="F4CCCC"),
+    "Warning": PatternFill("solid", fgColor="FCE4D6"),
+    "No action": NO_ACTION_FILL,
+}
 HEADER_FILL = PatternFill("solid", fgColor=NAVY)
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 TITLE_FONT = Font(bold=True, size=14, color=NAVY)
@@ -141,7 +147,7 @@ def _write_quote_sheet(sheet, report: QuoteReport) -> None:
             row_data.category, row_data.rule, row_data.field, row_data.current_value,
             row_data.proposed_value, status, display_comment(row_data),
         ]
-        fill = NO_ACTION_FILL if status == "No action" else UPDATE_FILL
+        fill = STATUS_FILL.get(status, UPDATE_FILL)
         for column, value in enumerate(values, start=1):
             cell = sheet.cell(row=row, column=column, value=value)
             cell.alignment = WRAP

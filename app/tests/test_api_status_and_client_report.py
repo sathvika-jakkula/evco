@@ -19,6 +19,7 @@ from app.modules.reporting.client_report import (
     NOT_READABLE,
     UPDATE,
     build_quote_report,
+    display_status,
 )
 from app.modules.reporting.client_workbook import _unique_sheet_name, build_client_workbook
 from app.modules.reporting.schemas import (
@@ -324,10 +325,23 @@ def test_not_found_aka_is_reported_once_even_with_matching_exception():
 
 
 def test_quote_level_exceptions_become_notes():
-    report = build_quote_report(_summary(
+    report = build_quote_report(_summary(_line(aka=AkaResolution(decision="NOT_FOUND")),
         quote_exceptions=[ExceptionDetail(exception_code="CUSTOMER_NOT_FOUND", message="not in IQMS")],
     ))
     assert report.quote_level_notes == ["CUSTOMER_NOT_FOUND: not in IQMS"]
+
+
+def test_rejected_quote_without_rows_gets_one_exception_row():
+    report = build_quote_report(_summary(
+        quote_exceptions=[
+            ExceptionDetail(exception_code="EXTRACTION_EX-002", message="copy"),
+            ExceptionDetail(exception_code="EX-002", message="required column missing"),
+        ],
+    ))
+    assert len(report.rows) == 1
+    assert report.rows[0].category == "Extraction"
+    assert report.quote_level_notes == []
+    assert display_status(report.rows[0]) == "Exception"
 
 
 def test_read_gap_codes_match_the_fields_the_webapi_cannot_return():
