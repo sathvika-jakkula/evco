@@ -54,6 +54,10 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.hyperlink import Hyperlink
 from pydantic import BaseModel, Field
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # rule_reference.py sits next to this file
+from rule_reference import RULE_REFERENCE, RULE_REFERENCE_HEADERS, RULE_REFERENCE_SHEET
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
@@ -228,7 +232,7 @@ def build_workbook(quotes: List[Tuple[UUID, StubQuote]]) -> Tuple[bytes, List[st
     summary = workbook.worksheets[0]
     summary.title = "Summary"
 
-    used = {"Summary"}
+    used = {"Summary", RULE_REFERENCE_SHEET}
     sheet_names = []
     for _, quote in quotes:
         name = _unique_sheet_name(quote.quote_number, used)
@@ -236,12 +240,13 @@ def build_workbook(quotes: List[Tuple[UUID, StubQuote]]) -> Tuple[bytes, List[st
         sheet_names.append(name)
 
     _write_summary(summary, quotes, sheet_names)
+    _write_rules_sheet(workbook.create_sheet(RULE_REFERENCE_SHEET))
     for (processing_id, quote), name in zip(quotes, sheet_names):
         _write_quote_sheet(workbook.create_sheet(name), processing_id, quote)
 
     buffer = BytesIO()
     workbook.save(buffer)
-    return buffer.getvalue(), ["Summary"] + sheet_names
+    return buffer.getvalue(), ["Summary", RULE_REFERENCE_SHEET] + sheet_names
 
 
 def _style_header(cell) -> None:
@@ -283,6 +288,26 @@ def _write_summary(sheet, quotes, sheet_names) -> None:
         sheet.cell(row=row, column=column, value=total).font = Font(bold=True)
     for column, width in zip("ABCDEFG", SUMMARY_WIDTHS):
         sheet.column_dimensions[column].width = width
+
+
+RULE_COLUMN_WIDTHS = [18, 12, 42, 46, 70, 16, 30, 48]
+
+
+def _write_rules_sheet(sheet) -> None:
+    """Rules Reference: the business rules, requirements, validation rules and exception rules."""
+    sheet["A1"] = "EVCO Quote Validation: Business Rules and Requirements"
+    sheet["A1"].font = TITLE_FONT
+    sheet["A2"] = "Source: EVCO - Quote Validation AI Agentic Rules and Requirements (Incede.ai, August 13, 2026)."
+    header_row = 4
+    for column, title in enumerate(RULE_REFERENCE_HEADERS, start=1):
+        _style_header(sheet.cell(row=header_row, column=column, value=title))
+    for offset, entry in enumerate(RULE_REFERENCE, start=1):
+        for column, value in enumerate(entry, start=1):
+            sheet.cell(row=header_row + offset, column=column, value=value).alignment = WRAP
+    for column, width in enumerate(RULE_COLUMN_WIDTHS, start=1):
+        sheet.column_dimensions[get_column_letter(column)].width = width
+    sheet.freeze_panes = f"A{header_row + 1}"
+    sheet.auto_filter.ref = f"A{header_row}:H{header_row + len(RULE_REFERENCE)}"
 
 
 def _write_quote_sheet(sheet, processing_id: UUID, quote: StubQuote) -> None:

@@ -361,7 +361,7 @@ def test_workbook_has_summary_and_one_sheet_per_quote():
     data = build_client_workbook([report])
 
     workbook = load_workbook(BytesIO(data))
-    assert workbook.sheetnames == ["Summary", "SAMPLE-Q-001"]
+    assert workbook.sheetnames == ["Summary", "Business Rules and Requirements", "SAMPLE-Q-001"]
 
     summary = workbook["Summary"]
     assert summary["A1"].value == "EVCO Quote Review: Summary"
