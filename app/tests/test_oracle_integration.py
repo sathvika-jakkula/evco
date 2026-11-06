@@ -60,7 +60,8 @@ def test_get_aka_endpoint_returns_only_present_fields(monkeypatch):
     assert response.status_code == 200
     detail = response.json()["data"]["aka_details"][0]
     assert detail["currency"] == "US Dollar"
-    assert "minimum_selling_qty" not in detail  # Oracle has no value, so it is left out
+    assert detail["minimum_selling_qty"] is None
+    assert detail["selling_multiples_of"] is None
 
 
 def test_get_aka_no_rows_is_200_with_null_header(monkeypatch):

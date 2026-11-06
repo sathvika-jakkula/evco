@@ -114,8 +114,8 @@ class InventoryService:
             customer_name=str(row.get("cust_name") or ""),
             manufacturing_bom_number=str(row.get("mfg_no") or ""),
             ship_to_attn="",
-            minimum_selling_qty=int(row.get("min_sell_qty") or 0),
-            selling_multiples_of=int(row.get("multiple") or 0),
+            minimum_selling_qty=None if row.get("min_sell_qty") is None else int(row["min_sell_qty"]),
+            selling_multiples_of=None if row.get("multiple") is None else int(row["multiple"]),
             so_item_number=str(row.get("so_item_info") or ""),
         )
 
