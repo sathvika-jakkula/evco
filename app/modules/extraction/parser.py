@@ -391,7 +391,12 @@ def extract_header_fields(full_text):
     if m:
         fields["issue_date"] = m.group(1).strip()
 
-    m = re.search(r"PRICE EFFECTIVE DATE:\s*([^\n]+)", full_text, re.IGNORECASE)
+    # The spec (BR-007 clarification) treats the effective date as the same field as the
+    # implementation date, so both labels are accepted.
+    m = re.search(
+        r"(?:PRICE EFFECTIVE DATE|IMPLEMENTED EFFECTIVE DATE|IMPLEMENTED DATE)\s*:\s*([^\n|]+)",
+        full_text, re.IGNORECASE,
+    )
     if m:
         fields["price_effective_date"] = m.group(1).strip()
 
@@ -402,6 +407,17 @@ def extract_header_fields(full_text):
         candidate = m.group(1).strip()
         if candidate:
             fields["customer_name"] = candidate
+
+    # Some quotes print the company name as a heading after the issue date, with no label.
+    if not fields.get("customer_name"):
+        m = re.search(
+            r"Issue Date:\s*[0-9/\-]+[\s|]*([A-Za-z][A-Za-z0-9&.,' \-]+?)\s*(?:\||\n)",
+            full_text,
+        )
+        if m:
+            candidate = m.group(1).strip()
+            if candidate:
+                fields["customer_name"] = candidate
 
     override_date = find_effective_date_override(full_text)
     if override_date:
