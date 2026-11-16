@@ -32,7 +32,8 @@ class AkaDetail(BaseModel):
     aka_description: str = Field(default="", alias="akaDescription", validation_alias=AliasChoices("part_description", "akaDescription"))
     rev: str = Field(default="", alias="rev")
     customer_number: str = Field(..., alias="customer#", validation_alias=AliasChoices("customer_number", "customer#"))
-    currency: str = Field(default="USD", alias="currency")
+    currency: Optional[str] = Field(default="USD", alias="currency")
+    currency_id: Optional[int] = Field(default=None, alias="currency_id")
     customer_name: str = Field(default="", alias="customername", validation_alias=AliasChoices("customer_name", "customername"))
     manufacturing_bom_number: str = Field(..., alias="mfg#", validation_alias=AliasChoices("manufacturing_bom_number", "mfg#"))
     ship_to_attn: str = Field(default="", alias="shipToAttn", validation_alias=AliasChoices("ship_to_attn", "shipToAttn"))
@@ -167,6 +168,7 @@ class AkaLiveDetail(BaseModel):
     customer_number: str
     customer_name: Optional[str] = None
     ship_to_attn: Optional[str] = None
+    currency_id: Optional[int] = None
     currency: Optional[str] = None
     manufacturing_bom_number: Optional[str] = None
     minimum_selling_qty: Optional[int] = None

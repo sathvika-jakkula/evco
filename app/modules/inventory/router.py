@@ -25,6 +25,8 @@ def _aka_detail_out(detail: AkaLiveDetail) -> dict:
     item = detail.model_dump(exclude_none=True)
     item["minimum_selling_qty"] = detail.minimum_selling_qty
     item["selling_multiples_of"] = detail.selling_multiples_of
+    item["currency_id"] = detail.currency_id
+    item["currency"] = detail.currency
     return item
 
 
@@ -45,7 +47,8 @@ def _to_live_aka(result: AkaSearchData) -> AkaLiveSearchData:
                 customer_number=detail.customer_number,
                 customer_name=detail.customer_name or None,
                 ship_to_attn=detail.ship_to_attn or None,
-                currency=detail.currency or None,
+                currency_id=detail.currency_id,
+                currency=detail.currency,
                 manufacturing_bom_number=detail.manufacturing_bom_number or None,
                 minimum_selling_qty=detail.minimum_selling_qty,
                 selling_multiples_of=detail.selling_multiples_of,

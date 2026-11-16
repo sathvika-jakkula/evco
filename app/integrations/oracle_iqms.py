@@ -27,6 +27,7 @@ SELECT i.itemno        AS item_no,
        a.cust_rev      AS aka_rev,
        c.custno        AS cust_no,
        c.company       AS cust_name,
+       a.currency_id   AS currency_id,
        cur.descrip     AS currency,
        s.mfgno         AS mfg_no,
        a.min_sell_qty,
@@ -39,7 +40,7 @@ JOIN   iqms.arcusto c
 LEFT JOIN iqms.standard s
        ON s.id = a.standard_id
 LEFT JOIN iqms.currency cur
-       ON cur.id = NVL(a.currency_id, c.currency_id)
+       ON cur.id = a.currency_id
 WHERE  i.itemno = :item_no
 AND    TRIM(c.custno) = :cust_no
 AND    s.mfgno = :mfg_no
