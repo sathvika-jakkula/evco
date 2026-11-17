@@ -88,29 +88,6 @@ class PriceBreakService:
         self._processing_repository = processing_repository or QuoteProcessingRepository()
         self._seed_data()
 
-    def _record_exception(self, line_item_id: Optional[UUID], processing_id: Optional[UUID],
-                           exception_code: str, message: str) -> None:
-        """Best-effort exception_logs write for a pricing lookup/update failure.
-        Resolves processing_id from line_item_id when the caller didn't supply one directly."""
-        try:
-            resolved_processing_id = processing_id
-            if resolved_processing_id is None and line_item_id is not None:
-                resolved_processing_id = self._processing_repository.get_processing_id_for_line_item(line_item_id)
-            if resolved_processing_id is None:
-                return
-            self._processing_repository.record_exception(
-                processing_id=resolved_processing_id,
-                agent_name="pricing",
-                tool_name="price_break_lookup",
-                exception_code=exception_code,
-                exception_message=message,
-                line_item_id=line_item_id,
-                is_retryable=False,
-            )
-        except Exception:
-            logger.exception("Failed to record exception_logs entry %s for line_item_id %s",
-                              exception_code, line_item_id)
-
     def _persist_price_change(self, req, quantity: int, price: float, effective_date: datetime, action: str) -> None:
         evco_part_number = getattr(req, "evco_part_number", None)
         customer_number = getattr(req, "customer_number", None)
@@ -244,7 +221,6 @@ class PriceBreakService:
             except Exception:
                 logger.exception("Failed to record pricing resolution for %s/%s/%s (not found)",
                                   customer_number, evco_part_number, bom_number)
-            self._record_exception(line_item_id, processing_id, "PRICE_NOT_FOUND", message)
             raise BusinessException(
                 message=message,
                 code="PRICE_BREAKS_NOT_FOUND",
@@ -345,7 +321,6 @@ class PriceBreakService:
                 except Exception:
                     logger.exception("Failed to record pricing resolution for update-target-missing at quantity %s",
                                       req.quantity)
-                self._record_exception(req.line_item_id, req.processing_id, "PRICE_UPDATE_TARGET_MISSING", message)
                 raise BusinessException(
                     message=message,
                     code="PRICE_UPDATE_TARGET_MISSING",

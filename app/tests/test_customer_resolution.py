@@ -3,7 +3,7 @@ import json
 import pytest
 from uuid import uuid4
 
-from app.integrations.iqms import IQMSClient
+from app.integrations.iqms import IQMSClient, IQMSUnavailableError
 from app.modules.customer.models import CustomerRecord
 from app.modules.customer.repository import CustomerRepository
 from app.modules.customer.service import CustomerService
@@ -160,6 +160,60 @@ def test_customer_service_resolve():
         processing_id=req.processing_id,
         customer_number="THERMO-001",
     )
+
+
+def test_customer_service_not_found_records_ex005_with_message():
+    mock_client = MagicMock(spec=IQMSClient)
+    mock_client.get_customers_lite.return_value = [{"ID": 1, "Company": "ACME CORP", "CustNo": "ACME-001"}]
+    processing_repository = MagicMock()
+    processing_repository.save_customer_exceptions_for_processing.return_value = [uuid4()]
+    service = CustomerService(
+        repository=CustomerRepository(iqms_client=mock_client),
+        processing_repository=processing_repository,
+    )
+
+    response = service.resolve_customer(
+        CustomerResolveRequest(processing_id=uuid4(), customer_name="POLARIS INDUSTRIES")
+    )
+
+    assert response.data is not None
+    assert response.data.match_status == MatchStatusEnum.NOT_FOUND
+    assert response.data.exception_codes == ["EX-005"]
+    assert "POLARIS INDUSTRIES" in response.message
+    assert "not found" in response.message
+    assert response.message != "Customer resolution completed successfully"
+    processing_repository.save_customer_exceptions_for_processing.assert_called_once()
+    saved = processing_repository.save_customer_exceptions_for_processing.call_args.kwargs["exceptions"]
+    assert "POLARIS INDUSTRIES" in saved["EX-005"]
+
+
+def test_customer_service_iqms_down_raises_not_not_found():
+    import pytest
+    from app.core.exceptions import TechnicalException
+
+    mock_client = MagicMock(spec=IQMSClient)
+    mock_client.get_customers_lite.side_effect = IQMSUnavailableError("login failed")
+    processing_repository = MagicMock()
+    service = CustomerService(
+        repository=CustomerRepository(iqms_client=mock_client),
+        processing_repository=processing_repository,
+    )
+
+    with pytest.raises(TechnicalException) as exc_info:
+        service.resolve_customer(CustomerResolveRequest(processing_id=uuid4(), customer_name="POLARIS INDUSTRIES"))
+
+    assert exc_info.value.code == "IQMS_UNAVAILABLE"
+    assert exc_info.value.status_code == 503
+    assert "could not be checked" in exc_info.value.message
+    processing_repository.save_customer_exceptions_for_processing.assert_not_called()
+    processing_repository.save_unique_customer_resolution_for_processing.assert_not_called()
+
+
+def test_iqms_get_customers_lite_raises_when_login_fails():
+    client = IQMSClient(base_url="https://example.invalid/WebAPI", auth_token=None)
+    with patch.object(client, "login", return_value=None):
+        with pytest.raises(IQMSUnavailableError):
+            client.get_customers_lite()
 
 
 def test_customer_service_records_ambiguous_customer_exception():

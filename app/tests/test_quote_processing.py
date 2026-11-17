@@ -33,7 +33,7 @@ def test_record_exception_writes_full_context_to_repository():
     req = RecordExceptionRequest(
         processing_id=processing_id,
         line_item_id=line_item_id,
-        agent_name="pricing_agent",
+        agent_name="PricingAgent",
         tool_name="PriceBreakTool",
         exception_code="PRICE_MISMATCH",
         exception_message="Quoted price does not match IQMS price break",
@@ -45,7 +45,7 @@ def test_record_exception_writes_full_context_to_repository():
 
     fake_repository.record_exception.assert_called_once_with(
         processing_id=processing_id,
-        agent_name="pricing_agent",
+        agent_name="PricingAgent",
         tool_name="PriceBreakTool",
         exception_code="PRICE_MISMATCH",
         exception_message="Quoted price does not match IQMS price break",
@@ -59,7 +59,7 @@ def test_record_exception_writes_full_context_to_repository():
     )
     assert result.processing_id == processing_id
     assert result.line_item_id == line_item_id
-    assert result.agent_name == "pricing_agent"
+    assert result.agent_name == "PricingAgent"
     assert result.is_retryable is True
 
 
@@ -74,7 +74,7 @@ def test_record_exception_endpoint(monkeypatch):
         exception_id=exception_id,
         processing_id=processing_id,
         line_item_id=None,
-        agent_name="extraction",
+        agent_name="ExtractionAgent",
         tool_name="PDFExtractor",
         exception_code="EX-002",
         exception_message="Missing required header field",
@@ -92,7 +92,7 @@ def test_record_exception_endpoint(monkeypatch):
         "/quote-processing/record-exception",
         json={
             "processing_id": processing_id,
-            "agent_name": "extraction",
+            "agent_name": "ExtractionAgent",
             "tool_name": "PDFExtractor",
             "exception_code": "EX-002",
             "exception_message": "Missing required header field",
@@ -101,7 +101,7 @@ def test_record_exception_endpoint(monkeypatch):
     assert response.status_code == 201
     data = response.json()
     assert data["data"]["exception_code"] == "EX-002"
-    assert data["data"]["agent_name"] == "extraction"
+    assert data["data"]["agent_name"] == "ExtractionAgent"
     fake_service.record_exception.assert_called_once()
 
 
@@ -111,7 +111,7 @@ def test_record_exception_requires_auth():
         "/quote-processing/record-exception",
         json={
             "processing_id": str(uuid4()),
-            "agent_name": "extraction",
+            "agent_name": "ExtractionAgent",
             "tool_name": "PDFExtractor",
             "exception_code": "EX-002",
             "exception_message": "Missing required header field",

@@ -58,7 +58,6 @@ class InventoryService:
             )
             self._record_resolution(line_item_id, item_number, customer_number, manufacturing_bom_number,
                                     decision="NOT_FOUND", status="AKA_NOT_FOUND")
-            self._record_exception(line_item_id, "AKA_NOT_FOUND", message)
             return AkaSearchData(
                 header=AkaHeader(item_number=item_number, rev="", description=""),
                 aka_details=[],
@@ -100,7 +99,6 @@ class InventoryService:
         ]
         if not breaks:
             message = f"No price breaks found for customer_number '{customer_number}', evco_part_number '{item_number}'"
-            self._record_exception_for_processing(processing_id, line_item_id, "PRICE_NOT_FOUND", message)
         return breaks
 
     @staticmethod
@@ -159,33 +157,6 @@ class InventoryService:
         except Exception:
             logger.exception("Failed to record AKA resolution for %s/%s/%s",
                              item_number, customer_number, manufacturing_bom_number)
-
-    def _record_exception(self, line_item_id: Optional[UUID], exception_code: str, message: str) -> None:
-        """Best-effort exception_logs write, attributed to the quote via line_item_id."""
-        self._record_exception_for_processing(None, line_item_id, exception_code, message)
-
-    def _record_exception_for_processing(
-        self, processing_id: Optional[UUID], line_item_id: Optional[UUID], exception_code: str, message: str,
-    ) -> None:
-        """Best-effort exception_logs write. processing_id is used when given, else resolved from line_item_id."""
-        try:
-            if processing_id is None and line_item_id is not None:
-                processing_id = self._processing_repository.get_processing_id_for_line_item(line_item_id)
-            if processing_id is None:
-                return
-            self._processing_repository.record_exception(
-                processing_id=processing_id,
-                agent_name="inventory",
-                tool_name="aka_lookup",
-                exception_code=exception_code,
-                exception_message=message,
-                line_item_id=line_item_id,
-                is_retryable=False,
-            )
-        except Exception:
-            logger.exception("Failed to record exception_logs entry %s for line_item_id %s",
-                             exception_code, line_item_id)
-
 
 
 # Singleton instance, mirroring InventoryMockStore's module-level singleton pattern

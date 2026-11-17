@@ -91,13 +91,6 @@ class QuoteProcessingResultService:
         except OSError as exc:
             duration_ms = int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000)
             self._log_move_call("FAILED", duration_ms, req, str(exc))
-            try:
-                self.processing_repository.record_exception(
-                    processing_id=None, agent_name="quote_processing", tool_name="move_quote_file",
-                    exception_code="QUOTE_FILE_MOVE_FAILED", exception_message=str(exc),
-                )
-            except Exception:
-                logger.exception("Failed to record QUOTE_FILE_MOVE_FAILED exception for %s", req.filename)
             return MoveQuoteFileResponseData(
                 filename=source_path.name,
                 outcome=req.outcome,

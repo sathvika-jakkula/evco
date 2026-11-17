@@ -158,3 +158,64 @@ def test_sales_order_endpoints_require_auth():
     app.dependency_overrides.clear()
     response = client.post("/sales-orders/get-sales-orders", json={"item_number": "9410145"})
     assert response.status_code == 401
+
+
+def test_get_sales_orders_iqms_down_raises_503_not_empty_list():
+    from unittest.mock import MagicMock
+    import pytest
+    from app.core.exceptions import TechnicalException
+    from app.integrations.iqms import IQMSUnavailableError
+
+    fake_client = MagicMock()
+    fake_client.get_sales_orders.side_effect = IQMSUnavailableError("login failed")
+    service = SalesOrderService(
+        iqms_client=fake_client,
+        sync_repository=MagicMock(),
+        pricing_history_repository=MagicMock(),
+        resolution_repository=MagicMock(),
+    )
+
+    with pytest.raises(TechnicalException) as exc_info:
+        service.get_sales_orders(item_number="9410145")
+
+    assert exc_info.value.code == "IQMS_UNAVAILABLE"
+    assert exc_info.value.status_code == 503
+    service.resolution_repository.record_resolution.assert_not_called()
+
+
+def test_get_sales_order_lines_iqms_down_raises_503():
+    from unittest.mock import MagicMock
+    import pytest
+    from app.core.exceptions import TechnicalException
+    from app.integrations.iqms import IQMSUnavailableError
+
+    fake_client = MagicMock()
+    fake_client.get_sales_orders.side_effect = IQMSUnavailableError("login failed")
+    service = SalesOrderService(
+        iqms_client=fake_client,
+        sync_repository=MagicMock(),
+        pricing_history_repository=MagicMock(),
+        resolution_repository=MagicMock(),
+    )
+
+    with pytest.raises(TechnicalException) as exc_info:
+        service.get_sales_order_lines(item_number="9410145")
+
+    assert exc_info.value.code == "IQMS_UNAVAILABLE"
+
+
+def test_get_sales_orders_genuine_empty_returns_empty_and_records_not_found():
+    from unittest.mock import MagicMock
+
+    fake_client = MagicMock()
+    fake_client.get_sales_orders.return_value = []
+    resolution = MagicMock()
+    service = SalesOrderService(
+        iqms_client=fake_client,
+        sync_repository=MagicMock(),
+        pricing_history_repository=MagicMock(),
+        resolution_repository=resolution,
+    )
+
+    assert service.get_sales_orders(item_number="NO-SUCH-PART") == []
+    assert resolution.record_resolution.call_args.kwargs["status"] == "NOT_FOUND"

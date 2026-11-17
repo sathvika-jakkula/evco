@@ -1,9 +1,12 @@
 from datetime import datetime
 from typing import List
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field
+
+
+ExceptionAgentName = Literal["ExtractionAgent", "CustomerAgent", "InventoryAgent", "PricingAgent", "SalesOrderAgent"]
 
 
 # --- T17: Record Exceptions ---
@@ -12,7 +15,7 @@ class RecordExceptionRequest(BaseModel):
     line_item_id: Optional[UUID] = Field(
         default=None, description="Line item this exception applies to - omit for a batch/quote-level exception"
     )
-    agent_name: Optional[str] = Field(default=None, description="Name of the agent that raised this exception")
+    agent_name: ExceptionAgentName = Field(..., description="Agent that raised this exception")
     tool_name: Optional[str] = Field(default=None, description="Name of the tool/step that raised this exception")
     exception_code: str = Field(..., description="Exception or rule code")
     exception_message: str = Field(..., description="Human-readable exception detail")

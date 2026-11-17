@@ -75,14 +75,6 @@ class QuoteProcessingRepository:
                 (uuid4(), processing_id, quote.quote_number, file_path.name, received_time,
                  quote.customer_name, self._parse_date(quote.price_effective_date), now),
             )
-            if quote.is_exception:
-                self._save_exception_logs(
-                    cursor=cursor,
-                    processing_id=processing_id,
-                    exception_codes=quote.exception_codes,
-                    exception_reason=quote.exception_reason,
-                    created_at=now,
-                )
             line_item_ids: list[UUID] = []
             for ordinal, part in enumerate(quote.parts, start=1):
                 for tier_index, tier in enumerate(part.pricing_tiers or [None], start=1):
@@ -101,28 +93,6 @@ class QuoteProcessingRepository:
                     )
                     line_item_ids.append(line_item_id)
         return line_item_ids
-
-    @staticmethod
-    def _save_exception_logs(
-        cursor, processing_id: UUID, exception_codes: list[str], exception_reason: str | None, created_at: datetime
-    ) -> None:
-        """Create one exception record per extraction rule code for a quote."""
-        codes = exception_codes or ["EXTRACTION_EXCEPTION"]
-        reason_sections = (exception_reason or "Quote extraction was excluded from processing.").split(" | ")
-        for code in codes:
-            matching_sections = [section for section in reason_sections if code in section]
-            message = " | ".join(matching_sections) or exception_reason or "Quote extraction was excluded from processing."
-            cursor.execute(
-                """INSERT INTO exception_logs (
-                   exception_id, line_item_id, processing_id, agent_name, tool_name,
-                   exception_code, exception_message, retry_attempt, max_retry_count,
-                   is_retryable, resolved, created_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                (
-                    uuid4(), None, processing_id, "extraction", "PDFExtractor", code, message,
-                    0, 2, code == "EXTRACTION_FAILED", False, created_at,
-                ),
-            )
 
     def record_exception(
         self,
@@ -282,20 +252,6 @@ class QuoteProcessingRepository:
                 "UPDATE quote_line_items SET status = %s WHERE processing_id = %s",
                 (line_status, processing_id),
             )
-            for code, message in exceptions.items():
-                exception_id = uuid4()
-                cursor.execute(
-                    """INSERT INTO exception_logs (
-                       exception_id, line_item_id, processing_id, agent_name, tool_name,
-                       exception_code, exception_message, retry_attempt, max_retry_count,
-                       is_retryable, resolved, created_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (
-                        exception_id, None, processing_id, "customer_resolution", "IQMSClient",
-                        code, message, 0, 0, False, False, datetime.now(timezone.utc),
-                    ),
-                )
-                exception_ids.append(exception_id)
         return exception_ids
 
     @staticmethod

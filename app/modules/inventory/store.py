@@ -54,29 +54,6 @@ class InventoryMockStore:
 
         self._seed_data()
 
-    def _record_exception(self, line_item_id: Optional[UUID], exception_code: str, message: str) -> None:
-        """Best-effort exception_logs write for an AKA lookup/update failure. processing_id
-        isn't in the AKA request payloads, so it's resolved from line_item_id when available -
-        without a line_item_id there's no way to attribute the exception to a quote."""
-        if line_item_id is None:
-            return
-        try:
-            processing_id = self._processing_repository.get_processing_id_for_line_item(line_item_id)
-            if processing_id is None:
-                return
-            self._processing_repository.record_exception(
-                processing_id=processing_id,
-                agent_name="inventory",
-                tool_name="aka_lookup",
-                exception_code=exception_code,
-                exception_message=message,
-                line_item_id=line_item_id,
-                is_retryable=False,
-            )
-        except Exception:
-            logger.exception("Failed to record exception_logs entry %s for line_item_id %s",
-                              exception_code, line_item_id)
-
     def _record_resolution(
         self, line_item_id: Optional[UUID], item_number: str, customer_number: str,
         manufacturing_bom_number: str, decision: str, status: str,
@@ -201,7 +178,6 @@ class InventoryMockStore:
             message = f"No item part number found for '{item_number}'"
             self._record_resolution(line_item_id, item_number, customer_number, manufacturing_bom_number,
                                      decision="NOT_FOUND", status="NOT_FOUND")
-            self._record_exception(line_item_id, "ITEM_NOT_FOUND", message)
             raise BusinessException(
                 message=message,
                 code="ITEM_NOT_FOUND",
@@ -217,7 +193,6 @@ class InventoryMockStore:
             )
             self._record_resolution(line_item_id, item_number, customer_number, manufacturing_bom_number,
                                      decision="NOT_FOUND", status="AKA_NOT_FOUND")
-            self._record_exception(line_item_id, "AKA_NOT_FOUND", message)
             return AkaSearchData(header=header, aka_details=[])
 
         # ── Case 3: full match ───────────────────────────────────────────────
@@ -285,7 +260,6 @@ class InventoryMockStore:
                     f"No AKA record found for item_number '{req.item_number}', "
                     f"customer_number '{req.customer_number}', mfg# '{req.manufacturing_bom_number}'"
                 )
-                self._record_exception(req.line_item_id, "AKA_UPDATE_TARGET_MISSING", message)
                 raise BusinessException(
                     message=message,
                     code="AKA_RECORD_NOT_FOUND",

@@ -15,10 +15,11 @@ from typing import Any, Dict, List, Optional, Set
 from uuid import UUID
 
 from app.core.config import settings
+from app.core.exceptions import TechnicalException
 from app.database.pricing_history_repository import PricingHistoryRepository
 from app.database.sales_order_repository import SalesOrderSyncRepository
 from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
-from app.integrations.iqms import IQMSClient
+from app.integrations.iqms import IQMSClient, IQMSUnavailableError
 from app.modules.sales_order.schemas import (
     SalesOrderData,
     SalesOrderDetailData,
@@ -71,9 +72,29 @@ class SalesOrderService:
         self.pricing_history_repository = pricing_history_repository or PricingHistoryRepository()
         self.resolution_repository = resolution_repository or SalesOrderResolutionRepository()
 
+    @staticmethod
+    def _call_iqms(call, description: str):
+        """Run an IQMS call. If IQMS is unreachable, raise a 503 instead of returning an empty result,
+        so an outage is never reported as 'no sales orders'."""
+        try:
+            return call()
+        except IQMSUnavailableError as exc:
+            raise TechnicalException(
+                message=(
+                    f"IQMS is unavailable, so {description} could not be retrieved. "
+                    "Retry once IQMS is back online."
+                ),
+                code="IQMS_UNAVAILABLE",
+                status_code=503,
+                retryable=True,
+                details={"reason": str(exc)},
+            ) from exc
+
     def get_sales_orders(self, item_number: str, line_item_id: Optional[UUID] = None) -> List[SalesOrderData]:
         """Fetch the full sales order list from IQMS and filter to item_number here."""
-        raw_records = self.iqms_client.get_sales_orders()
+        raw_records = self._call_iqms(
+            self.iqms_client.get_sales_orders, f"sales orders for item '{item_number}'"
+        )
         matching = [
             record
             for record in raw_records
@@ -130,7 +151,10 @@ class SalesOrderService:
         correctly server-side by sales_order_id), then filter to ar_invt_id here -
         one order can have multiple lines for different items.
         """
-        raw_records = self.iqms_client.get_sales_order_details(sales_order_id)
+        raw_records = self._call_iqms(
+            lambda: self.iqms_client.get_sales_order_details(sales_order_id),
+            f"details for sales order {sales_order_id}",
+        )
         matching = [
             record
             for record in raw_records
@@ -141,7 +165,10 @@ class SalesOrderService:
     def get_sales_order_releases(
         self, sales_order_detail_id: int, line_item_id: Optional[UUID] = None
     ) -> List[SalesOrderReleaseData]:
-        raw_records = self.iqms_client.get_sales_order_releases(sales_order_detail_id)
+        raw_records = self._call_iqms(
+            lambda: self.iqms_client.get_sales_order_releases(sales_order_detail_id),
+            f"releases for sales order detail {sales_order_detail_id}",
+        )
         releases = [
             self._to_sales_order_release(record) for record in raw_records if isinstance(record, dict)
         ]
@@ -227,9 +254,12 @@ class SalesOrderService:
         """Every sales order line for one EVCO part number, all customers and statuses, with
         its detail and releases nested. One list call, then one details call per order and
         one releases call per detail line (IQMS filters details and releases server-side)."""
+        all_orders = self._call_iqms(
+            self.iqms_client.get_sales_orders, f"sales order lines for item '{item_number}'"
+        )
         orders = [
             self._to_sales_order(record)
-            for record in self.iqms_client.get_sales_orders()
+            for record in all_orders
             if isinstance(record, dict) and str(record.get("ItemNumber") or "") == item_number
         ]
         lines: List[SalesOrderLineData] = []
@@ -237,7 +267,10 @@ class SalesOrderService:
         details_by_order: Dict[int, List[Dict[str, Any]]] = {}
         for order in orders:
             if order.sales_order_id not in details_by_order:
-                details_by_order[order.sales_order_id] = self.iqms_client.get_sales_order_details(order.sales_order_id)
+                details_by_order[order.sales_order_id] = self._call_iqms(
+                    lambda oid=order.sales_order_id: self.iqms_client.get_sales_order_details(oid),
+                    f"details for sales order {order.sales_order_id}",
+                )
             for record in details_by_order[order.sales_order_id]:
                 if not isinstance(record, dict) or record.get("ArInvtId") != order.ar_invt_id:
                     continue
@@ -245,9 +278,13 @@ class SalesOrderService:
                 if detail.sales_order_detail_id in seen_details:
                     continue
                 seen_details.add(detail.sales_order_detail_id)
+                raw_releases = self._call_iqms(
+                    lambda did=detail.sales_order_detail_id: self.iqms_client.get_sales_order_releases(did),
+                    f"releases for sales order detail {detail.sales_order_detail_id}",
+                )
                 releases = [
                     self._to_sales_order_release(r)
-                    for r in self.iqms_client.get_sales_order_releases(detail.sales_order_detail_id)
+                    for r in raw_releases
                     if isinstance(r, dict)
                 ]
                 lines.append(SalesOrderLineData(

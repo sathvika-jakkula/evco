@@ -31,9 +31,14 @@ router = APIRouter(prefix="/sales-orders", tags=["Sales Orders"])
 def get_sales_orders(payload: GetSalesOrdersRequest, response: Response):
     records = sales_order_service.get_sales_orders(item_number=payload.item_number, line_item_id=payload.line_item_id)
     response.status_code = status.HTTP_200_OK
+    message = (
+        "Sales orders retrieved successfully"
+        if records
+        else f"No sales orders found in IQMS for item '{payload.item_number}'."
+    )
     return StandardInventoryResponse(
         statusCode=200,
-        message="Sales orders retrieved successfully",
+        message=message,
         data=records,
     )
 
@@ -111,8 +116,13 @@ def update_sales_order_details(payload: UpdateSalesOrderDetailsRequest, response
 def get_sales_order_lines(payload: GetSalesOrderLinesRequest, response: Response):
     lines = sales_order_service.get_sales_order_lines(item_number=payload.item_number)
     response.status_code = status.HTTP_200_OK
+    message = (
+        "Sales order lines retrieved successfully"
+        if lines
+        else f"No sales order lines found in IQMS for item '{payload.item_number}'."
+    )
     return StandardInventoryResponse(
         statusCode=200,
-        message="Sales order lines retrieved successfully",
+        message=message,
         data=SalesOrderLinesData(lines=lines),
     )

@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 RETRYABLE_HTTP_STATUSES = {429, 500, 502, 503, 504}
 
 
+class IQMSUnavailableError(Exception):
+    """Raised when IQMS could not be reached or authenticated, so the data is unknown (not just empty)."""
+
+
 def _default_unwrap(data: Any) -> List[Dict[str, Any]]:
     """Default response-list unwrapping shared by most IQMS endpoints."""
     if isinstance(data, dict):
@@ -168,6 +172,7 @@ class IQMSClient:
         label: str,
         unwrap: Optional[Callable[[Any], List[Dict[str, Any]]]] = None,
         max_retries: Optional[int] = None,
+        raise_on_error: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         GET url and return the unwrapped JSON list, with retries and an
@@ -178,17 +183,24 @@ class IQMSClient:
           - HTTP 429/500/502/503/504 - transient server-side failures, retried with backoff
           - network-level errors (timeouts, connection failures) - retried with backoff
         Any other HTTP error status, or an unexpected exception (including a
-        malformed/undecodable response body), is treated as non-retryable and
-        returns [] immediately.
+        malformed/undecodable response body), is treated as non-retryable.
+
+        On failure this returns [] by default. With raise_on_error=True it raises
+        IQMSUnavailableError instead, so callers can tell "no data" from "unknown".
         """
         unwrap = unwrap or _default_unwrap
         max_retries = self.DEFAULT_MAX_RETRIES if max_retries is None else max_retries
         token = self.get_auth_token()
 
+        def give_up() -> List[Dict[str, Any]]:
+            if raise_on_error:
+                raise IQMSUnavailableError(f"IQMS {label} request failed; data could not be retrieved.")
+            return []
+
         for attempt in range(max_retries + 1):
             if not token:
                 logger.error("No valid IQMS AuthToken available for %s request.", label)
-                return []
+                return give_up()
 
             headers = {
                 "Accept": "application/json",
@@ -201,12 +213,12 @@ class IQMSClient:
                 status_code, body_bytes = self._request_with_audit(url, headers, "GET", label, attempt)
                 if status_code != 200:
                     logger.error("IQMS %s returned unexpected status %s", label, status_code)
-                    return []
+                    return give_up()
                 try:
                     return unwrap(json.loads(body_bytes.decode("utf-8")))
                 except Exception as parse_exc:
                     logger.error("Failed to parse IQMS %s response: %s", label, parse_exc)
-                    return []
+                    return give_up()
             except urllib.error.HTTPError as http_err:
                 has_retries_left = attempt < max_retries
                 if http_err.code in (401, 403) and has_retries_left:
@@ -226,7 +238,7 @@ class IQMSClient:
                     time.sleep(delay)
                     continue
                 logger.error("IQMS %s HTTP error %s: %s", label, http_err.code, http_err)
-                return []
+                return give_up()
             except (urllib.error.URLError, TimeoutError, socket.timeout) as net_err:
                 if attempt < max_retries:
                     delay = min(2 ** attempt, 5)
@@ -237,15 +249,19 @@ class IQMSClient:
                     time.sleep(delay)
                     continue
                 logger.error("IQMS %s network error, retries exhausted: %s", label, net_err)
-                return []
+                return give_up()
             except Exception as exc:
                 logger.error("Unexpected error fetching IQMS %s: %s", label, exc)
-                return []
+                return give_up()
 
-        return []
+        return give_up()
 
     def get_customers_lite(self) -> List[Dict[str, Any]]:
-        """Fetches the complete customer list from IQMS /CRM/CustomerCentral/CustomersLite."""
+        """
+        Fetches the complete customer list from IQMS /CRM/CustomerCentral/CustomersLite.
+        Raises IQMSUnavailableError if IQMS cannot be reached or returns an error,
+        so an outage is never mistaken for "customer does not exist".
+        """
         url = f"{self.base_url}/CRM/CustomerCentral/CustomersLite"
 
         def unwrap(data: Any) -> List[Dict[str, Any]]:
@@ -255,7 +271,7 @@ class IQMSClient:
                 return data.get("items") or data.get("data") or data.get("Customers") or [data]
             return []
 
-        return self._fetch_json_list(url, "CustomersLite", unwrap=unwrap)
+        return self._fetch_json_list(url, "CustomersLite", unwrap=unwrap, raise_on_error=True)
 
     def get_aka_inventory_for_customer(self, ar_custo_id: int) -> List[Dict[str, Any]]:
         """
@@ -289,12 +305,12 @@ class IQMSClient:
         filter client-side (see SalesOrderService.get_sales_orders).
         """
         url = f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrder"
-        return self._fetch_json_list(url, "SalesOrder")
+        return self._fetch_json_list(url, "SalesOrder", raise_on_error=True)
 
     def get_sales_order_details(self, sales_order_id: int) -> List[Dict[str, Any]]:
         """Fetches sales order detail (line item) records for one sales order - filters correctly server-side."""
         url = f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrderDetails?salesOrderId={sales_order_id}"
-        return self._fetch_json_list(url, "SalesOrderDetails")
+        return self._fetch_json_list(url, "SalesOrderDetails", raise_on_error=True)
 
     def get_sales_order_releases(self, sales_order_detail_id: int) -> List[Dict[str, Any]]:
         """Fetches release/shipment schedule records for one sales order detail line - filters correctly server-side."""
@@ -302,4 +318,4 @@ class IQMSClient:
             f"{self.base_url}/SalesDistribution/SalesOrder/SalesOrderReleases"
             f"?salesOrderDetailId={sales_order_detail_id}"
         )
-        return self._fetch_json_list(url, "SalesOrderReleases")
+        return self._fetch_json_list(url, "SalesOrderReleases", raise_on_error=True)

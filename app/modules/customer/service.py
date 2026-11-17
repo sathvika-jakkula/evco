@@ -1,3 +1,5 @@
+from app.core.exceptions import TechnicalException
+from app.integrations.iqms import IQMSUnavailableError
 from app.modules.customer.models import MatchStatus
 from app.modules.customer.repository import CustomerRepository
 from app.database.quote_processing_repository import QuoteProcessingRepository
@@ -22,10 +24,25 @@ class CustomerService:
         self.processing_repository = processing_repository or QuoteProcessingRepository()
 
     def resolve_customer(self, payload: CustomerResolveRequest) -> CustomerResolveResponse:
-        records = self.repository.find_candidates(
-            customer_name=payload.customer_name,
-            customer_number=payload.customer_number,
-        )
+        customer_label = payload.customer_name or payload.customer_number or "(no customer on quote)"
+
+        try:
+            records = self.repository.find_candidates(
+                customer_name=payload.customer_name,
+                customer_number=payload.customer_number,
+            )
+        except IQMSUnavailableError as exc:
+            # IQMS being down means the customer is UNKNOWN, not absent. Do not report NOT_FOUND.
+            raise TechnicalException(
+                message=(
+                    f"IQMS is unavailable, so customer '{customer_label}' could not be checked. "
+                    "Retry once IQMS is back online."
+                ),
+                code="IQMS_UNAVAILABLE",
+                status_code=503,
+                retryable=True,
+                details={"reason": str(exc)},
+            ) from exc
 
         candidates = [
             CustomerCandidateSchema(
@@ -46,7 +63,13 @@ class CustomerService:
 
         resolution_id = None
         customer_exceptions: dict[str, str] = {}
-        if match_status == MatchStatusEnum.AMBIGUOUS:
+        if match_status == MatchStatusEnum.NOT_FOUND:
+            # Spec (EX-005 clarification): a customer that does not exist in DELMIAWorks stops the quote.
+            customer_exceptions["EX-005"] = (
+                f"Customer '{customer_label}' was not found in DELMIAWorks/IQMS; "
+                "the quote cannot be matched to a customer and requires manual review."
+            )
+        elif match_status == MatchStatusEnum.AMBIGUOUS:
             customer_exceptions["EX-006"] = (
                 "Customer is ambiguous: multiple possible customers or divisions were found; "
                 "manual review is required."
@@ -83,7 +106,12 @@ class CustomerService:
                     exceptions=customer_exceptions,
                 )
 
-        message = "Customer resolution requires manual review" if customer_exceptions else "Customer resolution completed successfully"
+        if match_status == MatchStatusEnum.NOT_FOUND:
+            message = f"Customer '{customer_label}' not found in IQMS; manual review required (EX-005)."
+        elif customer_exceptions:
+            message = "Customer resolution requires manual review"
+        else:
+            message = "Customer resolution completed successfully"
         return CustomerResolveResponse(
             statusCode=200,
             message=message,
