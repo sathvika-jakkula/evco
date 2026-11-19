@@ -43,17 +43,17 @@ class NotificationService:
         cc = [address for address in dict.fromkeys(req.cc) if address not in req.to]
 
         # Build the workbook before connecting to SMTP. If it fails, nothing is sent.
-        attachment: Optional[ClientReportFile] = None
+        files: List[ClientReportFile] = []
         if req.client_report is not None:
             source = ClientReportSource(processing_ids=req.client_report.processing_ids)
-            attachment = self.reporting_service.build_client_report(source, req.client_report.file_name)
+            files = self.reporting_service.build_client_report_files(source, req.client_report.file_name)
         attachments = [NotificationAttachmentResult(
-            file_name=attachment.file_name,
+            file_name=f.file_name,
             content_type=CLIENT_REPORT_CONTENT_TYPE,
-            size_bytes=len(attachment.content),
-            sheets=attachment.sheet_names,
-            processing_count=len(attachment.processing_ids),
-        )] if attachment else []
+            size_bytes=len(f.content),
+            sheets=f.sheet_names,
+            processing_count=len(f.processing_ids),
+        ) for f in files]
 
         if not sender or not password:
             logger.error("SMTP_USER or SMTP_PASSWORD not configured in environment")
@@ -68,10 +68,10 @@ class NotificationService:
                 server.starttls()
                 server.login(sender, password)
                 if cc:
-                    results.extend(self._send_group(server, req, sender, cc, attachment))
+                    results.extend(self._send_group(server, req, sender, cc, files))
                 else:
                     for recipient in req.to:
-                        results.append(self._send_one(server, req, sender, recipient, attachment))
+                        results.append(self._send_one(server, req, sender, recipient, files))
         except Exception as connect_exc:
             # Could not even connect/authenticate to the SMTP server - log a
             # FAILED row per intended recipient so the failure is still auditable.
@@ -94,7 +94,7 @@ class NotificationService:
     @staticmethod
     def _build_message(
         req: SendNotificationRequest, sender: str, to_header: str, cc_header: Optional[str],
-        attachment: Optional[ClientReportFile],
+        files: Optional[List[ClientReportFile]],
     ) -> EmailMessage:
         message = EmailMessage()
         message["From"] = sender
@@ -103,7 +103,7 @@ class NotificationService:
             message["Cc"] = cc_header
         message["Subject"] = req.subject
         message.set_content(req.body, subtype=req.content_type.split("/")[1])
-        if attachment is not None:
+        for attachment in files or []:
             message.add_attachment(
                 attachment.content,
                 maintype="application",
@@ -131,10 +131,10 @@ class NotificationService:
 
     def _send_group(
         self, server: smtplib.SMTP, req: SendNotificationRequest, sender: str, cc: List[str],
-        attachment: Optional[ClientReportFile] = None,
+        files: Optional[List[ClientReportFile]] = None,
     ) -> List[NotificationRecipientResult]:
         """One email to all 'to' addresses with 'cc' in the Cc header. Each address gets one copy."""
-        message = self._build_message(req, sender, ", ".join(req.to), ", ".join(cc), attachment)
+        message = self._build_message(req, sender, ", ".join(req.to), ", ".join(cc), files)
         sent_time = datetime.now(timezone.utc)
         try:
             server.send_message(message)
@@ -158,9 +158,9 @@ class NotificationService:
 
     def _send_one(
         self, server: smtplib.SMTP, req: SendNotificationRequest, sender: str, recipient: str,
-        attachment: Optional[ClientReportFile] = None,
+        files: Optional[List[ClientReportFile]] = None,
     ) -> NotificationRecipientResult:
-        message = self._build_message(req, sender, recipient, None, attachment)
+        message = self._build_message(req, sender, recipient, None, files)
 
         sent_time = datetime.now(timezone.utc)
         try:

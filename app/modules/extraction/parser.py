@@ -2124,6 +2124,38 @@ def _document_field_evidence(per_page):
     return evidence
 
 
+def _absorb_placeholder_cells(cells: Dict[str, Any]) -> Dict[str, Any]:
+    """Move a value out of a 'ColN' placeholder column into the labelled column it belongs to.
+
+    PyMuPDF splits a merged or wrapped column into a labelled cell plus empty
+    phantom 'ColN' cells, and the header repair can attach the label to a
+    different slot than the one the row values sit in. Seen on 'BRP Mock
+    56043-021.pdf': every BOM value ('1428/9415018') came back under 'Col3'
+    while 'EVCO MFG #' beside it was blank, so the column read as missing.
+
+    A placeholder's value is moved only when exactly one of its nearest
+    labelled neighbours (left or right) is blank. If both are blank it is
+    ambiguous, and if neither is blank there is nowhere to put it; both
+    cases leave the row unchanged. Column order is the order the LLM returned.
+    """
+    labels = list(cells)
+    values = dict(cells)
+
+    def is_placeholder(label: Any) -> bool:
+        return bool(_PLACEHOLDER_HEADER_CELL_RE.match(str(label).strip()))
+
+    for index, label in enumerate(labels):
+        if not is_placeholder(label) or not _has_required_value(values[label]):
+            continue
+        left = next((labels[j] for j in range(index - 1, -1, -1) if not is_placeholder(labels[j])), None)
+        right = next((labels[j] for j in range(index + 1, len(labels)) if not is_placeholder(labels[j])), None)
+        targets = [n for n in (left, right) if n is not None and not _has_required_value(values[n])]
+        if len(targets) == 1:
+            values[targets[0]] = values[label]
+            values[label] = ""
+    return values
+
+
 def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
     """Map one raw row's {column_label: value} dict to {canonical_field:
     value}, for every label this project recognizes. A label that matches no
@@ -2139,6 +2171,7 @@ def _map_raw_row_cells(cells: Dict[str, Any]) -> Dict[str, str]:
     mapped: Dict[str, str] = {}
     if not isinstance(cells, dict):
         return mapped
+    cells = _absorb_placeholder_cells(cells)
     for label, value in cells.items():
         normalized = _normalize_header_cell(label)
         if "customerpn" in normalized and "partdescription" in normalized:

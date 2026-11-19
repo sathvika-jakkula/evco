@@ -3,13 +3,13 @@ Reference copy of the EVCO Quote Validation rules, written into every client rev
 workbook (sheet "Rules Reference"). Source: "EVCO - Quote Validation AI Agentic Rules and
 Requirements - Final-Revised Aug13a" (Incede.ai, August 13, 2026), sections 1 to 4.
 
-Each entry: (type, code, rule, formula_or_logic, description, linked_exception, agent, tools)
+Each entry: (type, code, rule_status, rule, formula_or_logic, description, linked_exception, agent, tools)
 """
 
 RULE_REFERENCE_SHEET = "Business Rules and Requirements"
 
 RULE_REFERENCE_HEADERS = [
-    "Type", "Code", "Rule", "Formula / Logic", "Description",
+    "Type", "Code", "Rule Status", "Rule", "Formula / Logic", "Description",
     "Linked Exception(s)", "Responsible Agent", "Tools",
 ]
 
@@ -285,4 +285,21 @@ RULE_REFERENCE = [
      "",
      "If a quote's box (selling multiple) quantity is not evenly divisible by the MOQ, the solution should still process and update pricing using the MOQ, but must raise a warning (not a hard exception/stop) so engineering can correct the box quantity on the next quote revision.",
      "", "A3 – Inventory", "T6 Get AKA; T17 Record Exceptions; T21 Notification"),
+]
+
+# Rules the solution does not currently apply. The solution makes no IQMS update calls yet: it reports
+# what must change ("Value to be applied to IQMS") but does not write it. Rules that only govern how a
+# write is performed therefore never apply. Rules that say *what* must be updated (BR-015, BRM-005,
+# VR-016/017/019/021, EX-010/011a, ...) stay Active because the agents use them to report the change.
+# Every other rule is shown as Active.
+INACTIVE_RULE_CODES = {
+    "BR-006",   # use the selected-item option when updating a Sales Order price
+    "BRM-008",  # save pricing inserts/updates with post edit
+    "EX-013",   # wrong item selected for a Sales Order update
+}
+
+# "Rule Status" sits after "Code" on the Business Rules and Requirements sheet.
+RULE_REFERENCE = [
+    (kind, code, "Inactive" if code in INACTIVE_RULE_CODES else "Active", *rest)
+    for kind, code, *rest in RULE_REFERENCE
 ]

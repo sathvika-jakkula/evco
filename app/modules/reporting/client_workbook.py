@@ -33,7 +33,7 @@ NO_ACTION_FILL = PatternFill("solid", fgColor="E2EFDA")
 STATUS_FILL = {
     "Updated": UPDATE_FILL,
     "Exception": PatternFill("solid", fgColor="F4CCCC"),
-    "Warning": PatternFill("solid", fgColor="FCE4D6"),
+    "Not verifiable": PatternFill("solid", fgColor="FCE4D6"),
     "No action": NO_ACTION_FILL,
 }
 HEADER_FILL = PatternFill("solid", fgColor=NAVY)
@@ -166,7 +166,7 @@ def _write_quote_sheet(sheet, report: QuoteReport) -> None:
         sheet.auto_filter.ref = f"A{header_row}:{get_column_letter(len(QUOTE_HEADERS))}{header_row + len(report.rows)}"
 
 
-RULE_COLUMN_WIDTHS = [18, 12, 42, 46, 70, 16, 30, 48]
+RULE_COLUMN_WIDTHS = [18, 12, 12, 42, 46, 70, 16, 30, 48]
 
 
 def _write_rules_sheet(sheet) -> None:

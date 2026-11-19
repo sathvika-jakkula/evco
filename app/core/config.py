@@ -38,6 +38,14 @@ class Settings:
     # Client review workbooks: when CLIENT_REPORT_SAVE_ENABLED=true, every workbook that is
     # generated is also saved into CLIENT_REPORT_SAVE_DIR (created if missing).
     CLIENT_REPORT_SAVE_ENABLED: bool = os.getenv("CLIENT_REPORT_SAVE_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+    # Quote sheets in the review workbook: when true, each quote gets the sectioned layout
+    # (A. header, B. stage status, C. line items, D. issues & actions); when false, the flat table.
+    REVIEW_WORKBOOK_QUOTE_LAYOUT_V2: bool = os.getenv("REVIEW_WORKBOOK_QUOTE_LAYOUT_V2", "false").strip().lower() in ("true", "1", "yes")
+    # Flat quote sheet (template 1 only): when true, a part's repeated fields are shown on its first row only.
+    # Emails: when true, every review email attaches both workbooks (template 1 = flat table,
+    # template 2 = sectioned layout) instead of a single workbook.
+    REVIEW_WORKBOOK_SEND_BOTH_LAYOUTS: bool = os.getenv("REVIEW_WORKBOOK_SEND_BOTH_LAYOUTS", "false").strip().lower() in ("true", "1", "yes")
+    REVIEW_WORKBOOK_GROUP_ROWS_BY_PART: bool =os.getenv("REVIEW_WORKBOOK_GROUP_ROWS_BY_PART", "false").strip().lower() in ("true", "1", "yes")
     CLIENT_REPORT_SAVE_DIR: str = os.getenv(
         "CLIENT_REPORT_SAVE_DIR", str(Path.home() / "Documents" / "EVCO_Client_Reports")
     )

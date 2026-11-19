@@ -23,8 +23,7 @@ from app.database.pricing_resolution_repository import PricingResolutionReposito
 from app.database.quote_scan_repository import QuoteScanRepository
 from app.database.review_row_repository import ReviewRowRepository
 from app.database.sales_order_resolution_repository import SalesOrderResolutionRepository
-from app.modules.reporting.client_report import build_quote_report, rows_from_review_rows
-from app.modules.reporting.client_workbook import build_client_workbook_with_sheets
+from app.modules.reporting.review_workbook import build_review_workbook
 from app.modules.reporting.schemas import (
     ClientReportSource,
     ReviewRowEntry,
@@ -69,23 +68,6 @@ class ClientReportFile:
     processing_ids: list[UUID]
 
 
-def _latest_run_per_quote(reports: list) -> list:
-    """One report per quote number. When a quote was processed more than once, keep the latest run."""
-    latest = {}
-    order = []
-    for report in reports:
-        key = report.quote_number
-        if key not in latest:
-            order.append(key)
-            latest[key] = report
-            continue
-        current = latest[key]
-        if (report.processing_start.timestamp() if report.processing_start else 0) > \
-                (current.processing_start.timestamp() if current.processing_start else 0):
-            latest[key] = report
-    return [latest[key] for key in order]
-
-
 class ReportingService:
     def __init__(
         self,
@@ -113,21 +95,7 @@ class ReportingService:
     def build_client_report(self, source: ClientReportSource, file_name: str = DEFAULT_REPORT_FILE_NAME) -> "ClientReportFile":
         """Client review workbook for the scans and/or quotes in source."""
         processing_ids = self.resolve_processing_ids(source)
-        reports = []
-        for pid in processing_ids:
-            summary = self.get_quote_summary(pid)
-            report = build_quote_report(summary)
-            if summary.review_rows:
-                report.rows = rows_from_review_rows(
-                    summary.review_rows, summary.line_items,
-                    customer_name=summary.customer_name or "", customer_number=summary.ar_cust_id or "",
-                )
-            report.processing_start, report.duration_minutes = (
-                self.line_item_audit_repository.get_processing_timing(pid)
-            )
-            reports.append(report)
-        reports = _latest_run_per_quote(reports)
-        content, sheet_names = build_client_workbook_with_sheets(reports)
+        content, sheet_names = build_review_workbook(processing_ids, generated_at=datetime.now())
         if settings.CLIENT_REPORT_SAVE_ENABLED:
             save_client_report_copy(content, file_name)
         return ClientReportFile(
@@ -136,6 +104,23 @@ class ReportingService:
             sheet_names=sheet_names,
             processing_ids=processing_ids,
         )
+
+    def build_client_report_files(self, source: ClientReportSource, file_name: str = DEFAULT_REPORT_FILE_NAME) -> list["ClientReportFile"]:
+        """Workbooks to attach to an email. With REVIEW_WORKBOOK_SEND_BOTH_LAYOUTS=true this is both
+        templates (template 1 = flat table, template 2 = sectioned layout); otherwise one workbook."""
+        if not settings.REVIEW_WORKBOOK_SEND_BOTH_LAYOUTS:
+            return [self.build_client_report(source, file_name)]
+        processing_ids = self.resolve_processing_ids(source)
+        base = Path(file_name)
+        files: list[ClientReportFile] = []
+        for suffix, sectioned in (("_Template1", False), ("_Template2", True)):
+            name = f"{base.stem}{suffix}{base.suffix}"
+            content, sheet_names = build_review_workbook(processing_ids, generated_at=datetime.now(), sectioned=sectioned)
+            if settings.CLIENT_REPORT_SAVE_ENABLED:
+                save_client_report_copy(content, name)
+            files.append(ClientReportFile(file_name=name, content=content, sheet_names=sheet_names,
+                                          processing_ids=processing_ids))
+        return files
 
     def get_quote_summary(self, processing_id: UUID) -> QuoteSummaryData:
         report_id = f"RPT-{processing_id}-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}"

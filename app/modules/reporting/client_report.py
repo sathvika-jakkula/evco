@@ -266,9 +266,9 @@ BLOCKED_CODE_MARKER = "WRITE_GAP"
 
 
 def display_status(row: "ReportRow") -> str:
-    """Status shown in the workbook: Updated, Exception, Warning or No Action."""
+    """Status shown in the workbook: Updated, Exception, Not verifiable or No Action."""
     if row.status == NOT_VERIFIABLE:
-        return "Warning"
+        return NOT_VERIFIABLE_LABEL
     if row.rule.startswith("EX-") or row.category in ("Other", "Extraction"):
         # "Other" rows come from exception log entries, not from a rule that changes IQMS.
         return "Exception"
@@ -286,8 +286,10 @@ API_NAME_RE = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")
 def _readable_comment(text: str) -> str:
     """Comment text with API / system codes (for example PRICE_BREAK_WRITE_GAP) removed."""
     parts = []
-    for piece in re.split(r"\s*[;/]\s*", text or ""):
-        cleaned = API_NAME_RE.sub("", piece).strip(" -:,")
+    # Split on ';' only: '/' is real content (BOM numbers like '6429/9481662',
+    # 'SO 302139-AMP / detail 78841') and must not turn into '; '.
+    for piece in re.split(r"\s*;\s*", text or ""):
+        cleaned = API_NAME_RE.sub("", piece).strip(" -:,/")
         if cleaned:
             parts.append(cleaned)
     return "; ".join(parts)

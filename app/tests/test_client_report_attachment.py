@@ -51,12 +51,12 @@ def test_report_source_needs_scan_or_processing_ids():
     with pytest.raises(ValidationError):
         ClientReportSource()
     with pytest.raises(ValidationError):
-        ClientReportAttachment(file_name="x.xlsx")
+        ClientReportAttachment.model_validate({"file_name": "x.xlsx"})
 
 
 def test_notification_attachment_takes_processing_ids_only():
     with pytest.raises(ValidationError):
-        ClientReportAttachment(scan_ids=[str(uuid4())])
+        ClientReportAttachment.model_validate({"scan_ids": [str(uuid4())]})
     assert ClientReportAttachment(processing_ids=[str(uuid4())]).file_name == "EVCO_Review_Per_Quote.xlsx"
 
 
@@ -64,7 +64,7 @@ def test_send_email_attaches_the_workbook(monkeypatch):
     monkeypatch.setattr(settings, "SMTP_USER", "sender@example.com")
     monkeypatch.setattr(settings, "SMTP_PASSWORD", "secret")
     reporting = MagicMock()
-    reporting.build_client_report.return_value = _report_file("EVCO_Review_Per_Quote.xlsx", b"PK-test")
+    reporting.build_client_report_files.return_value = [_report_file("EVCO_Review_Per_Quote.xlsx", b"PK-test")]
     smtp_cls = MagicMock()
     server = smtp_cls.return_value.__enter__.return_value
     monkeypatch.setattr("app.modules.notification.service.smtplib.SMTP", smtp_cls)
@@ -92,8 +92,9 @@ def test_failed_workbook_build_sends_no_email(monkeypatch):
     monkeypatch.setattr(settings, "SMTP_USER", "sender@example.com")
     monkeypatch.setattr(settings, "SMTP_PASSWORD", "secret")
     reporting = MagicMock()
-    reporting.build_client_report.side_effect = BusinessException(message="x", code="QUOTE_PROCESSING_NOT_FOUND",
-                                                                  status_code=404)
+    reporting.build_client_report_files.side_effect = BusinessException(
+        message="x", code="QUOTE_PROCESSING_NOT_FOUND", status_code=404,
+    )
     smtp_cls = MagicMock()
     monkeypatch.setattr("app.modules.notification.service.smtplib.SMTP", smtp_cls)
     service = NotificationService(notification_repository=MagicMock(), reporting_service=reporting)
@@ -138,3 +139,30 @@ def test_client_report_endpoint_accepts_scan_ids(monkeypatch):
     assert [str(s) for s in seen["source"].scan_ids] == [scan_id]
     assert response.content == b"PK-report"
     assert response.headers["content-disposition"] == 'attachment; filename="EVCO_Review_Per_Quote.xlsx"'
+
+
+def test_send_email_attaches_both_template_workbooks(monkeypatch):
+    monkeypatch.setattr(settings, "SMTP_USER", "sender@example.com")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "secret")
+    reporting = MagicMock()
+    reporting.build_client_report_files.return_value = [
+        _report_file("EVCO_Review_Template1.xlsx", b"PK-one"),
+        _report_file("EVCO_Review_Template2.xlsx", b"PK-two"),
+    ]
+    smtp_cls = MagicMock()
+    server = smtp_cls.return_value.__enter__.return_value
+    monkeypatch.setattr("app.modules.notification.service.smtplib.SMTP", smtp_cls)
+    repo = MagicMock()
+    repo.log_notification.return_value = uuid4()
+    service = NotificationService(notification_repository=repo, reporting_service=reporting)
+    req = SendNotificationRequest(
+        to=["ops@example.com"], subject="EVCO review", body="Attached.",
+        client_report={"processing_ids": [str(uuid4())]},
+    )
+
+    result = service.send_email(req)
+
+    assert [a.file_name for a in result.attachments] == ["EVCO_Review_Template1.xlsx", "EVCO_Review_Template2.xlsx"]
+    sent = server.send_message.call_args.args[0]
+    names = [a.get_filename() for a in sent.iter_attachments()]
+    assert names == ["EVCO_Review_Template1.xlsx", "EVCO_Review_Template2.xlsx"]

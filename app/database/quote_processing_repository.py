@@ -13,6 +13,10 @@ from app.database.connection import DatabaseConnection
 from app.core.exceptions import BusinessException
 from app.modules.extraction.parser import QuoteExtractionResponse
 
+# quote_part_id is "<part ordinal>-<tier>" (for example "2-1"). Every line row of a run shares one
+# created_at, so order by the ordinal and tier, which is the order the extracted parts were given in.
+_PART_ORDER = "split_part(quote_part_id, '-', 1)::int, split_part(quote_part_id, '-', 2)::int"
+
 
 class QuoteProcessingRepository:
     def __init__(self, connection: DatabaseConnection | None = None) -> None:
@@ -48,7 +52,7 @@ class QuoteProcessingRepository:
     def get_line_item_ids(self, processing_id: UUID) -> list[UUID]:
         with self.connection.connect() as db, db.cursor() as cursor:
             cursor.execute(
-                "SELECT line_item_id FROM quote_line_items WHERE processing_id = %s ORDER BY created_at, line_item_id",
+                "SELECT line_item_id FROM quote_line_items WHERE processing_id = %s ORDER BY " + _PART_ORDER,
                 (processing_id,),
             )
             return [row[0] for row in cursor.fetchall()]
@@ -178,7 +182,7 @@ class QuoteProcessingRepository:
         with self.connection.connect() as db, db.cursor() as cursor:
             cursor.execute(
                 """SELECT line_item_id FROM quote_line_items
-                   WHERE processing_id = %s ORDER BY created_at, line_item_id LIMIT 1""",
+                   WHERE processing_id = %s ORDER BY """ + _PART_ORDER + """ LIMIT 1""",
                 (processing_id,),
             )
             row = cursor.fetchone()
@@ -206,7 +210,7 @@ class QuoteProcessingRepository:
         matched = candidates[0] if match_status == "UNIQUE" and candidates else None
         with self.connection.connect() as db, db.cursor() as cursor:
             cursor.execute(
-                "SELECT line_item_id FROM quote_line_items WHERE processing_id = %s ORDER BY created_at, line_item_id",
+                "SELECT line_item_id FROM quote_line_items WHERE processing_id = %s ORDER BY " + _PART_ORDER,
                 (processing_id,),
             )
             line_item_ids = [row[0] for row in cursor.fetchall()]
