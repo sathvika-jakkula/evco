@@ -42,28 +42,70 @@ def _run(lines=2, exceptions=(), reviews=(), created_at=T0, quote_id="65150-003"
     return run
 
 
+A3 = QUOTE_HEADERS.index("A3 Evaluate Inventory, BOM & AKA")
+OUTCOME = QUOTE_HEADERS.index("Final Outcome")
+
+
+def _cells(run, row=0):
+    return quote_rows(run)[row][A3:A3 + 3]
+
+
 def test_extraction_failure_stops_at_a1():
     run = evaluate(_run(exceptions=[("ExtractionAgent", None)]))
-    assert run["outcome"] == "Fail"
-    assert run["first_stage"] == "A1"
     assert run["outcome_text"] == "Stopped - A1"
+    row = quote_rows(run)[0]
+    assert row[A3 - 2:A3 + 3] == ["Fail", "Not run", "Not run", "Not run", "Not run"]
 
 
-def test_some_lines_fail_is_partial():
-    run = evaluate(_run(lines=2, reviews=[("PRICING", "UPDATE_REQUIRED", 0)]))
-    assert run["outcome"] == "Partial"
+def test_customer_not_found_stops_at_a2():
+    run = evaluate(_run(exceptions=[("CustomerAgent", None)]))
+    assert run["outcome_text"] == "Stopped - A2"
+    assert quote_rows(run)[0][A3 - 2:A3 + 3] == ["Pass", "Fail", "Not run", "Not run", "Not run"]
 
 
-def test_all_lines_fail_is_fail_at_first_line_stage():
-    run = evaluate(_run(lines=2, reviews=[("AKA", "NOT_VERIFIABLE", 0), ("AKA", "UPDATE_REQUIRED", 1)]))
-    assert run["outcome"] == "Fail"
-    assert run["first_stage"] == "A3"
+def test_all_agents_clean_is_pass():
+    run = evaluate(_run(lines=1, reviews=[("AKA", "NO_ACTION", 0), ("PRICING", "NO_ACTION", 0),
+                                         ("SALES_ORDER", "NO_ACTION", 0)]))
+    assert run["outcome_text"] == "Pass"
+    assert _cells(run) == ["Pass", "Pass", "Pass"]
+    assert quote_rows(run)[0][OUTCOME] == "Pass"
 
 
-def test_no_failing_rows_is_pass():
-    run = evaluate(_run(lines=2, reviews=[("AKA", "NO_ACTION", 0)]))
-    assert run["outcome"] == "Pass"
-    assert run["last_agents"] == ""
+def test_action_required_stops_line_but_agent_passes():
+    run = evaluate(_run(lines=1, reviews=[("AKA", "UPDATE_REQUIRED", 0), ("PRICING", "NO_ACTION", 0)]))
+    assert run["outcome_text"] == "Stopped - A3"
+    assert _cells(run) == ["Pass", "Not run", "Not run"]
+    assert quote_rows(run)[0][OUTCOME] == "Stopped - A3"
+
+
+def test_not_validated_row_fails_the_agent():
+    run = evaluate(_run(lines=1, reviews=[("AKA", "NO_ACTION", 0), ("PRICING", "NOT_VERIFIABLE", 0)]))
+    assert run["outcome_text"] == "Stopped - A4"
+    assert _cells(run) == ["Pass", "Fail", "Not run"]
+
+
+def test_line_exception_fails_the_agent():
+    run = evaluate(_run(lines=1, exceptions=[("InventoryAgent", 0)]))
+    assert _cells(run) == ["Fail", "Not run", "Not run"]
+
+
+def test_agent_with_no_rows_is_not_run():
+    run = evaluate(_run(lines=1, reviews=[("AKA", "NO_ACTION", 0)]))
+    assert _cells(run) == ["Pass", "Not run", "Not run"]
+    assert run["outcome_text"] == "Pass"
+
+
+def test_action_required_at_a5_stops_at_a5():
+    run = evaluate(_run(lines=1, reviews=[("AKA", "NO_ACTION", 0), ("PRICING", "NO_ACTION", 0),
+                                         ("SALES_ORDER", "UPDATE_REQUIRED", 0)]))
+    assert run["outcome_text"] == "Stopped - A5"
+    assert _cells(run) == ["Pass", "Pass", "Pass"]
+
+
+def test_quote_outcome_is_earliest_line_stop():
+    run = evaluate(_run(lines=3, reviews=[("AKA", "NO_ACTION", 0), ("PRICING", "UPDATE_REQUIRED", 0),
+                                         ("AKA", "UPDATE_REQUIRED", 1), ("AKA", "NO_ACTION", 2)]))
+    assert run["outcome_text"] == "Stopped - A3"
 
 
 def test_quote_rows_match_header_width():
@@ -76,21 +118,7 @@ def test_business_rule_status_uses_report_labels():
     run = evaluate(_run(lines=3, reviews=[
         ("AKA", "NO_ACTION", 0), ("AKA", "UPDATE_REQUIRED", 1), ("AKA", "NOT_VERIFIABLE", 2)]))
     column = QUOTE_HEADERS.index("Business Rule Status")
-    assert [row[column] for row in quote_rows(run)] == ["Validated", "Action Required", "Warning"]
-
-
-def test_stages_after_a3_failure_are_not_run_when_agent_never_called_them():
-    run = evaluate(_run(lines=1, reviews=[("AKA", "UPDATE_REQUIRED", 0)]))
-    row = quote_rows(run)[0]
-    a3 = QUOTE_HEADERS.index("A3 Evaluate Inventory, BOM & AKA")
-    assert row[a3:a3 + 3] == ["Fail", "Not run", "Not run"]
-
-
-def test_stage_after_a3_failure_shows_its_result_when_it_did_run():
-    run = evaluate(_run(lines=1, reviews=[("AKA", "UPDATE_REQUIRED", 0), ("PRICING", "NO_ACTION", 0)]))
-    row = quote_rows(run)[0]
-    a3 = QUOTE_HEADERS.index("A3 Evaluate Inventory, BOM & AKA")
-    assert row[a3:a3 + 3] == ["Fail", "Pass", "Not run"]
+    assert [row[column] for row in quote_rows(run)] == ["Validated", "Action Required", "Not Validated"]
 
 
 def test_field_names_are_normalized():

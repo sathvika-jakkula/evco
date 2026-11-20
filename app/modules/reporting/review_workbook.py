@@ -7,14 +7,18 @@ Every value comes from the database (quote_processing, quote_audit, quote_line_i
 quote_scans, quote_scan_files, exception_logs, review_rows). Stage results and outcomes are
 derived here:
 
-- A1 fails when an ExtractionAgent exception exists for the run.
-- A2 fails when a CustomerAgent exception exists for the run.
-- A3 / A4 / A5 fail for a line item when an InventoryAgent / PricingAgent / SalesOrderAgent
-  exception exists for that line, or when the matching review area (AKA / PRICING /
-  SALES_ORDER) has an UPDATE_REQUIRED or NOT_VERIFIABLE row for that line.
-- Pass: no A1 or A2 failure and no line item fails at A3, A4 or A5.
-- Partial: no A1 or A2 failure, some line items fail at A3-A5, and some pass.
-- Fail: an A1 or A2 failure, or every line item fails at A3-A5.
+Agent cell (A3 / A4 / A5, per line; review areas AKA / PRICING / SALES_ORDER):
+- Not run: the agent has no rows for the line, or an earlier agent stopped the line.
+- Fail: the agent has an exception or a Not Validated (NOT_VERIFIABLE) row for the line.
+- Pass: otherwise, including Validated and Action Required rows.
+A1 and A2 (whole quote): A1 fails when extraction rejected the quote (ExtractionAgent exception);
+A2 fails when the customer was not found or was ambiguous (CustomerAgent exception). A1 Fail sets
+A2-A5 to Not run; A2 Fail sets A3-A5 to Not run.
+
+Final Outcome per line: "Stopped - A<n>" where A<n> is the first agent with an Action Required,
+exception or Not Validated row for the line (agents after it are Not run); otherwise "Pass".
+Final Outcome per quote: "Pass" if every line passes, otherwise "Stopped - A<n>" at the earliest
+stop (A1/A2 stops first). The Dashboard "Stopped at" counts use this value.
 - Quote Validation End: the latest agent timestamp of the run (exception_logs and review_rows),
   falling back to quote_processing.completed_at.
 """
@@ -53,9 +57,12 @@ LEGACY_AGENT_STAGE = {
     "SalesOrderAgent": "A5", "SalesOrderReviewAgent": "A5",
 }
 AREA_STAGE = {"AKA": "A3", "PRICING": "A4", "SALES_ORDER": "A5"}
+# Review rows that need attention (listed and counted as issues).
 FAILING_REVIEW_STATUSES = ("UPDATE_REQUIRED", "NOT_VERIFIABLE")
+# Review rows that fail a stage. Action Required (UPDATE_REQUIRED) rows do not: the stage still passes.
+STAGE_FAILING_STATUSES = ("NOT_VERIFIABLE",)
 # How each review_rows status is shown in the Business Rule Status column.
-STATUS_LABELS = {"NO_ACTION": "Validated", "UPDATE_REQUIRED": "Action Required", "NOT_VERIFIABLE": "Warning"}
+STATUS_LABELS = {"NO_ACTION": "Validated", "UPDATE_REQUIRED": "Action Required", "NOT_VERIFIABLE": "Not Validated"}
 DASHBOARD_SHEET = "Dashboard"
 ATTENTION_SHEET = "Quotes Requiring Attention"
 AUDIT_SHEET = "Processing Audit"
@@ -173,9 +180,12 @@ def latest_run_per_quote(runs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 # Stage and outcome rules
 # ---------------------------------------------------------------------------
 def evaluate(run: Dict[str, Any]) -> Dict[str, Any]:
-    """Adds run_stages, line_stages, outcome, first_stage, last_agents, issues, start and end."""
+    """Adds the stage cells, line and quote outcomes, issues, start and end (rules in the module docstring)."""
     run_stages: Set[str] = set()
-    line_stages: Dict[Any, Set[str]] = {line["line_item_id"]: set() for line in run["lines"]}
+    lids = [line["line_item_id"] for line in run["lines"]]
+    line_stages: Dict[Any, Set[str]] = {lid: set() for lid in lids}   # Fail: exception or Not Validated row
+    line_action: Dict[Any, Set[str]] = {lid: set() for lid in lids}   # has an Action Required row
+    line_ran: Dict[Any, Set[str]] = {lid: set() for lid in lids}      # has any row at all
 
     for exc in run["exceptions"]:
         stage = LEGACY_AGENT_STAGE.get(exc["agent_name"] or "")
@@ -186,46 +196,37 @@ def evaluate(run: Dict[str, Any]) -> Dict[str, Any]:
                 run_stages.add(stage)
         elif exc["line_item_id"] in line_stages and stage in LINE_STAGES:
             line_stages[exc["line_item_id"]].add(stage)
-
-    for rev in run["reviews"]:
-        stage = AREA_STAGE.get(rev["review_area"])
-        if stage and rev["status"] in FAILING_REVIEW_STATUSES and rev["line_item_id"] in line_stages:
-            line_stages[rev["line_item_id"]].add(stage)
-
-    # Line stages that reported anything (a review row of any status, or an exception) for each line.
-    line_ran: Dict[Any, Set[str]] = {lid: set() for lid in line_stages}
-    for exc in run["exceptions"]:
-        stage = LEGACY_AGENT_STAGE.get(exc["agent_name"] or "")
-        if exc["line_item_id"] in line_ran and stage in LINE_STAGES:
             line_ran[exc["line_item_id"]].add(stage)
+
     for rev in run["reviews"]:
         stage = AREA_STAGE.get(rev["review_area"])
-        if stage and rev["line_item_id"] in line_ran:
-            line_ran[rev["line_item_id"]].add(stage)
+        lid = rev["line_item_id"]
+        if not stage or lid not in line_ran:
+            continue
+        line_ran[lid].add(stage)
+        if rev["status"] in STAGE_FAILING_STATUSES:
+            line_stages[lid].add(stage)
+        elif rev["status"] == "UPDATE_REQUIRED":
+            line_action[lid].add(stage)
 
-    failing_lines = [lid for lid, stages in line_stages.items() if stages]
-    if run_stages & {"A1", "A2"}:
-        outcome = "Fail"
-    elif not line_stages:
-        outcome = "Pass"
-    elif len(failing_lines) == len(line_stages):
-        outcome = "Fail"
-    elif failing_lines:
-        outcome = "Partial"
-    else:
-        outcome = "Pass"
-
-    line_used = set().union(*line_stages.values())
     if "A1" in run_stages:
-        first_stage = "A1"
+        quote_stop = "A1"
     elif "A2" in run_stages:
-        first_stage = "A2"
-    elif outcome == "Fail" and line_used:
-        first_stage = min(line_used, key=STAGES.index)
+        quote_stop = "A2"
     else:
-        first_stage = None
+        quote_stop = None
 
-    failing = sorted(run_stages | line_used, key=STAGES.index)
+    line_stop: Dict[Any, Optional[str]] = {}
+    for lid in lids:
+        stops = line_stages[lid] | line_action[lid]
+        line_stop[lid] = quote_stop or next((s for s in LINE_STAGES if s in stops), None)
+
+    if quote_stop:
+        first_stage = quote_stop
+    else:
+        stopped = [stop for stop in line_stop.values() if stop]
+        first_stage = min(stopped, key=STAGES.index) if stopped else None
+
     # Exception timestamps are naive and review timestamps are timezone-aware; compare them as naive local time.
     timestamps = [row["created_at"].replace(tzinfo=None) for row in run["exceptions"] + run["reviews"]
                   if row["created_at"]]
@@ -233,11 +234,13 @@ def evaluate(run: Dict[str, Any]) -> Dict[str, Any]:
     run.update({
         "run_stages": run_stages,
         "line_stages": line_stages,
+        "line_action": line_action,
         "line_ran": line_ran,
-        "outcome": outcome,
+        "line_stop": line_stop,
+        "outcome": "Stopped" if first_stage else "Pass",
         "first_stage": first_stage,
-        "outcome_text": f"Stopped - {first_stage}" if outcome == "Fail" and first_stage else outcome,
-        "last_agents": ", ".join(failing),
+        "outcome_text": f"Stopped - {first_stage}" if first_stage else "Pass",
+        "last_agents": first_stage or "",
         "issues": len(run["exceptions"]) + sum(
             1 for rev in run["reviews"] if rev["status"] in FAILING_REVIEW_STATUSES),
         "start": run["scan_started_at"] or run["created_at"],
@@ -247,7 +250,7 @@ def evaluate(run: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _run_stage_status(stage: str, run: Dict[str, Any]) -> str:
-    """A1 and A2 are checked once per quote. If A1 failed, A2 never ran, so it is not run rather than passed."""
+    """A1 and A2 are checked once per quote. A1 Fail leaves A2 not run."""
     if stage in run["run_stages"]:
         return "Fail"
     if stage == "A2" and run["first_stage"] == "A1":
@@ -255,19 +258,31 @@ def _run_stage_status(stage: str, run: Dict[str, Any]) -> str:
     return "Pass"
 
 
-def _stage_cell(stage: str, run: Dict[str, Any], line_stages: Set[str], ran: AbstractSet[str] = frozenset()) -> str:
+def _stage_cell(stage: str, run: Dict[str, Any], lid: Any) -> str:
+    """One agent's result for one line: Not run, Fail or Pass."""
     if stage in ("A1", "A2"):
         return _run_stage_status(stage, run)
     if run["first_stage"] in ("A1", "A2"):
-        # The quote stopped before the line stages ran, so they were never checked.
         return "Not run"
-    if stage in line_stages:
-        return "Fail"
-    earlier_failed = any(s in line_stages for s in LINE_STAGES[:LINE_STAGES.index(stage)])
-    if earlier_failed and stage not in ran:
-        # An earlier stage failed for this line and this stage reported nothing: the agent never ran it.
-        return "Not run"
-    return "Pass"
+    stop = run["line_stop"].get(lid)
+    if stop and STAGES.index(stage) > STAGES.index(stop):
+        return "Not run"   # every agent after the one the line stopped at
+    if stage not in run["line_ran"].get(lid, set()):
+        return "Not run"   # the agent has no rows for the line
+    return "Fail" if stage in run["line_stages"].get(lid, set()) else "Pass"
+
+
+def _line_outcome(run: Dict[str, Any], lid: Any) -> str:
+    stop = run["line_stop"].get(lid)
+    return f"Stopped - {stop}" if stop else "Pass"
+
+
+def _quote_stage_status(stage: str, run: Dict[str, Any]) -> str:
+    """Whole-quote result for one agent: Fail if any line fails, Pass if any line passes, else Not run."""
+    if stage in ("A1", "A2"):
+        return _run_stage_status(stage, run)
+    cells = {_stage_cell(stage, run, lid) for lid in run["line_stop"]}
+    return "Fail" if "Fail" in cells else "Pass" if "Pass" in cells else "Not run"
 
 
 # ---------------------------------------------------------------------------
@@ -373,7 +388,7 @@ def quote_rows(run: Dict[str, Any]) -> List[List[Any]]:
             continue
         stage = LEGACY_AGENT_STAGE.get(exc["agent_name"] or "", "")
         field = {"A1": "Extraction", "A2": "Customer"}.get(stage, "")
-        stages = [_stage_cell(s, run, set()) for s in STAGES]
+        stages = [_quote_stage_status(s, run) for s in STAGES]
         rows.append(head + [None] * 9 + tail + stages
                     + [exc["exception_code"], None, field, None, None, exc["exception_message"]] + timing)
 
@@ -385,8 +400,8 @@ def quote_rows(run: Dict[str, Any]) -> List[List[Any]]:
         lid = line["line_item_id"]
         base = head + [line["line_number"], line["mold_number"], line["evco_part_id"], line["bom_id"],
                        line["customer_part_number"], line["description"], line["parts"], line["moq"], line["price"]]
-        stages = [_stage_cell(s, run, run["line_stages"].get(lid, set()), run["line_ran"].get(lid, set()))
-                  for s in STAGES]
+        stages = [_stage_cell(s, run, lid) for s in STAGES]
+        tail = [run["filename"], _line_outcome(run, lid)]
         reviews = [rev for rev in run["reviews"] if rev["line_item_id"] == lid]
         line_excs = [exc for exc in run["exceptions"] if exc["line_item_id"] == lid]
         if reviews:
@@ -468,20 +483,20 @@ def _sheet_name(raw: str, used: Set[str]) -> str:
     return name
 
 
-def _dashboard(sheet, runs, quotes_by_stage: Dict[str, int], start, end) -> None:
+def _dashboard(sheet, runs, start, end) -> None:
     _title(sheet)
-    counts = {"Pass": 0, "Partial": 0, "Fail": 0}
-    stopped_at = {"A1": 0, "A2": 0}
+    # Each quote counts once, at the stage of its Final Outcome ("Stopped - A<n>").
+    stopped_at = {stage: 0 for stage in STAGES}
     for run in runs:
-        counts[run["outcome"]] += 1
-        if run["outcome"] == "Fail" and run["first_stage"] in stopped_at:
+        if run["first_stage"]:
             stopped_at[run["first_stage"]] += 1
+    passed = sum(1 for run in runs if run["outcome"] == "Pass")
     summary = [
         ("Process Start", _clean(start)),
         ("Process End", _clean(end)),
         ("Total Quotes Processed", len(runs)),
-        ("Valid Quotes / No Action", counts["Pass"]),
-        ("Quotes Requiring Attention", counts["Partial"] + counts["Fail"]),
+        ("Valid Quotes / No Action", passed),
+        ("Quotes Requiring Attention", len(runs) - passed),
     ]
     for offset, (label, value) in enumerate(summary, start=2):
         sheet.cell(row=offset, column=1, value=label).font = Font(bold=True)
@@ -491,9 +506,9 @@ def _dashboard(sheet, runs, quotes_by_stage: Dict[str, int], start, end) -> None
     stops = [
         ("Stopped at A1 PDF Extraction / Field Validation", stopped_at["A1"]),
         ("Stopped at A2 Customer Validation", stopped_at["A2"]),
-        ("Quotes failing at A3 Evaluate Inventory, BOM & AKA", quotes_by_stage["A3"]),
-        ("Quotes failing at A4 Determine Pricing & Confirm Actions", quotes_by_stage["A4"]),
-        ("Quotes failing at A5 Sales Order Evaluation", quotes_by_stage["A5"]),
+        ("Stopped at A3 Evaluate Inventory, BOM & AKA", stopped_at["A3"]),
+        ("Stopped at A4 Determine Pricing & Confirm Actions", stopped_at["A4"]),
+        ("Stopped at A5 Sales Order Evaluation", stopped_at["A5"]),
     ]
     for offset, (label, value) in enumerate(stops, start=8):
         sheet.cell(row=offset, column=2, value=label)
@@ -662,15 +677,7 @@ def _quote_sheet_v2(sheet, run: Dict[str, Any]) -> None:
     _v2_section(sheet, 9, "B. STAGE STATUS (A1–A2 are checked once per quote; A3–A5 are checked per line)")
     stopped_early = run["first_stage"] in ("A1", "A2")
     for index, stage in enumerate(STAGES, start=1):
-        if stage in ("A1", "A2"):
-            status = _run_stage_status(stage, run)
-        elif stopped_early:
-            status = "Not run"
-        else:
-            # Quote-level status from the per-line cells: Fail if any line fails, Not run if no line ran it.
-            cells = {_stage_cell(stage, run, run["line_stages"].get(lid, set()), run["line_ran"].get(lid, set()))
-                     for lid in run["line_stages"]}
-            status = "Fail" if "Fail" in cells else "Pass" if "Pass" in cells or not cells else "Not run"
+        status = _quote_stage_status(stage, run)
         label = sheet.cell(row=10, column=index, value=V2_STAGE_LABELS[stage])
         label.font = Font(bold=True)
         label.fill = V2_LABEL_FILL
@@ -687,7 +694,6 @@ def _quote_sheet_v2(sheet, run: Dict[str, Any]) -> None:
         sheet.cell(row=row, column=1, value="Line items not shown – quote stopped at A1/A2.")
     for line in ([] if stopped_early else run["lines"]):
         lid = line["line_item_id"]
-        stages = run["line_stages"].get(lid, set())
         values = [line["line_number"], line["mold_number"], line["evco_part_id"], line["bom_id"],
                   line["customer_part_number"], line["description"], line["moq"], line["price"]]
         for column, value in enumerate(values, start=1):
@@ -695,7 +701,7 @@ def _quote_sheet_v2(sheet, run: Dict[str, Any]) -> None:
             if column == 8:
                 cell.number_format = V2_PRICE_FORMAT
         for column, stage in enumerate(LINE_STAGES, start=9):
-            text = "Not run" if stopped_early else _stage_cell(stage, run, stages, run["line_ran"].get(lid, set()))
+            text = _stage_cell(stage, run, lid)
             cell = sheet.cell(row=row, column=column, value=text)
             cell.alignment = Alignment(horizontal="center")
             cell.fill = V2_STAGE_FILL.get(text, V2_STAGE_FILL["Pass"])
@@ -736,14 +742,6 @@ def build_review_workbook(
     use_sectioned = settings.REVIEW_WORKBOOK_QUOTE_LAYOUT_V2 if sectioned is None else sectioned
     runs = [evaluate(run) for run in latest_run_per_quote(load_runs(processing_ids))]
 
-    # A quote counts once per stage when any of its lines fails there; quotes stopped at A1/A2 never reached A3-A5.
-    quotes_by_stage = {stage: 0 for stage in LINE_STAGES}
-    for run in runs:
-        if run["first_stage"] in ("A1", "A2"):
-            continue
-        for stage in set().union(*run["line_stages"].values()):
-            quotes_by_stage[stage] += 1
-
     starts = [run["start"] for run in runs if run["start"]]
     batch_start = min(starts) if starts else None
 
@@ -751,14 +749,14 @@ def build_review_workbook(
     dashboard = workbook.worksheets[0]
     dashboard.title = DASHBOARD_SHEET
     _title(dashboard)
-    _dashboard(dashboard, runs, quotes_by_stage, batch_start, generated_at)
+    _dashboard(dashboard, runs, batch_start, generated_at)
 
     attention = workbook.create_sheet(ATTENTION_SHEET)
     _title(attention)
     _write_rows(attention, ATTENTION_HEADERS, [
         [r["quote_id"], r["filename"], r["customer_name"], r["last_agents"], r["outcome_text"],
          r["issues"], r["processing_id"], r["start"], r["end"]]
-        for r in runs if r["outcome"] in ("Partial", "Fail")
+        for r in runs if r["outcome"] != "Pass"
     ], [16, 34, 30, 30, 18, 10, 38, 22, 22])
 
     audit = workbook.create_sheet(AUDIT_SHEET)

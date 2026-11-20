@@ -287,15 +287,13 @@ RULE_REFERENCE = [
      "", "A3 – Inventory", "T6 Get AKA; T17 Record Exceptions; T21 Notification"),
 ]
 
-# Rules the solution does not currently apply. The solution makes no IQMS update calls yet: it reports
-# what must change ("Value to be applied to IQMS") but does not write it. Rules that only govern how a
-# write is performed therefore never apply. Rules that say *what* must be updated (BR-015, BRM-005,
-# VR-016/017/019/021, EX-010/011a, ...) stay Active because the agents use them to report the change.
-# Every other rule is shown as Active.
+# Rules always shown as Inactive on the Business Rules and Requirements sheet: the solution makes no
+# IQMS update calls yet, so the rules that insert or update IQMS records are not applied. Every other
+# rule is shown as Active.
 INACTIVE_RULE_CODES = {
-    "BR-006",   # use the selected-item option when updating a Sales Order price
-    "BRM-008",  # save pricing inserts/updates with post edit
-    "EX-013",   # wrong item selected for a Sales Order update
+    "BR-006","BRM-008", "BR-015", "BR-016", "BR-017", "BR-018",
+    "BRM-004", "BRM-005", "BRM-007",
+    "VR-016", "VR-017", "VR-019", "VR-020", "VR-021",
 }
 
 # "Rule Status" sits after "Code" on the Business Rules and Requirements sheet.

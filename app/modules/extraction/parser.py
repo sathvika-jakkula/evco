@@ -95,6 +95,9 @@ class CallbackExtractionStatusResponse(BaseModel):
         description="Status message for the callback-style request.",
     )
     callback_url: Optional[str] = Field(default=None, description="Callback URL used to receive the extraction result.")
+    processing_id: Optional[UUID] = Field(
+        default=None, description="ID of the processing run started by this call; use it for every later call."
+    )
 
 logger = logging.getLogger(__name__)
 
