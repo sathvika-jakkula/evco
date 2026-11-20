@@ -291,7 +291,7 @@ RULE_REFERENCE = [
 # IQMS update calls yet, so the rules that insert or update IQMS records are not applied. Every other
 # rule is shown as Active.
 INACTIVE_RULE_CODES = {
-    "BR-006","BRM-008", "BR-015", "BR-016", "BR-017", "BR-018",
+    "BR-006", "BR-013","BRM-008", "BR-015", "BR-016", "BR-017", "BR-018",
     "BRM-004", "BRM-005", "BRM-007",
     "VR-016", "VR-017", "VR-019", "VR-020", "VR-021",
 }
